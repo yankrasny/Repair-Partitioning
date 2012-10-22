@@ -23,13 +23,15 @@ private:
 	unsigned currStart, currEnd, diff;
 	std::string currFunc;
 
+	std::string inputSpec;
+
 	static Profiler GlobalProfiler;
 	Profiler()
 	{
 		times = std::map<std::string, std::vector<unsigned> >();
 		stats = std::map<std::string, std::map<std::string, double> >();
 	}
-	
+
 	void addTime(const std::string& func, unsigned t)
 	{
 		if (!mapExists(times, func))
@@ -43,6 +45,11 @@ public:
 	static inline Profiler& getInstance()
 	{
 		return GlobalProfiler;
+	}
+
+	void setInputSpec(const std::string& inputSpec)
+	{
+		this->inputSpec = inputSpec;
 	}
 
 	void start(const std::string& func)

@@ -703,15 +703,16 @@ int main(int argc, char* argv[])
 
 	if (test == "repair")
 	{
-		//The original text, as one long document	
-		//char* text = getText("Input/shortInput.txt");
-		//char* text = getText("Input/medInput.txt");
+		//The original text, as one document (idea is to process concatenation of all versions)
 		char* text;
+		const char* filename;
 
 		if (argc < 2)
-			text = getText("Input/longInput.txt");
+			filename = "Input/longInput.txt";
 		else
-			text = getText(argv[1]);
+			filename = argv[1];
+
+		text = getText(filename);
 
 		//For now just deal with one doc, no separators, TODO add them later
 		//TODO this is roughly tolower, needs a string though, not a char*
@@ -724,6 +725,7 @@ int main(int argc, char* argv[])
 		map<vector<unsigned>, HashTableEntry*> hashTable = map<vector<unsigned>, HashTableEntry*>();
 		vector<Association> associations = vector<Association>();
 
+		Profiler::getInstance().setInputSpec(filename);
 		Profiler::getInstance().start("extract");
 		extractPairs(wordIDs, myHeap, hashTable);
 		Profiler::getInstance().end();
