@@ -53,7 +53,7 @@ void Profiler::writeResults(const std::string& filename)
 	double numCalls;
 	double totalTime;
 	os << std::endl << "---------------------------------------" << std::endl << std::endl;
-	os << "Input: " << this->inputSpec << std::endl;
+	os << this->inputSpec << std::endl;
 	for (it = times.begin(); it != times.end(); it++)
 	{
 		avg = this->getAvg(it->first);

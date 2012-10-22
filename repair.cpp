@@ -1,112 +1,3 @@
-/*
-
-Current Status:
-
-8/27/12 (I think)
-[Done] Just changed all the chars to unsigned, and implemented word -> wordID translation
-	[Done] We have a vector of wordIDs to work with, it's no longer char based
-		[See below] Extracting the pairs and filling the two data strcutures (HT + heap) is buggy
-
-9/7/12
-[Done] Refactored and fixed a bunch of problems with extract pairs
-[Done] Implemented a consistent understanding of adding occurrences and setting prec/succ
-	[Fixed] Still need to clean up the classes based on all of this
-		[See below] About to implement all removals, this should address the above
-
-[Fixed] OK so now, we have this huge if else structure for all the cases with the linked list
-	[Fixed]	This needs to be refactored (a lot of statements in there are repeated)
-	[See below]	Also, there are access violations, so need to think more about what's happening with memory I'm using
-
-9/9/12
-[Fixed]	Refactored that huge if else structure, now it's logically related to the edge cases
-[See below] The linked list of Occurrences isn't being properly handled, something to do with removal of occurrences...
-
-9/10/12
-[Fixed] Removing the hashTable[key] was happening every time (added the appropriate condition)
-[Fixed] myHeap.front() is not giving the highest occurring element, so the comparison function is either wrong on not being used
-[TempFix] Heap Entries are being sort of deleted, but not fully, so ending up with numOccurrences = 23123129083 or something
-	=> Instead of an efficient remove for the heap, ran through the whole thing
-
-9/11/12 (Early)
-[Update] No runtime errors
-[] Not sure if associations are correct (consider implementing fillTree for this)
-[Fixed] not all associations have consecutive IDs, and they should
-[Done] The associations now print at the end of the program
-
-9/12/12
-[] Introduce separators and concept of versions
-
-9/18/12
-[shit] No progress since 9/12, have been working on other projects...
-
-9/20/12
-[Fixed] Some bugs (program used to crash on non trivial input)
-
-9/21/12
-[Fixed] Linear removal is likely the cause of poor performance
-
-
-9/24/12
-[Done] No progress since last time (learned a bit about stl heaps, might have to write my own)
-[Not needed] I did try to use the valid flag approach, with unfortunate results
-	[Not needed] Something got corrupted, like the heap (not a heap, the heap).... not sure wtf was wrong
-
-[Great] Checked out Jinru's code for winnowing and discovered the data type for representing fragment boundaries
-	[Great] An int* called starts, here's an example [0, 10, 17, 24, 38]
-		[Great] In this example, the fragments are (0,9), (10,16), (17,23), (24,37), (38, docSize)
-
-[Done] Have an idea of how to implement deletion of an arbitrary element in the heap
-	[Done] It's stored as a vector, and the tree is conceptual
-		[Done] So swap with the back(), pop_back(), and reheapify
-		[Done] Wait, didn't I try this already, and wasn't the heap invalid? Let's see...
-
-
-9/26/12
-Talked to Sergey, and have a new plan
-[Done] Profile: created a profiler, now using it
-[Done] Instead of using new and delete, use an object pool
-[Done] Implement the damn log(n) remove
-
-[Result] Basically we need to create an object pool and also fix the O(n) remove
-
-9/27/12
-[Done] Implementing Object Pool: Results are weak. Gotta fix the algorithm itself (re-examine pooling later)
-
-10/8/12
-[I know] Well that was a long break...
-
-10/9/12
-[Done] Writing RandomHeap (THAT SHIT WORKS)
-[Not 30 minutes...] Integrate into this code (just keep track of positions, not that hard)
-	DEBUG THIS FOR LIKE 30 MINUTES AND YOU GOT IT!
-		===>LOL, nope
-
-10/12/12
-[Done] Still debugging runtime errors
-[Done] Now it looks like prec and succ are not properly being removed (they have mem addresses that seem to have been freed, ex: 0xfefefefe)
-[Done] The heap seems to work nicely on its own, priorities and indexes look ok
-[Fixed] Memory is being corrupted when calling mapExists() More 0xfefefefe type stuff
-
-10/17/12
-[Great] After an awesome session with Costas, I'm much closer to solving this
-[Done] Latest error: prec and succ aren't being set properly somewhere
-[Great] Note: heap seems ok, finally
-
-10/19/12
-[Done] The problem is now in the linking to prec and succ, check the code for that in repair, as the link function itself is easy
-[IT WORKS BITCHES]
-
-------------------------------------------------------------
-What have we learned so far?
-
-1) Think before you implement anything, however simple.
-2) Version control, always!
-3) Don't worry about wasting time, sometimes proper implementation can take a while.
-
-*/
-
-//Shit + Alt + Enter to toggle fullscreen
-
 #include<iostream>
 #include<fstream>
 #include<vector>
@@ -638,9 +529,8 @@ vector<unsigned> stringToWordIDs(const string& text)
 	return ret;
 }
 
-char* getText(const string& filename)
+char* getText(const string& filename, int& length)
 {
-	int length;
 	char* buffer;
 
 	ifstream is;
@@ -685,6 +575,30 @@ void getVersions(vector<char**>& versions)
 	//TODO figure out the input for this, depends on Jinru's code
 }
 
+//There can't be any gaps, but there can be duplicates (TODO right?)
+bool checkOutput(vector<Association> associations)
+{
+	vector<int> identifiers;
+	for (size_t i = 0; i < associations.size(); i++)
+	{
+		identifiers.push_back(associations[i].symbol);
+		identifiers.push_back(associations[i].left);
+		identifiers.push_back(associations[i].right);
+	}
+	sort(identifiers.begin(), identifiers.end());
+	for (size_t i = 0; i < identifiers.size() - 1; i++)
+	{
+		int diff = abs(identifiers[i] - identifiers[i + 1]);
+		if (diff > 1)
+		{
+			cerr << endl << "Failed at " << i << endl;
+			cout << "arr[i]: " << identifiers[i] << ", arr[i+1]: " << identifiers[i+1] << endl;
+			return false;
+		}
+	}
+	return true;
+}
+
 int main(int argc, char* argv[])
 {
 	//createOutputDir();
@@ -706,13 +620,14 @@ int main(int argc, char* argv[])
 		//The original text, as one document (idea is to process concatenation of all versions)
 		char* text;
 		const char* filename;
+		int fileSize;
 
 		if (argc < 2)
 			filename = "Input/longInput.txt";
 		else
 			filename = argv[1];
 
-		text = getText(filename);
+		text = getText(filename, fileSize);
 
 		//For now just deal with one doc, no separators, TODO add them later
 		//TODO this is roughly tolower, needs a string though, not a char*
@@ -724,19 +639,38 @@ int main(int argc, char* argv[])
 		RandomHeap myHeap;
 		map<vector<unsigned>, HashTableEntry*> hashTable = map<vector<unsigned>, HashTableEntry*>();
 		vector<Association> associations = vector<Association>();
-
-		Profiler::getInstance().setInputSpec(filename);
-		Profiler::getInstance().start("extract");
+		
+		Profiler::getInstance().start("main");
+		//Profiler::getInstance().start("extract");
 		extractPairs(wordIDs, myHeap, hashTable);
+		//Profiler::getInstance().end();
+
+		int numPairs = hashTable.size();
+
+		//Profiler::getInstance().start("repair");
+		doRepair(myHeap, hashTable, associations);
+		//Profiler::getInstance().end();
+
 		Profiler::getInstance().end();
 
-		Profiler::getInstance().start("repair");
-		doRepair(myHeap, hashTable, associations);
-		Profiler::getInstance().end();		
+		stringstream ss;
+		ss << "Filename: " << filename << endl;
+		ss << "Size: " << fileSize << " bytes" << endl; 
+		ss << "Word Count: " << wordIDs.size() << endl;
+		ss << "Unique Pair Count (in original file): " << numPairs << endl;
 
 		showAssociations(associations);
-		cleanup(myHeap, hashTable, associations);		
+		
+		cout << "Checking output... ";
+		if (checkOutput(associations))
+			cout << "ok";
+		else
+			cout << "failed";
+		cout << endl;
+
+		Profiler::getInstance().setInputSpec(ss.str());	
 		Profiler::getInstance().writeResults("Output/profile-functions.txt");
+		cleanup(myHeap, hashTable, associations);
 		system("pause");
 	}
 }

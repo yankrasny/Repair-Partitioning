@@ -4,7 +4,7 @@
 #define RANDOM_HEAP_H
 
 #include<algorithm>
-#include<math.h>
+#include<cmath>
 #include<vector>
 
 class HeapEntry
