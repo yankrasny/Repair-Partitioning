@@ -59,7 +59,10 @@ struct Association
 	unsigned symbol;
 	unsigned left;
 	unsigned right;
-	Association(unsigned symbol, unsigned left, unsigned right) : symbol(symbol), left(left), right(right) {}
+	unsigned freq;
+	unsigned startPos; //TODO implement
+	unsigned endPos; //TODO implement
+	Association(unsigned symbol, unsigned left, unsigned right, unsigned freq) : symbol(symbol), left(left), right(right), freq(freq) {}
 };
 
 //ObjectPool<HeapEntry> heapPool = ObjectPool<HeapEntry>(1000);
@@ -213,7 +216,7 @@ public:
 			next = current->getNext();
 		}
 		//TODO make sure this never happens
-		//cerr << "we didn't find the target, wtf?" << endl;
+		cerr << "we didn't find the target, wtf?" << endl;
 		//system("pause");
 		//Profiler::getInstance().end();
 	}
@@ -411,7 +414,7 @@ void doRepair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTa
 
 			//Store the association before you do anything else
 			if (i == 0)
-				associations.push_back(Association(symbol, curr->getLeft(), curr->getRight()));
+				associations.push_back(Association(symbol, curr->getLeft(), curr->getRight(), numOccurrences));
 			
 			//Now go through all the edge cases (because of the links we have to make, there are a lot)
 			bool onLeftEdge(false);
@@ -536,6 +539,11 @@ char* getText(const string& filename, int& length)
 	ifstream is;
 	is.open ( filename.c_str(), ios::binary );
 
+	if (is.fail())
+	{
+		cerr << "Could not open input file. Exiting..." << endl;
+		exit(1);
+	}
 	// get length of file:
 	is.seekg (0, ios::end);
 	length = is.tellg();
@@ -551,7 +559,7 @@ char* getText(const string& filename, int& length)
 	return buffer;
 }
 
-void cleanup(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable, vector<Association>& associations)
+void cleanup(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable)
 {
 	for (map<vector<unsigned>, HashTableEntry*>::iterator it = hashTable.begin(); it != hashTable.end(); it++)
 	{
@@ -559,15 +567,16 @@ void cleanup(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTab
 		it->second = NULL;
 	}
 	myHeap.cleanup();
-	associations.clear();
 }
 
-void showAssociations(const vector<Association>& associations)
+void writeAssociations(const vector<Association>& associations, const string& filename)
 {
+	ofstream os(filename.c_str());
 	for (size_t i = 0; i < associations.size(); i++)
 	{
-		cout << associations[i];
+		os << associations[i];
 	}
+	os.close();
 }
 
 void getVersions(vector<char**>& versions)
@@ -575,27 +584,42 @@ void getVersions(vector<char**>& versions)
 	//TODO figure out the input for this, depends on Jinru's code
 }
 
-//There can't be any gaps, but there can be duplicates (TODO right?)
-bool checkOutput(vector<Association> associations)
+/*
+
+The order of these is first added through last added, so start at the bottom, and work your way up
+
+*/
+vector<unsigned> extract(vector<Association> associations)
 {
-	vector<int> identifiers;
-	for (size_t i = 0; i < associations.size(); i++)
+	//Build a tree from the associations
+	//Traverse all of the leaves in order (is this called pre-order?)
+	
+}
+
+/*
+We must be able to re-extract for the algorithm to be correct
+Associations must be monotonically decreasing for the algorithm to be optimal
+*/
+bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
+{
+	vector<unsigned> extractedWordIDs = extract(associations);
+	for (size_t i = 0; i < extractedWordIDs.size(); i++)
 	{
-		identifiers.push_back(associations[i].symbol);
-		identifiers.push_back(associations[i].left);
-		identifiers.push_back(associations[i].right);
-	}
-	sort(identifiers.begin(), identifiers.end());
-	for (size_t i = 0; i < identifiers.size() - 1; i++)
-	{
-		int diff = abs(identifiers[i] - identifiers[i + 1]);
-		if (diff > 1)
+		if (extractedWordIDs[i] != wordIDs[i])
 		{
-			cerr << endl << "Failed at " << i << endl;
-			cout << "arr[i]: " << identifiers[i] << ", arr[i+1]: " << identifiers[i+1] << endl;
 			return false;
 		}
 	}
+
+	//If it's correct, check to see if it's optimal
+	for (size_t i = 0; i < associations.size(); i++)
+	{
+		if (associations[i].freq < associations[i+1].freq)
+		{
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -609,7 +633,7 @@ int main(int argc, char* argv[])
 	if (test == "heap")
 	{
 		Profiler::getInstance().start("heap");
-		RandomHeapTest test = RandomHeapTest(1000);		
+		RandomHeapTest test = RandomHeapTest(1000);
 		Profiler::getInstance().end();
 		Profiler::getInstance().writeResults("Output/profile-heap.txt");
 		exit(0);
@@ -659,10 +683,10 @@ int main(int argc, char* argv[])
 		ss << "Word Count: " << wordIDs.size() << endl;
 		ss << "Unique Pair Count (in original file): " << numPairs << endl;
 
-		showAssociations(associations);
+		writeAssociations(associations, "Output/associations.txt");
 		
 		cout << "Checking output... ";
-		if (checkOutput(associations))
+		if (checkOutput(associations, wordIDs))
 			cout << "ok";
 		else
 			cout << "failed";
@@ -670,7 +694,7 @@ int main(int argc, char* argv[])
 
 		Profiler::getInstance().setInputSpec(ss.str());	
 		Profiler::getInstance().writeResults("Output/profile-functions.txt");
-		cleanup(myHeap, hashTable, associations);
+		cleanup(myHeap, hashTable);
 		system("pause");
 	}
 }
