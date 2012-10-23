@@ -361,6 +361,79 @@ vector<unsigned>* getNewLeftKey(unsigned symbol, Occurrence* prec)
 }
 
 /*
+
+Extract back to original string
+
+Ex:
+
+1 2 3 1 2 4
+5   3 5   4
+6     5   4
+7         4
+8
+
+5 -> (1, 2)
+6 -> (5, 3)
+7 -> (6, 5)
+8 -> (7, 4)
+
+0 <- 8 -> 0
+
+addNew(7)
+addNew(4)
+link(prec, 7)
+link(7, 4)
+link(4, succ)
+
+0 <- 8 -> 0
+0 <- 7 <-> 4 -> 0
+
+remove(8)
+
+0 <- 7 <-> 4 -> 0
+
+*/
+vector<unsigned> extract(vector<Association>& associations)
+{
+	RandomHeap myHeap;
+	map<vector<unsigned>, HashTableEntry*> hashTable;
+/*
+	//reverse the process in repair
+	for (size_t i = 0; i < associations.size(); i++)
+	{
+	 	myHeap.insert(new HeapEntry(associations[i].key, associations[i].freq));
+
+	}
+
+	//Maybe start from the bottom, just add 8 to the heap, then add its children as you go 
+
+	while (!myHeap.empty())
+	{
+		HeapEntry* heapMax = myHeap.getMax();
+		Occurrence* max = heapMax.getHeadOccurrence();
+		unsigned numOccurrences = heapMax.size();
+		Occurrence* curr;
+
+		for (size_t i = 0; i < numOccurrences; i++)
+		{
+			curr = heapMax.getHeadOccurrence();
+			prec = curr->getPrec();
+			succ = curr->getSucc();
+
+			addNew(max.getLeft());
+			addNew(max.getRight());
+			link(prec, left);
+			link(left, right);
+			link(right, succ);
+
+			remove(curr);
+		}
+	}
+*/
+}
+
+
+/*
 	While the heap is not empty, get the max and process it (that is, replace all occurrences and modify all prec and succ pointers)
 	The max will keep getting removed, as well as the occurrences it touches
 	Two new occurrences will be added (resulting from the replacement)
@@ -584,17 +657,6 @@ void getVersions(vector<char**>& versions)
 	//TODO figure out the input for this, depends on Jinru's code
 }
 
-/*
-
-The order of these is first added through last added, so start at the bottom, and work your way up
-
-*/
-vector<unsigned> extract(vector<Association> associations)
-{
-	//Build a tree from the associations
-	//Traverse all of the leaves in order (is this called pre-order?)
-	
-}
 
 /*
 We must be able to re-extract for the algorithm to be correct
@@ -602,6 +664,7 @@ Associations must be monotonically decreasing for the algorithm to be optimal
 */
 bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 {
+	//Check to see whether it's correct
 	vector<unsigned> extractedWordIDs = extract(associations);
 	for (size_t i = 0; i < extractedWordIDs.size(); i++)
 	{
@@ -611,7 +674,7 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 		}
 	}
 
-	//If it's correct, check to see if it's optimal
+	//If it's correct, check to see whether it's optimal
 	for (size_t i = 0; i < associations.size(); i++)
 	{
 		if (associations[i].freq < associations[i+1].freq)
