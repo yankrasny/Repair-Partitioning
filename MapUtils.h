@@ -3,7 +3,7 @@
 #ifndef MAP_UTILS_H
 #define MAP_UTILS_H
 
-#include<map>
+#include <map>
 
 template<typename T, typename S>
 bool mapExists(typename std::map<T, S> theMap, T key)

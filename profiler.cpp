@@ -1,19 +1,20 @@
-#include"profiler.h"
+#include "profiler.h"
 
 Profiler Profiler::GlobalProfiler;
 
 void Profiler::calcStats()
 {
-	std::map<std::string, std::vector<unsigned> >::iterator it;
+	std::map<std::string, std::vector<FunctionCall> >::iterator it;
 	std::map<std::string, double> currentMap;
-	for (it = times.begin(); it != times.end(); it++)
+	for (it = calls.begin(); it != calls.end(); it++)
 	{
 		double sum(0.0);
 		double numCalls = it->second.size();
 		currentMap["numCalls"] = numCalls;
 		for (size_t i = 0; i < numCalls; i++)
 		{
-			sum += it->second[i];
+			unsigned elapsed = it->second[i].getElapsed();
+			sum += elapsed;
 		}
 		currentMap["totalTime"] = sum;
 		currentMap["average"] = sum / numCalls;
@@ -48,13 +49,13 @@ void Profiler::writeResults(const std::string& filename)
 {
 	this->calcStats();
 	std::ofstream os(filename.c_str(), std::ios::out | std::ios::app );
-	std::map<std::string, std::vector<unsigned> >::iterator it;
+	std::map<std::string, std::vector<FunctionCall> >::iterator it;
 	double avg;
 	double numCalls;
 	double totalTime;
 	os << std::endl << "---------------------------------------" << std::endl << std::endl;
 	os << this->inputSpec << std::endl;
-	for (it = times.begin(); it != times.end(); it++)
+	for (it = calls.begin(); it != calls.end(); it++)
 	{
 		avg = this->getAvg(it->first);
 		numCalls = this->getNumCalls(it->first);

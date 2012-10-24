@@ -1,14 +1,14 @@
-#include<iostream>
-#include<fstream>
-#include<vector>
-#include<map>
-#include<algorithm>
-#include<iterator>
-#include<sstream>
-#include<locale>
-#include"profiler.h"
-#include"ObjectPool.h"
-#include"RandomHeap.h"
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <map>
+#include <algorithm>
+#include <iterator>
+#include <sstream>
+#include <locale>
+#include "profiler.h"
+#include "ObjectPool.h"
+#include "RandomHeap.h"
 using namespace std;
 
 unsigned currentID(0);
@@ -166,7 +166,7 @@ public:
 	}
 	void removeOccurrence(Occurrence* target)
 	{
-		//Profiler::getInstance().start("HashTableEntry.removeOccurrence");
+		// Profiler::getInstance().start("HashTableEntry.removeOccurrence");
 		if (!target || !heapPointer)
 			return;
 
@@ -179,8 +179,11 @@ public:
 				//occurrencePool.destroy(target);
 				delete occurrences;
 				occurrences = NULL;
+				// Profiler::getInstance().end("HashTableEntry.removeOccurrence");
 				return;
 			}
+			cerr << "we didn't find the target, wtf?" << endl;
+			// Profiler::getInstance().end("HashTableEntry.removeOccurrence");
 			return;
 		}
 		
@@ -206,7 +209,7 @@ public:
 				}
 				
 				//occurrencePool.destroy(current);
-				//Profiler::getInstance().end();
+				// Profiler::getInstance().end("HashTableEntry.removeOccurrence");
 
 				delete current;
 				return;
@@ -218,7 +221,7 @@ public:
 		//TODO make sure this never happens
 		cerr << "we didn't find the target, wtf?" << endl;
 		//system("pause");
-		//Profiler::getInstance().end();
+		// Profiler::getInstance().end("HashTableEntry.removeOccurrence");
 	}
 	void addOccurrence(Occurrence* oc)
 	{
@@ -274,7 +277,7 @@ void addOrUpdatePair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>&
 		//Is this still true? TODO
 		myHeap.insert(hp);
 	}
-	// Profiler::getInstance().end();
+	// Profiler::getInstance().end("addOrUpdatePair");
 }
 
 void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable)
@@ -311,11 +314,11 @@ void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
 {
 	if (hp && !myHeap.empty())
 	{
-		//Profiler::getInstance().start("removeFromHeap");
+		// Profiler::getInstance().start("removeFromHeap");
 		
 		myHeap.deleteRandom(hp->getIndex());
 
-		//Profiler::getInstance().end();
+		// Profiler::getInstance().end("removeFromHeap");
 	}
 }
 
@@ -337,7 +340,7 @@ void removeOccurrence(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>
 			hashTable.erase(key);
 		}
 	}
-	// Profiler::getInstance().end();
+	// Profiler::getInstance().end("removeOccurrence");
 }
 
 vector<unsigned>* getNewRightKey(unsigned symbol, Occurrence* succ)
@@ -446,8 +449,13 @@ Extract back to original string
 */
 vector<unsigned> undoRepair(const vector<Association>& associations)
 {
+	// Profiler::getInstance().start("undoRepair");
+
 	map<unsigned, vector<unsigned> > knownExpansions = map<unsigned, vector<unsigned> >();
-	return expand(associations, associations.size() - 1, knownExpansions);
+	vector<unsigned> result = expand(associations, associations.size() - 1, knownExpansions);
+	
+	// Profiler::getInstance().end("undoRepair");
+	return result;
 }
 
 /*
@@ -578,6 +586,7 @@ void doRepair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTa
 
 vector<unsigned> stringToWordIDs(const string& text)
 {
+	// Profiler::getInstance().start("stringToWordIDs");
 	map<unsigned, unsigned> uniqueWordIDs = map<unsigned, unsigned>();
 
 	vector<unsigned> ret = vector<unsigned>();
@@ -619,6 +628,7 @@ vector<unsigned> stringToWordIDs(const string& text)
 		}
 		ret.push_back(theID);
 	}
+	// Profiler::getInstance().end("stringToWordIDs");
 	return ret;
 }
 
@@ -721,7 +731,7 @@ int main(int argc, char* argv[])
 	{
 		Profiler::getInstance().start("heap");
 		RandomHeapTest test = RandomHeapTest(1000);
-		Profiler::getInstance().end();
+		Profiler::getInstance().end("heap");
 		Profiler::getInstance().writeResults("Output/profile-heap.txt");
 		exit(0);
 	}
@@ -751,19 +761,19 @@ int main(int argc, char* argv[])
 		map<vector<unsigned>, HashTableEntry*> hashTable = map<vector<unsigned>, HashTableEntry*>();
 		vector<Association> associations = vector<Association>();
 		
-		// Profiler::getInstance().start("main");
+		Profiler::getInstance().start("main");
 		
 		Profiler::getInstance().start("extract");
 		extractPairs(wordIDs, myHeap, hashTable);
-		Profiler::getInstance().end();
+		Profiler::getInstance().end("extract");
 
 		int numPairs = hashTable.size();
 
 		Profiler::getInstance().start("repair");
 		doRepair(myHeap, hashTable, associations);
-		Profiler::getInstance().end();
+		Profiler::getInstance().end("repair");
 
-		// Profiler::getInstance().end();
+		Profiler::getInstance().end("main");
 
 		stringstream ss;
 		ss << "Filename: " << filename << endl;

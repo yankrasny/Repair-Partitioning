@@ -7,38 +7,67 @@ Can't nest currently
 #ifndef PROFILER_H
 #define PROFILER_H
 
-#include<fstream>
-#include<vector>
-#include<string>
-#include<ctime>
-#include"MapUtils.h"
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <ctime>
+#include "MapUtils.h"
+
+class FunctionCall
+{
+private:
+	unsigned start;
+	unsigned end;
+	std::string funcName;
+public:
+	FunctionCall(const std::string& funcName, unsigned start, unsigned end) : funcName(funcName), start(start), end(end) {}
+	FunctionCall(const std::string& funcName, unsigned start) : funcName(funcName), start(start), end(0) {}
+
+	void setEnd(unsigned end)
+	{
+		this->end = end;
+	}
+
+	unsigned getElapsed()
+	{
+		if (end > start)
+			return end - start;
+		return 0;
+	}
+};
 
 class Profiler
 {
 private:
-	//function names to a list of times for each
-	std::map<std::string, std::vector<unsigned> > times;
+	//function name -> list of function call objects
+	std::map<std::string, std::vector<FunctionCall> > calls;
+
+	//function name -> list of statistics (an alphanumeric key, and a double value)
 	std::map<std::string, std::map<std::string, double> > stats;
 	
-	unsigned currStart, currEnd, diff;
-	std::string currFunc;
+	unsigned currStart;
+	unsigned currEnd;
 
 	std::string inputSpec;
 
 	static Profiler GlobalProfiler;
 	Profiler()
 	{
-		times = std::map<std::string, std::vector<unsigned> >();
+		calls = std::map<std::string, std::vector<FunctionCall> >();
 		stats = std::map<std::string, std::map<std::string, double> >();
 	}
 
-	void addTime(const std::string& func, unsigned t)
+	void addCall(const std::string& func, unsigned start, unsigned end = 0)
 	{
-		if (!mapExists(times, func))
+		if (!mapExists(calls, func))
 		{
-			times[func] = std::vector<unsigned>();
+			calls[func] = std::vector<FunctionCall>();
 		}
-		times[func].push_back(t);
+		// std::cerr << "Func: " << func << ", numCalls: " << calls[func].size() << std::endl;
+		// system("pause");
+		calls[func].push_back(FunctionCall(func, start, end));
 	}
 
 public:
@@ -54,21 +83,20 @@ public:
 
 	void start(const std::string& func)
 	{
-		currFunc = func;
 		currStart = clock();
+		this->addCall(func, currStart);
 	}
 
 	/* Ends whichever one was started, so no funcID necessary */
-	void end()
+	void end(const std::string& func)
 	{
 		currEnd = clock();
-		diff = currEnd - currStart;
-		this->addTime(currFunc, diff);
+		calls[func].back().setEnd(currEnd);
 	}
 
 	void reset(const std::string& func)
 	{
-		times[func].clear(); //Do we need to clear the inner vectors? TODO
+		calls[func].clear(); //Do we need to clear the inner vectors? TODO, but don't think so, since there aren't any pointers to worry about.
 	}
 
 	double checkKeyAndReturn(const std::string& func, const std::string& field);

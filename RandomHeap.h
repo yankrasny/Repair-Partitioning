@@ -3,9 +3,9 @@
 #ifndef RANDOM_HEAP_H
 #define RANDOM_HEAP_H
 
-#include<algorithm>
-#include<cmath>
-#include<vector>
+#include <algorithm>
+#include <cmath>
+#include <vector>
 
 class HeapEntry
 {
