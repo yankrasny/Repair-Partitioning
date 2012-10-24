@@ -698,7 +698,7 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 	for (size_t i = 0; i < associations.size() - 1; i++)
 	{
 		cerr << "freq[i]: " << associations[i].freq << ", freq[i+1]: " << associations[i+1].freq << endl;
-		system("pause");
+		// system("pause");
 		if (associations[i].freq < associations[i+1].freq)
 		{
 			return false;
@@ -776,7 +776,7 @@ int main(int argc, char* argv[])
 		if (checkOutput(associations, wordIDs))
 			cout << "Output ok!";
 		else
-			cout << "Output check failed :(";
+			cout << "Check failed!";
 		cout << endl;
 
 		Profiler::getInstance().setInputSpec(ss.str());	
