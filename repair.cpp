@@ -751,18 +751,19 @@ int main(int argc, char* argv[])
 		map<vector<unsigned>, HashTableEntry*> hashTable = map<vector<unsigned>, HashTableEntry*>();
 		vector<Association> associations = vector<Association>();
 		
-		Profiler::getInstance().start("main");
-		//Profiler::getInstance().start("extract");
+		// Profiler::getInstance().start("main");
+		
+		Profiler::getInstance().start("extract");
 		extractPairs(wordIDs, myHeap, hashTable);
-		//Profiler::getInstance().end();
+		Profiler::getInstance().end();
 
 		int numPairs = hashTable.size();
 
-		//Profiler::getInstance().start("repair");
+		Profiler::getInstance().start("repair");
 		doRepair(myHeap, hashTable, associations);
-		//Profiler::getInstance().end();
-
 		Profiler::getInstance().end();
+
+		// Profiler::getInstance().end();
 
 		stringstream ss;
 		ss << "Filename: " << filename << endl;
