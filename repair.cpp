@@ -659,14 +659,13 @@ char* getText(const string& filename, int& length)
 	return buffer;
 }
 
-void cleanup(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable)
+void cleanup(map<vector<unsigned>, HashTableEntry*>& hashTable)
 {
 	for (map<vector<unsigned>, HashTableEntry*>::iterator it = hashTable.begin(); it != hashTable.end(); it++)
 	{
 		delete it->second;
 		it->second = NULL;
 	}
-	myHeap.cleanup();
 }
 
 void writeAssociations(const vector<Association>& associations, const string& filename)
@@ -792,7 +791,7 @@ int main(int argc, char* argv[])
 
 		Profiler::getInstance().setInputSpec(ss.str());	
 		Profiler::getInstance().writeResults("Output/profile-functions.txt");
-		cleanup(myHeap, hashTable);
+		cleanup(hashTable);
 		system("pause");
 	}
 }
