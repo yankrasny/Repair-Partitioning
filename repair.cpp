@@ -53,7 +53,7 @@ struct Association
 {
 	friend ostream& operator<<(ostream& os, const Association& a)
 	{
-		return os << a.symbol << " -> " << "(" << a.left << ", " << a.right << ")" << endl;
+		return os << a.symbol << " -> " << "(" << a.left << ", " << a.right << "), " << "freq: " << a.freq << endl;
 	}
 
 	unsigned symbol;
@@ -360,78 +360,95 @@ vector<unsigned>* getNewLeftKey(unsigned symbol, Occurrence* prec)
 	return ret;
 }
 
+int binarySearch(const vector<Association>& associations, unsigned target, int leftPos, int rightPos)
+{
+	// cout << endl;
+	// cout << "Target: " << target << endl;
+	// cout << "Searching between: " << leftPos << " and " << rightPos << endl;
+	// system("pause");
+
+	//indexes that don't make sense, means we haven't found the target
+	if (leftPos > rightPos)
+		return -1;
+
+	if (leftPos == rightPos)
+	{
+		if (associations[leftPos].symbol == target)
+		{
+			return leftPos;
+		}
+		return -1;
+	}
+
+	int mid = floor((leftPos + rightPos) / 2);
+	unsigned midVal = associations[mid].symbol;
+
+	// cout << "mid: " << mid << ", val: " << midVal << endl;
+	// system("pause");
+
+	//found it
+	if (target == midVal)
+		return mid;
+
+	//target is on the left
+	if (target < midVal)
+		return binarySearch(associations, target, leftPos, mid);
+	
+	//target is on the right
+	if (target > midVal)
+		return binarySearch(associations, target, mid+1, rightPos);
+}
+
+vector<unsigned> expand(const vector<Association>& associations, int pos, map<unsigned, vector<unsigned> > knownExpansions)
+{
+	// cout << "Expanding position: " << pos << endl;
+	// system("pause");
+	if (knownExpansions[pos].size() > 0)
+		return knownExpansions[pos];
+
+	unsigned left = associations[pos].left;
+	unsigned right = associations[pos].right;
+
+	int lpos = binarySearch(associations, left, 0, pos);
+	int rpos = binarySearch(associations, right, 0, pos);
+
+	vector<unsigned> lret, rret;
+	if (lpos == -1)	
+	{
+		lret = vector<unsigned>();		
+		lret.push_back(left);
+	}
+	else
+	{
+		lret = expand(associations, lpos, knownExpansions);
+	}
+
+	if (rpos == -1)
+	{
+		rret = vector<unsigned>(); 		
+		rret.push_back(right);
+	}
+	else
+	{
+		rret = expand(associations, rpos, knownExpansions);
+	}
+
+	// return lret + rret; //overload + for vector<unsigned> or just do something else
+	lret.insert(lret.end(), rret.begin(), rret.end());
+	knownExpansions[pos] = lret;
+	return lret;
+}
+
 /*
 
 Extract back to original string
 
-Ex:
-
-1 2 3 1 2 4
-5   3 5   4
-6     5   4
-7         4
-8
-
-5 -> (1, 2)
-6 -> (5, 3)
-7 -> (6, 5)
-8 -> (7, 4)
-
-0 <- 8 -> 0
-
-addNew(7)
-addNew(4)
-link(prec, 7)
-link(7, 4)
-link(4, succ)
-
-0 <- 8 -> 0
-0 <- 7 <-> 4 -> 0
-
-remove(8)
-
-0 <- 7 <-> 4 -> 0
-
 */
-vector<unsigned> extract(vector<Association>& associations)
+vector<unsigned> undoRepair(const vector<Association>& associations)
 {
-	RandomHeap myHeap;
-	map<vector<unsigned>, HashTableEntry*> hashTable;
-/*
-	//reverse the process in repair
-	for (size_t i = 0; i < associations.size(); i++)
-	{
-	 	myHeap.insert(new HeapEntry(associations[i].key, associations[i].freq));
-
-	}
-
-	//Maybe start from the bottom, just add 8 to the heap, then add its children as you go 
-
-	while (!myHeap.empty())
-	{
-		HeapEntry* heapMax = myHeap.getMax();
-		Occurrence* max = heapMax.getHeadOccurrence();
-		unsigned numOccurrences = heapMax.size();
-		Occurrence* curr;
-
-		for (size_t i = 0; i < numOccurrences; i++)
-		{
-			curr = heapMax.getHeadOccurrence();
-			prec = curr->getPrec();
-			succ = curr->getSucc();
-
-			addNew(max.getLeft());
-			addNew(max.getRight());
-			link(prec, left);
-			link(left, right);
-			link(right, succ);
-
-			remove(curr);
-		}
-	}
-*/
+	map<unsigned, vector<unsigned> > knownExpansions = map<unsigned, vector<unsigned> >();
+	return expand(associations, associations.size() - 1, knownExpansions);
 }
-
 
 /*
 	While the heap is not empty, get the max and process it (that is, replace all occurrences and modify all prec and succ pointers)
@@ -665,23 +682,30 @@ Associations must be monotonically decreasing for the algorithm to be optimal
 bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 {
 	//Check to see whether it's correct
-	vector<unsigned> extractedWordIDs = extract(associations);
+	vector<unsigned> extractedWordIDs = undoRepair(associations);
 	for (size_t i = 0; i < extractedWordIDs.size(); i++)
 	{
+		//cerr << "Orig: " << wordIDs[i] << ", compare: " << extractedWordIDs[i] << endl; 
 		if (extractedWordIDs[i] != wordIDs[i])
 		{
 			return false;
 		}
 	}
 
+	cerr << "Passed correctness check..." << endl;
+
 	//If it's correct, check to see whether it's optimal
-	for (size_t i = 0; i < associations.size(); i++)
+	for (size_t i = 0; i < associations.size() - 1; i++)
 	{
+		cerr << "freq[i]: " << associations[i].freq << ", freq[i+1]: " << associations[i+1].freq << endl;
+		system("pause");
 		if (associations[i].freq < associations[i+1].freq)
 		{
 			return false;
 		}
 	}
+
+	cerr << "Passed optimal check..." << endl;
 
 	return true;
 }
@@ -750,9 +774,9 @@ int main(int argc, char* argv[])
 		
 		cout << "Checking output... ";
 		if (checkOutput(associations, wordIDs))
-			cout << "ok";
+			cout << "Output ok!";
 		else
-			cout << "failed";
+			cout << "Output check failed :(";
 		cout << endl;
 
 		Profiler::getInstance().setInputSpec(ss.str());	
