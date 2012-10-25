@@ -9,43 +9,13 @@
 #include "profiler.h"
 #include "ObjectPool.h"
 #include "RandomHeap.h"
+#include "Tokenizer.h"
 using namespace std;
 
 unsigned currentID(0);
 unsigned nextID()
 {
 	return ++currentID;
-}
-
-/*
-Borrowed from Sergey N.
-*/
-void tokenize(const std::string& str,  std::vector<std::string>& tokens,
-              const std::string& delimiters, const bool trimEmpty) 
-{
-        std::string::size_type pos, lastPos = 0;
-        while(true)
-        {
-                pos = str.find_first_of(delimiters, lastPos);
-                if(pos == std::string::npos)
-                {
-                        pos = str.length();
-
-                        if(pos != lastPos || !trimEmpty)
-                                tokens.push_back(std::string(str.data()+lastPos,
-                                                (std::string::size_type)pos-lastPos ));
-
-                        break;
-                }
-                else
-                {
-                        if(pos != lastPos || !trimEmpty)
-                                tokens.push_back(std::string(str.data()+lastPos,
-                                                (std::string::size_type)pos-lastPos ));
-                }
-
-                lastPos = pos + 1;
-        }
 }
 
 //Used to store associations from one symbol to two others
@@ -760,19 +730,19 @@ int main(int argc, char* argv[])
 		map<vector<unsigned>, HashTableEntry*> hashTable = map<vector<unsigned>, HashTableEntry*>();
 		vector<Association> associations = vector<Association>();
 		
-		Profiler::getInstance().start("main");
+		// Profiler::getInstance().start("main");
 		
-		Profiler::getInstance().start("extract");
+		// Profiler::getInstance().start("extract");
 		extractPairs(wordIDs, myHeap, hashTable);
-		Profiler::getInstance().end("extract");
+		// Profiler::getInstance().end("extract");
 
 		int numPairs = hashTable.size();
 
-		Profiler::getInstance().start("repair");
+		// Profiler::getInstance().start("repair");
 		doRepair(myHeap, hashTable, associations);
-		Profiler::getInstance().end("repair");
+		// Profiler::getInstance().end("repair");
 
-		Profiler::getInstance().end("main");
+		// Profiler::getInstance().end("main");
 
 		stringstream ss;
 		ss << "Filename: " << filename << endl;
@@ -789,8 +759,8 @@ int main(int argc, char* argv[])
 			cout << "Check failed!";
 		cout << endl;
 
-		Profiler::getInstance().setInputSpec(ss.str());	
-		Profiler::getInstance().writeResults("Output/profile-functions.txt");
+		// Profiler::getInstance().setInputSpec(ss.str());	
+		// Profiler::getInstance().writeResults("Output/profile-functions.txt");
 		cleanup(hashTable);
 		system("pause");
 	}
