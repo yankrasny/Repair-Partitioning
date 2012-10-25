@@ -278,7 +278,7 @@ void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, map<vector<unsig
 		currPair->clear();
 	}
 	delete currPair;
-}
+} __attribute__((noinline))
 
 void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
 {
@@ -290,7 +290,7 @@ void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
 
 		// Profiler::getInstance().end("removeFromHeap");
 	}
-}
+} __attribute__((noinline))
 
 void removeOccurrence(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable, Occurrence* oc)
 {
@@ -311,7 +311,7 @@ void removeOccurrence(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>
 		}
 	}
 	// Profiler::getInstance().end("removeOccurrence");
-}
+} __attribute__((noinline))
 
 vector<unsigned>* getNewRightKey(unsigned symbol, Occurrence* succ)
 {
@@ -321,7 +321,7 @@ vector<unsigned>* getNewRightKey(unsigned symbol, Occurrence* succ)
 	ret->push_back(symbol);
 	ret->push_back(symbolToTheRight);
 	return ret;
-}
+} __attribute__((noinline))
 
 vector<unsigned>* getNewLeftKey(unsigned symbol, Occurrence* prec)
 {
@@ -331,7 +331,7 @@ vector<unsigned>* getNewLeftKey(unsigned symbol, Occurrence* prec)
 	ret->push_back(symbolToTheLeft);
 	ret->push_back(symbol);
 	return ret;
-}
+} __attribute__((noinline))
 
 int binarySearch(const vector<Association>& associations, unsigned target, int leftPos, int rightPos)
 {
@@ -370,7 +370,7 @@ int binarySearch(const vector<Association>& associations, unsigned target, int l
 	//target is on the right
 	if (target > midVal)
 		return binarySearch(associations, target, mid+1, rightPos);
-}
+} __attribute__((noinline))
 
 vector<unsigned> expand(const vector<Association>& associations, int pos, map<unsigned, vector<unsigned> > knownExpansions)
 {
@@ -410,7 +410,7 @@ vector<unsigned> expand(const vector<Association>& associations, int pos, map<un
 	lret.insert(lret.end(), rret.begin(), rret.end());
 	knownExpansions[pos] = lret;
 	return lret;
-}
+} __attribute__((noinline))
 
 /*
 
@@ -426,7 +426,7 @@ vector<unsigned> undoRepair(const vector<Association>& associations)
 	
 	// Profiler::getInstance().end("undoRepair");
 	return result;
-}
+} __attribute__((noinline))
 
 /*
 	While the heap is not empty, get the max and process it (that is, replace all occurrences and modify all prec and succ pointers)
@@ -552,7 +552,7 @@ void doRepair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTa
 			newRightKey = NULL;
 		}
 	}
-}
+} __attribute__((noinline))
 
 vector<unsigned> stringToWordIDs(const string& text)
 {
