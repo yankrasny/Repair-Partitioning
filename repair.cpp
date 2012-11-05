@@ -7,7 +7,8 @@
 #include <sstream>
 #include <locale>
 #include "profiler.h"
-#include "ObjectPool.h"
+//#include "ObjectPool.h"
+#include "HeapEntry.h"
 #include "RandomHeap.h"
 #include "Tokenizer.h"
 using namespace std;
@@ -43,6 +44,7 @@ class Occurrence
 private:
 	//linked list of occurrences needs each occurrence to be able to point to the next one (see HashTableEntry)
 	Occurrence* next;
+	Occurrence* prev;
 
 	//To modify each other's left and right
 	Occurrence* prec;
@@ -50,11 +52,11 @@ private:
 	unsigned left;
 	unsigned right;
 public:
-	Occurrence() : prec(NULL), succ(NULL), next(NULL) {}
+	Occurrence() : prec(NULL), succ(NULL), next(NULL), prev(NULL) {}
 
-	Occurrence(unsigned left, unsigned right) : prec(NULL), succ(NULL), left(left), right(right), next(NULL) {}
+	Occurrence(unsigned left, unsigned right) : prec(NULL), succ(NULL), left(left), right(right), next(NULL), prev(NULL) {}
 
-	Occurrence(vector<unsigned> pair) : prec(NULL), succ(NULL), left(pair[0]), right(pair[1]), next(NULL) {}
+	Occurrence(vector<unsigned> pair) : prec(NULL), succ(NULL), left(pair[0]), right(pair[1]), next(NULL), prev(NULL) {}
 
 	void init(vector<unsigned> pair)
 	{
@@ -62,10 +64,8 @@ public:
 		right = pair[1];
 	}
 
-	Occurrence* getNext()	
-	{
-		return next;
-	}
+	Occurrence* getNext()	{return next;}
+	Occurrence* getPrev()	{return prev;}
 	Occurrence* getPrec()	{return prec;}
 	Occurrence* getSucc()	{return succ;}
 
@@ -73,6 +73,7 @@ public:
 	unsigned getRight()	const {return right;}
 
 	void setNext(Occurrence* next)	{this->next = next;}
+	void setPrev(Occurrence* prev)	{this->prev = prev;}
 	void setPrec(Occurrence* prec)	{this->prec = prec;}
 	void setSucc(Occurrence* succ)	{this->succ = succ;}
 
@@ -88,16 +89,24 @@ public:
 
 void doubleLinkOccurrences(Occurrence* prev, Occurrence* curr)
 {
-	// Profiler::getInstance().start("link");
-	if (prev && curr)
-	{
-		//Set the preceding pointer of the current element
-		curr->setPrec(prev);
+	//Set the preceding pointer of the current element
+	if (curr)
+		curr->setPrev(prev);
 
-		//Set the succeeding pointer of the previous element
-		prev->setSucc(curr);
-	}
-	// Profiler::getInstance().end();
+	//Set the succeeding pointer of the previous element
+	if (prev)
+		prev->setNext(curr);
+}
+
+void doubleLinkNeighbors(Occurrence* prec, Occurrence* curr)
+{
+	//Set the preceding pointer of the current element
+	if (curr)
+		curr->setPrec(prec);
+
+	//Set the succeeding pointer of the previous element
+	if (prec)
+		prec->setSucc(curr);
 }
 
 class HashTableEntry
@@ -113,11 +122,8 @@ public:
 		
 		occurrences = new Occurrence(left, right); //The head of the linked list (Occurrences have a next pointer)
 
-		doubleLinkOccurrences(prec, occurrences);
-		doubleLinkOccurrences(occurrences, succ);
-
-		//occurrences = occurrencePool.getNew();
-		//occurrences->init(hp->getKey());
+		doubleLinkNeighbors(prec, occurrences);
+		doubleLinkNeighbors(occurrences, succ);
 	}
 	HashTableEntry(HeapEntry* hp, Occurrence* oc) : heapPointer(hp), size(1)
 	{
@@ -136,27 +142,35 @@ public:
 	}
 	void removeOccurrence(Occurrence* target)
 	{
-		// Profiler::getInstance().start("HashTableEntry.removeOccurrence");
 		if (!target || !heapPointer)
 			return;
 
-		decrement();
+		Occurrence* next = target->getNext();
+		Occurrence* prev = target->getPrev();
 
+		doubleLinkOccurrences(prev, next);
+
+		decrement();
 		if (size < 1)
 		{
 			if (occurrences == target)
 			{
-				//occurrencePool.destroy(target);
 				delete occurrences;
 				occurrences = NULL;
-				// Profiler::getInstance().end("HashTableEntry.removeOccurrence");
 				return;
 			}
 			cerr << "we didn't find the target, wtf?" << endl;
-			// Profiler::getInstance().end("HashTableEntry.removeOccurrence");
 			return;
 		}
-		
+
+		if (occurrences == target)
+		{
+			occurrences = next;
+		}
+		delete target;
+
+/*
+	
 		Occurrence* current = occurrences;
 		Occurrence* next = occurrences->getNext();
 		Occurrence* prev(NULL);
@@ -190,16 +204,17 @@ public:
 		}
 		//TODO make sure this never happens
 		cerr << "we didn't find the target, wtf?" << endl;
-		//system("pause");
-		// Profiler::getInstance().end("HashTableEntry.removeOccurrence");
+		*/
 	}
 	void addOccurrence(Occurrence* oc)
 	{
+		if (!oc || !occurrences)
+			return;
+
 		//Adds an occurrence to the head of the linked list	
-		if (occurrences)
-		{
-			oc->setNext(occurrences);
-		}
+		oc->setNext(occurrences);
+		occurrences->setPrev(oc);
+
 		occurrences = oc;
 		increment();
 	}
@@ -223,8 +238,6 @@ void addOrUpdatePair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>&
 	if (keyPtr == NULL)
 		return;
 
-	// Profiler::getInstance().start("addOrUpdatePair");
-	
 	vector<unsigned> key = *keyPtr;
 	HeapEntry* hp;
 
@@ -235,7 +248,7 @@ void addOrUpdatePair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>&
 	else //First time we've seen this pair
 	{
 		//Create a heap entry, and initialize the count to 1
-		hp = new HeapEntry(key, 1);
+		hp = new HeapEntry(key, 1, &myHeap);
 
 		//HeapEntry* hp = heapPool.getNew();
 		//hp->init(key, 1);
@@ -247,7 +260,6 @@ void addOrUpdatePair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>&
 		//Is this still true? TODO
 		myHeap.insert(hp);
 	}
-	// Profiler::getInstance().end("addOrUpdatePair");
 }
 
 void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable)
@@ -270,7 +282,7 @@ void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, map<vector<unsig
 		Occurrence* lastAddedOccurrence = hashTable[*currPair]->getHeadOccurrence();
 
 		//Checks for existence of prev, and links them to each other
-		doubleLinkOccurrences(prevOccurrence, lastAddedOccurrence);
+		doubleLinkNeighbors(prevOccurrence, lastAddedOccurrence);
 
 		//Update the previous occurrence variable
 		prevOccurrence = lastAddedOccurrence;
@@ -278,19 +290,15 @@ void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, map<vector<unsig
 		currPair->clear();
 	}
 	delete currPair;
-} __attribute__((noinline))
+}
 
 void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
 {
 	if (hp && !myHeap.empty())
 	{
-		// Profiler::getInstance().start("removeFromHeap");
-		
 		myHeap.deleteRandom(hp->getIndex());
-
-		// Profiler::getInstance().end("removeFromHeap");
 	}
-} __attribute__((noinline))
+}
 
 void removeOccurrence(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable, Occurrence* oc)
 {
@@ -298,7 +306,6 @@ void removeOccurrence(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>
 	{
 		return;
 	}
-	// Profiler::getInstance().start("removeOccurrence");
 	vector<unsigned> key = oc->getPair();
 	if (mapExists(hashTable, key))
 	{
@@ -310,8 +317,7 @@ void removeOccurrence(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>
 			hashTable.erase(key);
 		}
 	}
-	// Profiler::getInstance().end("removeOccurrence");
-} __attribute__((noinline))
+}
 
 vector<unsigned>* getNewRightKey(unsigned symbol, Occurrence* succ)
 {
@@ -321,7 +327,7 @@ vector<unsigned>* getNewRightKey(unsigned symbol, Occurrence* succ)
 	ret->push_back(symbol);
 	ret->push_back(symbolToTheRight);
 	return ret;
-} __attribute__((noinline))
+}
 
 vector<unsigned>* getNewLeftKey(unsigned symbol, Occurrence* prec)
 {
@@ -331,7 +337,7 @@ vector<unsigned>* getNewLeftKey(unsigned symbol, Occurrence* prec)
 	ret->push_back(symbolToTheLeft);
 	ret->push_back(symbol);
 	return ret;
-} __attribute__((noinline))
+} 
 
 int binarySearch(const vector<Association>& associations, unsigned target, int leftPos, int rightPos)
 {
@@ -353,7 +359,7 @@ int binarySearch(const vector<Association>& associations, unsigned target, int l
 		return -1;
 	}
 
-	int mid = floor((leftPos + rightPos) / 2);
+	int mid = floor(((float)leftPos + rightPos) / 2);
 	unsigned midVal = associations[mid].symbol;
 
 	// cout << "mid: " << mid << ", val: " << midVal << endl;
@@ -370,7 +376,7 @@ int binarySearch(const vector<Association>& associations, unsigned target, int l
 	//target is on the right
 	if (target > midVal)
 		return binarySearch(associations, target, mid+1, rightPos);
-} __attribute__((noinline))
+} 
 
 vector<unsigned> expand(const vector<Association>& associations, int pos, map<unsigned, vector<unsigned> > knownExpansions)
 {
@@ -411,7 +417,7 @@ vector<unsigned> expand(const vector<Association>& associations, int pos, map<un
 	lret.insert(lret.end(), rret.begin(), rret.end());
 	knownExpansions[pos] = lret;
 	return lret;
-} __attribute__((noinline))
+} 
 
 /*
 
@@ -420,15 +426,12 @@ Extract back to original string
 */
 vector<unsigned> undoRepair(const vector<Association>& associations)
 {
-	// Profiler::getInstance().start("undoRepair");
-
 	//knownExpansions is used for memoization
 	map<unsigned, vector<unsigned> > knownExpansions = map<unsigned, vector<unsigned> >();
 	vector<unsigned> result = expand(associations, associations.size() - 1, knownExpansions);
 	
-	// Profiler::getInstance().end("undoRepair");
 	return result;
-} __attribute__((noinline))
+} 
 
 /*
 	While the heap is not empty, get the max and process it (that is, replace all occurrences and modify all prec and succ pointers)
@@ -519,20 +522,20 @@ void doRepair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTa
 			{
 				//Have 2 neighbors to the left
 				newLeftOcc = hashTable[*newLeftKey]->getHeadOccurrence();
-				doubleLinkOccurrences(prec->getPrec(), newLeftOcc);
+				doubleLinkNeighbors(prec->getPrec(), newLeftOcc);
 			}
 			if (!nearRightEdge && !onRightEdge)
 			{
 				//Have 2 neighbors to the right
 				newRightOcc = hashTable[*newRightKey]->getHeadOccurrence();
-				doubleLinkOccurrences(newRightOcc, succ->getSucc());
+				doubleLinkNeighbors(newRightOcc, succ->getSucc());
 			}
 			if (!onRightEdge && !onLeftEdge)
 			{
 				//A neighbor on each side, link them
 				newLeftOcc = hashTable[*newLeftKey]->getHeadOccurrence();
 				newRightOcc = hashTable[*newRightKey]->getHeadOccurrence();
-				doubleLinkOccurrences(newLeftOcc, newRightOcc);
+				doubleLinkNeighbors(newLeftOcc, newRightOcc);
 			}
 			
 			//cerr << "Removing curr: " << curr->getLeft() << "," << curr->getRight() << endl;
@@ -554,7 +557,7 @@ void doRepair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTa
 			newRightKey = NULL;
 		}
 	}
-} __attribute__((noinline))
+} 
 
 vector<unsigned> stringToWordIDs(const string& text)
 {
@@ -678,7 +681,7 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 	//If it's correct, check to see whether it's optimal
 	for (size_t i = 0; i < associations.size() - 1; i++)
 	{
-		cerr << "freq[i]: " << associations[i].freq << ", freq[i+1]: " << associations[i+1].freq << endl;
+		// cerr << "freq[i]: " << associations[i].freq << ", freq[i+1]: " << associations[i+1].freq << endl;
 		// system("pause");
 		if (associations[i].freq < associations[i+1].freq)
 		{
@@ -700,15 +703,13 @@ int main(int argc, char* argv[])
 
 	if (test == "heap")
 	{
-		Profiler::getInstance().start("heap");
 		RandomHeapTest test = RandomHeapTest(1000);
-		Profiler::getInstance().end("heap");
-		Profiler::getInstance().writeResults("Output/profile-heap.txt");
 		exit(0);
 	}
 
 	if (test == "repair")
 	{
+		Profiler::getInstance().start("all");
 		//The original text, as one document (idea is to process concatenation of all versions)
 		char* text;
 		const char* filename;
@@ -732,19 +733,10 @@ int main(int argc, char* argv[])
 		map<vector<unsigned>, HashTableEntry*> hashTable = map<vector<unsigned>, HashTableEntry*>();
 		vector<Association> associations = vector<Association>();
 		
-		// Profiler::getInstance().start("main");
-		
-		// Profiler::getInstance().start("extract");
 		extractPairs(wordIDs, myHeap, hashTable);
-		// Profiler::getInstance().end("extract");
-
 		int numPairs = hashTable.size();
 
-		// Profiler::getInstance().start("repair");
 		doRepair(myHeap, hashTable, associations);
-		// Profiler::getInstance().end("repair");
-
-		// Profiler::getInstance().end("main");
 
 		stringstream ss;
 		ss << "Filename: " << filename << endl;
@@ -754,15 +746,16 @@ int main(int argc, char* argv[])
 
 		writeAssociations(associations, "Output/associations.txt");
 		
-		cout << "Checking output... ";
+		cout << "Checking output... " << endl;
 		if (checkOutput(associations, wordIDs))
 			cout << "Output ok!";
 		else
 			cout << "Check failed!";
 		cout << endl;
 
-		// Profiler::getInstance().setInputSpec(ss.str());	
-		// Profiler::getInstance().writeResults("Output/profile-functions.txt");
+		Profiler::getInstance().end("all");
+		Profiler::getInstance().setInputSpec(ss.str());	
+		Profiler::getInstance().writeResults("Output/profile-functions.txt");
 		cleanup(hashTable);
 		system("pause");
 	}
