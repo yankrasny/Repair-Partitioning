@@ -407,6 +407,7 @@ vector<unsigned> expand(const vector<Association>& associations, int pos, map<un
 	}
 
 	// return lret + rret; //overload + for vector<unsigned> or just do something else
+	//the stl code below might be slow, we don't have to use it if it's a problem
 	lret.insert(lret.end(), rret.begin(), rret.end());
 	knownExpansions[pos] = lret;
 	return lret;
@@ -421,6 +422,7 @@ vector<unsigned> undoRepair(const vector<Association>& associations)
 {
 	// Profiler::getInstance().start("undoRepair");
 
+	//knownExpansions is used for memoization
 	map<unsigned, vector<unsigned> > knownExpansions = map<unsigned, vector<unsigned> >();
 	vector<unsigned> result = expand(associations, associations.size() - 1, knownExpansions);
 	
@@ -570,7 +572,7 @@ vector<unsigned> stringToWordIDs(const string& text)
 	
 	//remove punctuation and produce vector of strings (called tokens)
 	string delimiters = "',.:;\"/!?() []{}\n";
-	bool trimEmpty = false;	
+	bool trimEmpty = false;
 	tokenize(text, tokens, delimiters, trimEmpty);
 
 	//Would it be faster to download the code for a hash function? TODO
