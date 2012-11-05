@@ -1,13 +1,13 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <map>
+// #include <map>
+#include <tr1/unordered_map>
 #include <algorithm>
 #include <iterator>
 #include <sstream>
 #include <locale>
 #include "profiler.h"
-//#include "ObjectPool.h"
 #include "HeapEntry.h"
 #include "RandomHeap.h"
 #include "Tokenizer.h"
@@ -657,7 +657,6 @@ void getVersions(vector<char**>& versions)
 {
 	//TODO figure out the input for this, depends on Jinru's code
 }
-
 
 /*
 We must be able to re-extract for the algorithm to be correct
