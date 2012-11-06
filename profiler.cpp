@@ -1,11 +1,11 @@
-#include "profiler.h"
+#include "Profiler.h"
 
 Profiler Profiler::GlobalProfiler;
 
 void Profiler::calcStats()
 {
-	std::map<std::string, std::vector<FunctionCall> >::iterator it;
-	std::map<std::string, double> currentMap;
+	std::unordered_map<std::string, std::vector<FunctionCall> >::iterator it;
+	std::unordered_map<std::string, double> currentMap;
 	for (it = calls.begin(); it != calls.end(); it++)
 	{
 		double sum(0.0);
@@ -49,7 +49,7 @@ void Profiler::writeResults(const std::string& filename)
 {
 	this->calcStats();
 	std::ofstream os(filename.c_str(), std::ios::out | std::ios::app );
-	std::map<std::string, std::vector<FunctionCall> >::iterator it;
+	std::unordered_map<std::string, std::vector<FunctionCall> >::iterator it;
 	double avg;
 	double numCalls;
 	double totalTime;

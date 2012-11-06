@@ -42,10 +42,10 @@ class Profiler
 {
 private:
 	//function name -> list of function call objects
-	std::map<std::string, std::vector<FunctionCall> > calls;
+	std::unordered_map<std::string, std::vector<FunctionCall> > calls;
 
 	//function name -> list of statistics (an alphanumeric key, and a double value)
-	std::map<std::string, std::map<std::string, double> > stats;
+	std::unordered_map<std::string, std::unordered_map<std::string, double> > stats;
 	
 	unsigned currStart;
 	unsigned currEnd;
@@ -55,8 +55,8 @@ private:
 	static Profiler GlobalProfiler;
 	Profiler()
 	{
-		calls = std::map<std::string, std::vector<FunctionCall> >();
-		stats = std::map<std::string, std::map<std::string, double> >();
+		calls = std::unordered_map<std::string, std::vector<FunctionCall> >();
+		stats = std::unordered_map<std::string, std::unordered_map<std::string, double> >();
 	}
 
 	void addCall(const std::string& func, unsigned start, unsigned end = 0)

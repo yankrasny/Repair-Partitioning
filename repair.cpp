@@ -2,12 +2,12 @@
 #include <fstream>
 #include <vector>
 // #include <map>
-#include <tr1/unordered_map>
+#include <unordered_map>
 #include <algorithm>
 #include <iterator>
 #include <sstream>
 #include <locale>
-#include "profiler.h"
+#include "Profiler.h"
 #include "HeapEntry.h"
 #include "RandomHeap.h"
 #include "Tokenizer.h"
@@ -168,43 +168,6 @@ public:
 			occurrences = next;
 		}
 		delete target;
-
-/*
-	
-		Occurrence* current = occurrences;
-		Occurrence* next = occurrences->getNext();
-		Occurrence* prev(NULL);
-
-		//TODO this might also make things slow (can we do this without looping over the list?)
-		while (current->getNext())
-		{
-			if (current == target)
-			{
-				//found it, do the removal
-				if (!prev)
-				{
-					//target was the first one, just point occurrences to the next one
-					occurrences = next;
-				}
-				else
-				{
-					//need to link the previous one to the next one
-					prev->setNext(next);
-				}
-				
-				//occurrencePool.destroy(current);
-				// Profiler::getInstance().end("HashTableEntry.removeOccurrence");
-
-				delete current;
-				return;
-			}
-			prev = current;
-			current = current->getNext();
-			next = current->getNext();
-		}
-		//TODO make sure this never happens
-		cerr << "we didn't find the target, wtf?" << endl;
-		*/
 	}
 	void addOccurrence(Occurrence* oc)
 	{
@@ -233,7 +196,7 @@ public:
 };
 //ObjectPool<HashTableEntry> hashTablePool = ObjectPool<HashTableEntry>(2000);
 
-void addOrUpdatePair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable, vector<unsigned>* keyPtr, Occurrence* prec = NULL, Occurrence* succ = NULL)
+void addOrUpdatePair(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry*>& hashTable, vector<unsigned>* keyPtr, Occurrence* prec = NULL, Occurrence* succ = NULL)
 {
 	if (keyPtr == NULL)
 		return;
@@ -262,7 +225,7 @@ void addOrUpdatePair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>&
 	}
 }
 
-void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable)
+void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry*>& hashTable)
 {
 	//The current pair (will be reused in the loop)
 	vector<unsigned>* currPair = new vector<unsigned>();
@@ -300,7 +263,7 @@ void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
 	}
 }
 
-void removeOccurrence(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable, Occurrence* oc)
+void removeOccurrence(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry*>& hashTable, Occurrence* oc)
 {
 	if (!oc)
 	{
@@ -378,7 +341,7 @@ int binarySearch(const vector<Association>& associations, unsigned target, int l
 		return binarySearch(associations, target, mid+1, rightPos);
 } 
 
-vector<unsigned> expand(const vector<Association>& associations, int pos, map<unsigned, vector<unsigned> > knownExpansions)
+vector<unsigned> expand(const vector<Association>& associations, int pos, unordered_map<unsigned, vector<unsigned> > knownExpansions)
 {
 	// cout << "Expanding position: " << pos << endl;
 	// system("pause");
@@ -427,7 +390,7 @@ Extract back to original string
 vector<unsigned> undoRepair(const vector<Association>& associations)
 {
 	//knownExpansions is used for memoization
-	map<unsigned, vector<unsigned> > knownExpansions = map<unsigned, vector<unsigned> >();
+	unordered_map<unsigned, vector<unsigned> > knownExpansions = unordered_map<unsigned, vector<unsigned> >();
 	vector<unsigned> result = expand(associations, associations.size() - 1, knownExpansions);
 	
 	return result;
@@ -444,7 +407,7 @@ vector<unsigned> undoRepair(const vector<Association>& associations)
 		New occurrences to add:		ax, xd
 		Old occurrences to remove:	ab, bc, cd
 */
-void doRepair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTable, vector<Association>& associations)
+void doRepair(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry*>& hashTable, vector<Association>& associations)
 {
 	while (!myHeap.empty())
 	{
@@ -562,7 +525,7 @@ void doRepair(RandomHeap& myHeap, map<vector<unsigned>, HashTableEntry*>& hashTa
 vector<unsigned> stringToWordIDs(const string& text)
 {
 	// Profiler::getInstance().start("stringToWordIDs");
-	map<unsigned, unsigned> uniqueWordIDs = map<unsigned, unsigned>();
+	unordered_map<unsigned, unsigned> uniqueWordIDs = unordered_map<unsigned, unsigned>();
 
 	vector<unsigned> ret = vector<unsigned>();
 
@@ -583,7 +546,7 @@ vector<unsigned> stringToWordIDs(const string& text)
 	const collate<char>& coll = use_facet<collate<char> >(loc);
 	unsigned myHash;
 
-	map<unsigned, unsigned>::iterator it;
+	unordered_map<unsigned, unsigned>::iterator it;
 	for (size_t i = 0; i < tokens.size(); i++)
 	{
 		myHash = coll.hash(tokens[i].data(), tokens[i].data() + tokens[i].length());
@@ -634,9 +597,9 @@ char* getText(const string& filename, int& length)
 	return buffer;
 }
 
-void cleanup(map<vector<unsigned>, HashTableEntry*>& hashTable)
+void cleanup(unordered_map<vector<unsigned>, HashTableEntry*>& hashTable)
 {
-	for (map<vector<unsigned>, HashTableEntry*>::iterator it = hashTable.begin(); it != hashTable.end(); it++)
+	for (unordered_map<vector<unsigned>, HashTableEntry*>::iterator it = hashTable.begin(); it != hashTable.end(); it++)
 	{
 		delete it->second;
 		it->second = NULL;
@@ -729,7 +692,7 @@ int main(int argc, char* argv[])
 
 		//Allocate the heap, hash table, and array of associations
 		RandomHeap myHeap;
-		map<vector<unsigned>, HashTableEntry*> hashTable = map<vector<unsigned>, HashTableEntry*>();
+		unordered_map<vector<unsigned>, HashTableEntry*> hashTable = unordered_map<vector<unsigned>, HashTableEntry*>();
 		vector<Association> associations = vector<Association>();
 		
 		extractPairs(wordIDs, myHeap, hashTable);
