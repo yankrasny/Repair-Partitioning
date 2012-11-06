@@ -208,6 +208,7 @@ public:
 };
 //ObjectPool<HashTableEntry> hashTablePool = ObjectPool<HashTableEntry>(2000);
 
+unsigned numAdd(0);
 void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, unsigned long long key, Occurrence* prec = NULL, Occurrence* succ = NULL)
 {
 	if (key == 0)
@@ -215,7 +216,12 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashT
 
 	HeapEntry* hp;
 
-	if (mapExists(hashTable, key))
+	//if (numAdd % 1000 == 0)
+	//	cout << "Updating key: " << key << " (number " << numAdd << ")" << endl;
+
+	++numAdd;
+
+	if (hashTable.count(key))
 	{
 		hashTable[key]->addOccurrence(new Occurrence(key));
 	}
@@ -229,19 +235,21 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashT
 
 		//Create a hash table entry, and initialize it with its heap entry pointer
 		hashTable[key] = new HashTableEntry(hp, prec, succ); //This creates the first occurrence (see the constructor)
-		
+		// hashTable[key] = 0;
 		//The order of these calls matters: do this first and the hash table entry won't know the index
 		//Is this still true? TODO
 		myHeap.insert(hp);
 	}
 }
 
-void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable)
+void extractPairs(const vector<unsigned>& wordIDs, RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable)
 {
 	//The current pair (will be reused in the loop)
 	// vector<unsigned>* currPair = new vector<unsigned>();
 
 	unsigned long long currPair;
+
+	hashTable.reserve(50000);
 
 	//The previous entry in the HT (used to set preceding and succeeding pointers)
 	Occurrence* prevOccurrence(NULL);
@@ -263,6 +271,10 @@ void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, unordered_map<un
 		//Update the previous occurrence variable
 		prevOccurrence = lastAddedOccurrence;
 	}
+	// cou(hashTable[key])
+	// int x;
+	// system("pause");
+	// exit(0);
 }
 
 void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
@@ -273,14 +285,16 @@ void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
 	}
 }
 
+unsigned numRemove(0);
 void removeOccurrence(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, Occurrence* oc)
 {
 	if (!oc)
 	{
 		return;
 	}
+	// cout << "Removing occurrence number: " << ++numRemove;
 	unsigned long long key = oc->getPair();
-	if (mapExists(hashTable, key))
+	if (hashTable.count(key))
 	{
 		HeapEntry* hp = hashTable[key]->getHeapPointer();
 		hashTable[key]->removeOccurrence(oc);
@@ -694,7 +708,7 @@ int main(int argc, char* argv[])
 		int fileSize;
 
 		if (argc < 2)
-			filename = "Input/longInput.txt";
+			filename = "Input/alice.txt";
 		else
 			filename = argv[1];
 
