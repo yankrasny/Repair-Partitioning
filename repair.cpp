@@ -1,22 +1,37 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-// #include <map>
 #include <unordered_map>
 #include <algorithm>
 #include <iterator>
 #include <sstream>
 #include <locale>
-#include "Profiler.h"
 #include "HeapEntry.h"
 #include "RandomHeap.h"
 #include "Tokenizer.h"
+#include "MapUtils.h"
+#include "Profiler.h"
 using namespace std;
 
 unsigned currentID(0);
 unsigned nextID()
 {
 	return ++currentID;
+}
+
+unsigned long long combineToUInt64(unsigned long long left, unsigned long long right)
+{
+	return (left << 32) | right;
+}
+
+unsigned getLeft(unsigned long long key)
+{
+	return key >> 32;
+}
+
+unsigned getRight(unsigned long long key)
+{
+	return (key << 32) >> 32;
 }
 
 //Used to store associations from one symbol to two others
@@ -56,13 +71,13 @@ public:
 
 	Occurrence(unsigned left, unsigned right) : prec(NULL), succ(NULL), left(left), right(right), next(NULL), prev(NULL) {}
 
-	Occurrence(vector<unsigned> pair) : prec(NULL), succ(NULL), left(pair[0]), right(pair[1]), next(NULL), prev(NULL) {}
+	Occurrence(unsigned long long key) : prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), next(NULL), prev(NULL) {}
 
-	void init(vector<unsigned> pair)
-	{
-		left = pair[0];
-		right = pair[1];
-	}
+	// void init(vector<unsigned> pair)
+	// {
+	// 	left = pair[0];
+	// 	right = pair[1];
+	// }
 
 	Occurrence* getNext()	{return next;}
 	Occurrence* getPrev()	{return prev;}
@@ -77,12 +92,9 @@ public:
 	void setPrec(Occurrence* prec)	{this->prec = prec;}
 	void setSucc(Occurrence* succ)	{this->succ = succ;}
 
-	vector<unsigned> getPair()
+	unsigned long long getPair()
 	{
-		vector<unsigned> ret;
-		ret.push_back(left);
-		ret.push_back(right);
-		return ret;
+		return combineToUInt64(left, right);
 	}
 };
 //ObjectPool<Occurrence> occurrencePool = ObjectPool<Occurrence>(5000);
@@ -117,8 +129,8 @@ class HashTableEntry
 public:
 	HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ) : heapPointer(hp), size(1)
 	{
-		unsigned left = hp->getKey()[0];
-		unsigned right = hp->getKey()[1];
+		unsigned left = hp->getLeft();
+		unsigned right = hp->getRight();
 		
 		occurrences = new Occurrence(left, right); //The head of the linked list (Occurrences have a next pointer)
 
@@ -196,12 +208,11 @@ public:
 };
 //ObjectPool<HashTableEntry> hashTablePool = ObjectPool<HashTableEntry>(2000);
 
-void addOrUpdatePair(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry*>& hashTable, vector<unsigned>* keyPtr, Occurrence* prec = NULL, Occurrence* succ = NULL)
+void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, unsigned long long key, Occurrence* prec = NULL, Occurrence* succ = NULL)
 {
-	if (keyPtr == NULL)
+	if (key == 0)
 		return;
 
-	vector<unsigned> key = *keyPtr;
 	HeapEntry* hp;
 
 	if (mapExists(hashTable, key))
@@ -225,10 +236,12 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTab
 	}
 }
 
-void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry*>& hashTable)
+void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable)
 {
 	//The current pair (will be reused in the loop)
-	vector<unsigned>* currPair = new vector<unsigned>();
+	// vector<unsigned>* currPair = new vector<unsigned>();
+
+	unsigned long long currPair;
 
 	//The previous entry in the HT (used to set preceding and succeeding pointers)
 	Occurrence* prevOccurrence(NULL);
@@ -236,23 +249,20 @@ void extractPairs(vector<unsigned> wordIDs, RandomHeap& myHeap, unordered_map<ve
 	//Go through the string and get all overlapping pairs, and process them
 	for (size_t i = 0; i < wordIDs.size() - 1; i++)
 	{
-		currPair->push_back(wordIDs[i]);
-		currPair->push_back(wordIDs[i+1]);
-
+		currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
+		// cerr << "Left: " << getLeft(currPair) << endl;
+		// cerr << "Right: " << getRight(currPair) << endl;
 		addOrUpdatePair(myHeap, hashTable, currPair, NULL, NULL);
 
 		//The first occurrence was the last one added because we add to the head
-		Occurrence* lastAddedOccurrence = hashTable[*currPair]->getHeadOccurrence();
+		Occurrence* lastAddedOccurrence = hashTable[currPair]->getHeadOccurrence();
 
 		//Checks for existence of prev, and links them to each other
 		doubleLinkNeighbors(prevOccurrence, lastAddedOccurrence);
 
 		//Update the previous occurrence variable
 		prevOccurrence = lastAddedOccurrence;
-
-		currPair->clear();
 	}
-	delete currPair;
 }
 
 void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
@@ -263,13 +273,13 @@ void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
 	}
 }
 
-void removeOccurrence(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry*>& hashTable, Occurrence* oc)
+void removeOccurrence(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, Occurrence* oc)
 {
 	if (!oc)
 	{
 		return;
 	}
-	vector<unsigned> key = oc->getPair();
+	unsigned long long key = oc->getPair();
 	if (mapExists(hashTable, key))
 	{
 		HeapEntry* hp = hashTable[key]->getHeapPointer();
@@ -282,24 +292,18 @@ void removeOccurrence(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTa
 	}
 }
 
-vector<unsigned>* getNewRightKey(unsigned symbol, Occurrence* succ)
+unsigned long long getNewRightKey(unsigned symbol, Occurrence* succ)
 {
-	if (!succ) return NULL;
+	if (!succ) return 0;
 	unsigned symbolToTheRight = succ->getRight();
-	vector<unsigned>* ret = new vector<unsigned>();
-	ret->push_back(symbol);
-	ret->push_back(symbolToTheRight);
-	return ret;
+	return combineToUInt64(symbol, symbolToTheRight);
 }
 
-vector<unsigned>* getNewLeftKey(unsigned symbol, Occurrence* prec)
+unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec)
 {
-	if (!prec) return NULL;
+	if (!prec) return 0;
 	unsigned symbolToTheLeft = prec->getLeft();
-	vector<unsigned>* ret = new vector<unsigned>();
-	ret->push_back(symbolToTheLeft);
-	ret->push_back(symbol);
-	return ret;
+	return combineToUInt64(symbolToTheLeft, symbol);
 } 
 
 int binarySearch(const vector<Association>& associations, unsigned target, int leftPos, int rightPos)
@@ -407,7 +411,7 @@ vector<unsigned> undoRepair(const vector<Association>& associations)
 		New occurrences to add:		ax, xd
 		Old occurrences to remove:	ab, bc, cd
 */
-void doRepair(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry*>& hashTable, vector<Association>& associations)
+void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<Association>& associations)
 {
 	while (!myHeap.empty())
 	{
@@ -419,7 +423,10 @@ void doRepair(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry
 		HeapEntry hp = myHeap.getMax();
 
 		//The string of 2 chars, used to key into the hashmap
-		vector<unsigned> key = hp.getKey();
+		unsigned long long key = hp.getKey();
+
+		unsigned long long lTest = hp.getLeft();
+		unsigned long long rTest = hp.getRight();
 		
 		//Get the hash table entry (so all occurrences and so on)
 		HashTableEntry* max = hashTable[key];
@@ -458,8 +465,9 @@ void doRepair(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry
 			bool nearLeftEdge(false);
 			bool nearRightEdge(false);
 
-			vector<unsigned>* newLeftKey;
-			vector<unsigned>* newRightKey;
+			unsigned long long newLeftKey;
+			unsigned long long newRightKey;
+
 
 			//Use these bools instead of calling the functions repeatedly
 			if (!prec)
@@ -484,20 +492,20 @@ void doRepair(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry
 			if (!nearLeftEdge && !onLeftEdge)
 			{
 				//Have 2 neighbors to the left
-				newLeftOcc = hashTable[*newLeftKey]->getHeadOccurrence();
+				newLeftOcc = hashTable[newLeftKey]->getHeadOccurrence();
 				doubleLinkNeighbors(prec->getPrec(), newLeftOcc);
 			}
 			if (!nearRightEdge && !onRightEdge)
 			{
 				//Have 2 neighbors to the right
-				newRightOcc = hashTable[*newRightKey]->getHeadOccurrence();
+				newRightOcc = hashTable[newRightKey]->getHeadOccurrence();
 				doubleLinkNeighbors(newRightOcc, succ->getSucc());
 			}
 			if (!onRightEdge && !onLeftEdge)
 			{
 				//A neighbor on each side, link them
-				newLeftOcc = hashTable[*newLeftKey]->getHeadOccurrence();
-				newRightOcc = hashTable[*newRightKey]->getHeadOccurrence();
+				newLeftOcc = hashTable[newLeftKey]->getHeadOccurrence();
+				newRightOcc = hashTable[newRightKey]->getHeadOccurrence();
 				doubleLinkNeighbors(newLeftOcc, newRightOcc);
 			}
 			
@@ -514,10 +522,6 @@ void doRepair(RandomHeap& myHeap, unordered_map<vector<unsigned>, HashTableEntry
 				//cerr << "Removing prec: " << prec->getLeft() << "," << prec->getRight() << endl;
 				removeOccurrence(myHeap, hashTable, prec);
 			}
-			delete newLeftKey;
-			delete newRightKey;
-			newLeftKey = NULL;
-			newRightKey = NULL;
 		}
 	}
 } 
@@ -597,9 +601,9 @@ char* getText(const string& filename, int& length)
 	return buffer;
 }
 
-void cleanup(unordered_map<vector<unsigned>, HashTableEntry*>& hashTable)
+void cleanup(unordered_map<unsigned long long, HashTableEntry*>& hashTable)
 {
-	for (unordered_map<vector<unsigned>, HashTableEntry*>::iterator it = hashTable.begin(); it != hashTable.end(); it++)
+	for (unordered_map<unsigned long long, HashTableEntry*>::iterator it = hashTable.begin(); it != hashTable.end(); it++)
 	{
 		delete it->second;
 		it->second = NULL;
@@ -658,6 +662,18 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 
 int main(int argc, char* argv[])
 {
+	//cerr << sizeof(unsigned long) << endl;
+	//unsigned long long left = 1;
+	//unsigned long long right = 2;
+	//unsigned long long key = combineToUInt64(left, right);
+	//cerr << "Key: " << key << endl;
+
+	//cerr << "Left: " << getLeft(key) << endl;
+
+	//cerr << "Right: " << getRight(key) << endl;
+
+	//system("pause");
+	//exit(0);
 	//createOutputDir();
 
 	//heap, repair
@@ -692,7 +708,7 @@ int main(int argc, char* argv[])
 
 		//Allocate the heap, hash table, and array of associations
 		RandomHeap myHeap;
-		unordered_map<vector<unsigned>, HashTableEntry*> hashTable = unordered_map<vector<unsigned>, HashTableEntry*>();
+		unordered_map<unsigned long long, HashTableEntry*> hashTable = unordered_map<unsigned long long, HashTableEntry*> ();
 		vector<Association> associations = vector<Association>();
 		
 		extractPairs(wordIDs, myHeap, hashTable);

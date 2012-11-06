@@ -163,13 +163,10 @@ RandomHeap::~RandomHeap()
 
 void RandomHeapTest::runTest(int n)
 {
-	std::vector<std::vector<unsigned> > keys = std::vector<std::vector<unsigned> >();
+	std::vector<unsigned long long> keys = std::vector<unsigned long long>();
 	for (int i = 0; i < n; i++)
 	{
-		std::vector<unsigned> key = std::vector<unsigned>();
-		key.push_back(i);
-		key.push_back(i+1);
-		keys.push_back(key);
+		keys.push_back((i << 32) | (i+1));
 	}
 	std::vector<HeapEntry*> vec = std::vector<HeapEntry*>();
 	for (int i = 0; i < n; i++)

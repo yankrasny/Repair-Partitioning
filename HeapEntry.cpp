@@ -1,8 +1,18 @@
 #include "HeapEntry.h"
 
-std::vector<unsigned> HeapEntry::getKey() 
+unsigned long long HeapEntry::getKey()
 {
 	return key;
+}
+
+unsigned HeapEntry::getLeft()
+{
+	return key >> 32;
+}
+
+unsigned HeapEntry::getRight()
+{
+	return (key << 32) >> 32;
 }
 
 size_t HeapEntry::getPriority() const
