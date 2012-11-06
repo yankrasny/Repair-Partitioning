@@ -661,7 +661,7 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 	//If it's correct, check to see whether it's optimal
 	for (size_t i = 0; i < associations.size() - 1; i++)
 	{
-		// cerr << "freq[i]: " << associations[i].freq << ", freq[i+1]: " << associations[i+1].freq << endl;
+		cerr << "i: " << i << " freq[i]: " << associations[i].freq << ", freq[i+1]: " << associations[i+1].freq << endl;
 		// system("pause");
 		if (associations[i].freq < associations[i+1].freq)
 		{
