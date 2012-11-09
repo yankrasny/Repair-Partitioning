@@ -9,7 +9,6 @@
 #include "HeapEntry.h"
 #include "RandomHeap.h"
 #include "Tokenizer.h"
-#include "MapUtils.h"
 #include "Profiler.h"
 using namespace std;
 
@@ -66,12 +65,15 @@ private:
 	Occurrence* succ;
 	unsigned left;
 	unsigned right;
+	unsigned leftPositionInSequence;
 public:
 	Occurrence() : prec(NULL), succ(NULL), next(NULL), prev(NULL) {}
 
-	Occurrence(unsigned left, unsigned right) : prec(NULL), succ(NULL), left(left), right(right), next(NULL), prev(NULL) {}
+	// Occurrence(unsigned left, unsigned right) : prec(NULL), succ(NULL), left(left), right(right), next(NULL), prev(NULL) {}
 
 	Occurrence(unsigned long long key) : prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), next(NULL), prev(NULL) {}
+
+	Occurrence(unsigned long long key, unsigned leftPositionInSequence) : prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), leftPositionInSequence(leftPositionInSequence), next(NULL), prev(NULL) {}
 
 	// void init(vector<unsigned> pair)
 	// {
@@ -86,6 +88,8 @@ public:
 
 	unsigned getLeft()	const {return left;}
 	unsigned getRight()	const {return right;}
+
+	unsigned getLeftPositionInSequence()	const {return leftPositionInSequence;}
 
 	void setNext(Occurrence* next)	{this->next = next;}
 	void setPrev(Occurrence* prev)	{this->prev = prev;}
@@ -127,12 +131,11 @@ class HashTableEntry
 	Occurrence* occurrences;
 	size_t size;
 public:
-	HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ) : heapPointer(hp), size(1)
+	HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ, unsigned leftPosition) : heapPointer(hp), size(1)
 	{
-		unsigned left = hp->getLeft();
-		unsigned right = hp->getRight();
-		
-		occurrences = new Occurrence(left, right); //The head of the linked list (Occurrences have a next pointer)
+		unsigned long long key = hp->getKey();
+
+		occurrences = new Occurrence(key, leftPosition); //The head of the linked list (Occurrences have a next pointer)
 
 		doubleLinkNeighbors(prec, occurrences);
 		doubleLinkNeighbors(occurrences, succ);
@@ -208,8 +211,8 @@ public:
 };
 //ObjectPool<HashTableEntry> hashTablePool = ObjectPool<HashTableEntry>(2000);
 
-unsigned numAdd(0);
-void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, unsigned long long key, Occurrence* prec = NULL, Occurrence* succ = NULL)
+// unsigned numAdd(0);
+void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, unsigned long long key, unsigned leftPosition, Occurrence* prec = NULL, Occurrence* succ = NULL)
 {
 	if (key == 0)
 		return;
@@ -219,11 +222,11 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashT
 	//if (numAdd % 1000 == 0)
 	//	cout << "Updating key: " << key << " (number " << numAdd << ")" << endl;
 
-	++numAdd;
+	// ++numAdd;
 
 	if (hashTable.count(key))
 	{
-		hashTable[key]->addOccurrence(new Occurrence(key));
+		hashTable[key]->addOccurrence(new Occurrence(key, leftPosition));
 	}
 	else //First time we've seen this pair
 	{
@@ -234,7 +237,7 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashT
 		//hp->init(key, 1);
 
 		//Create a hash table entry, and initialize it with its heap entry pointer
-		hashTable[key] = new HashTableEntry(hp, prec, succ); //This creates the first occurrence (see the constructor)
+		hashTable[key] = new HashTableEntry(hp, prec, succ, leftPosition); //This creates the first occurrence (see the constructor)
 		// hashTable[key] = 0;
 		//The order of these calls matters: do this first and the hash table entry won't know the index
 		//Is this still true? TODO
@@ -249,7 +252,7 @@ void extractPairs(const vector<unsigned>& wordIDs, RandomHeap& myHeap, unordered
 
 	unsigned long long currPair;
 
-	hashTable.reserve(50000);
+	// hashTable.reserve(50000);
 
 	//The previous entry in the HT (used to set preceding and succeeding pointers)
 	Occurrence* prevOccurrence(NULL);
@@ -260,7 +263,7 @@ void extractPairs(const vector<unsigned>& wordIDs, RandomHeap& myHeap, unordered
 		currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
 		// cerr << "Left: " << getLeft(currPair) << endl;
 		// cerr << "Right: " << getRight(currPair) << endl;
-		addOrUpdatePair(myHeap, hashTable, currPair, NULL, NULL);
+		addOrUpdatePair(myHeap, hashTable, currPair, i);
 
 		//The first occurrence was the last one added because we add to the head
 		Occurrence* lastAddedOccurrence = hashTable[currPair]->getHeadOccurrence();
@@ -446,6 +449,9 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 		HashTableEntry* max = hashTable[key];
 		size_t numOccurrences = max->getSize();
 
+		if (numOccurrences < 5)
+			return;
+
 		Occurrence* curr;
 		Occurrence* prec;
 		Occurrence* succ;
@@ -482,8 +488,7 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			unsigned long long newLeftKey;
 			unsigned long long newRightKey;
 
-
-			//Use these bools instead of calling the functions repeatedly
+			//Use these bools instead of following the pointers repeatedly
 			if (!prec)
 				onLeftEdge = true;
 			else
@@ -499,9 +504,20 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			newLeftKey = getNewLeftKey(symbol, prec);
 			newRightKey = getNewRightKey(symbol, succ);
 
+			unsigned oldLeftIndex, oldRightIndex;
+			if (onLeftEdge)
+				oldLeftIndex = 0;
+			else
+				oldLeftIndex = prec->getLeftPositionInSequence();
+
+			if (onRightEdge)
+				oldRightIndex = curr->getLeftPositionInSequence();
+			else
+				oldRightIndex = succ->getLeftPositionInSequence();
+
 			//Just creates the occurrence in the hash table and heap, doesn't link it to its neighbors
-			addOrUpdatePair(myHeap, hashTable, newLeftKey);
-			addOrUpdatePair(myHeap, hashTable, newRightKey);
+			addOrUpdatePair(myHeap, hashTable, newLeftKey, oldLeftIndex);
+			addOrUpdatePair(myHeap, hashTable, newRightKey, oldRightIndex);
 
 			if (!nearLeftEdge && !onLeftEdge)
 			{
@@ -674,20 +690,37 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 	return true;
 }
 
+vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable)
+{
+	HeapEntry lastMax = myHeap.getMax();
+	unsigned long long key = lastMax.getKey();
+	
+	Occurrence* oc = hashTable[key]->getHeadOccurrence();
+	Occurrence* prec(NULL);
+	if (oc->getPrec())
+		prec = oc->getPrec();
+	else
+		prec = oc;
+
+	//Run to the left
+	while (prec->getPrec())
+	{
+		prec = prec->getPrec();
+	}
+	Occurrence* current = prec;
+
+	vector<unsigned> starts = vector<unsigned>();
+	while (current)
+	{
+		starts.push_back(current->getLeftPositionInSequence());
+		current = current->getSucc();
+	}
+
+	return starts;
+}
+
 int main(int argc, char* argv[])
 {
-	//cerr << sizeof(unsigned long) << endl;
-	//unsigned long long left = 1;
-	//unsigned long long right = 2;
-	//unsigned long long key = combineToUInt64(left, right);
-	//cerr << "Key: " << key << endl;
-
-	//cerr << "Left: " << getLeft(key) << endl;
-
-	//cerr << "Right: " << getRight(key) << endl;
-
-	//system("pause");
-	//exit(0);
 	//createOutputDir();
 
 	//heap, repair
@@ -731,25 +764,30 @@ int main(int argc, char* argv[])
 
 		doRepair(myHeap, hashTable, associations);
 
+		vector<unsigned> starts = getPartitioning(myHeap, hashTable);
+
+		for (unsigned i = 0; i < 100; i++)
+			cerr << starts[i] << endl;
+
 		stringstream ss;
 		ss << "Filename: " << filename << endl;
 		ss << "Size: " << fileSize << " bytes" << endl; 
 		ss << "Word Count: " << wordIDs.size() << endl;
 		ss << "Unique Pair Count (in original file): " << numPairs << endl;
 
-		writeAssociations(associations, "Output/associations.txt");
+		writeAssociations(associations, "Output/associations-1.txt");
 		
-		cout << "Checking output... " << endl;
-		if (checkOutput(associations, wordIDs))
-			cout << "Output ok!";
-		else
-			cout << "Check failed!";
-		cout << endl;
+		// cout << "Checking output... " << endl;
+		// if (checkOutput(associations, wordIDs))
+		// 	cout << "Output ok!";
+		// else
+		// 	cout << "Check failed!";
+		// cout << endl;
 
 		Profiler::getInstance().end("all");
 		Profiler::getInstance().setInputSpec(ss.str());	
 		Profiler::getInstance().writeResults("Output/profile-functions.txt");
-		cleanup(hashTable);
-		system("pause");
+		// cleanup(hashTable);
+		// system("pause");
 	}
 }
