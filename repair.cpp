@@ -75,12 +75,6 @@ public:
 
 	Occurrence(unsigned long long key, unsigned leftPositionInSequence) : prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), leftPositionInSequence(leftPositionInSequence), next(NULL), prev(NULL) {}
 
-	// void init(vector<unsigned> pair)
-	// {
-	// 	left = pair[0];
-	// 	right = pair[1];
-	// }
-
 	Occurrence* getNext()	{return next;}
 	Occurrence* getPrev()	{return prev;}
 	Occurrence* getPrec()	{return prec;}
@@ -247,9 +241,6 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashT
 
 void extractPairs(const vector<unsigned>& wordIDs, RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable)
 {
-	//The current pair (will be reused in the loop)
-	// vector<unsigned>* currPair = new vector<unsigned>();
-
 	unsigned long long currPair;
 
 	// hashTable.reserve(50000);
@@ -261,8 +252,11 @@ void extractPairs(const vector<unsigned>& wordIDs, RandomHeap& myHeap, unordered
 	for (size_t i = 0; i < wordIDs.size() - 1; i++)
 	{
 		currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
-		// cerr << "Left: " << getLeft(currPair) << endl;
-		// cerr << "Right: " << getRight(currPair) << endl;
+		unsigned left = getLeft(currPair);
+		unsigned right = getRight(currPair);
+
+		// cerr << "Left: " << left << endl;
+		// cerr << "Right: " << right << endl;
 		addOrUpdatePair(myHeap, hashTable, currPair, i);
 
 		//The first occurrence was the last one added because we add to the head
@@ -274,10 +268,6 @@ void extractPairs(const vector<unsigned>& wordIDs, RandomHeap& myHeap, unordered
 		//Update the previous occurrence variable
 		prevOccurrence = lastAddedOccurrence;
 	}
-	// cou(hashTable[key])
-	// int x;
-	// system("pause");
-	// exit(0);
 }
 
 void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
@@ -449,7 +439,9 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 		HashTableEntry* max = hashTable[key];
 		size_t numOccurrences = max->getSize();
 
-		if (numOccurrences < 5)
+		// TODO think about this number
+		unsigned minimumNumOccurrences = 2;
+		if (numOccurrences < minimumNumOccurrences)
 			return;
 
 		Occurrence* curr;
@@ -510,10 +502,7 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			else
 				oldLeftIndex = prec->getLeftPositionInSequence();
 
-			if (onRightEdge)
-				oldRightIndex = curr->getLeftPositionInSequence();
-			else
-				oldRightIndex = succ->getLeftPositionInSequence();
+			oldRightIndex = curr->getLeftPositionInSequence();
 
 			//Just creates the occurrence in the hash table and heap, doesn't link it to its neighbors
 			addOrUpdatePair(myHeap, hashTable, newLeftKey, oldLeftIndex);
@@ -690,8 +679,15 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 	return true;
 }
 
-vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable)
+vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, unsigned minFragSize)
 {
+	vector<unsigned> starts = vector<unsigned>();
+	if (myHeap.empty())
+		return starts;
+
+	// cerr << myHeap.getMax().getIndex() << endl;
+	// system("pause");
+
 	HeapEntry lastMax = myHeap.getMax();
 	unsigned long long key = lastMax.getKey();
 	
@@ -702,6 +698,9 @@ vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long
 	else
 		prec = oc;
 
+	// cerr << prec->getLeftPositionInSequence() << endl;
+	// system("pause");
+
 	//Run to the left
 	while (prec->getPrec())
 	{
@@ -709,13 +708,32 @@ vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long
 	}
 	Occurrence* current = prec;
 
-	vector<unsigned> starts = vector<unsigned>();
+	unsigned currVal, nextVal, diff;
+	//Starting from the left, read the indexes in order, giving us our partitioning
 	while (current)
 	{
-		starts.push_back(current->getLeftPositionInSequence());
-		current = current->getSucc();
+		currVal = current->getLeftPositionInSequence();
+		if (current->getSucc())
+		{
+			current = current->getSucc();
+			nextVal = current->getLeftPositionInSequence();
+			diff = nextVal - currVal;
+			if (diff > minFragSize)
+			{
+				starts.push_back(currVal);
+				starts.push_back(nextVal);
+			}
+		}
+		else
+		{
+			break;
+		}
+		// starts.push_back(current->getLeftPositionInSequence());
+		// if (current->getSucc())
+		// 	current = current->getSucc();
+		// else
+		// 	break;
 	}
-
 	return starts;
 }
 
@@ -739,12 +757,19 @@ int main(int argc, char* argv[])
 		char* text;
 		const char* filename;
 		int fileSize;
+		unsigned minFragSize;
 
 		if (argc < 2)
 			filename = "Input/alice.txt";
 		else
 			filename = argv[1];
 
+		if (argc < 3)
+			minFragSize = 20;
+		else
+			minFragSize = atoi(argv[2]);
+
+		cerr << "Minimum fragment size is: " << minFragSize << endl;
 		
 		text = getText(filename, fileSize);
 
@@ -764,10 +789,12 @@ int main(int argc, char* argv[])
 
 		doRepair(myHeap, hashTable, associations);
 
-		vector<unsigned> starts = getPartitioning(myHeap, hashTable);
+		
+		vector<unsigned> starts = getPartitioning(myHeap, hashTable, minFragSize);
 
-		for (unsigned i = 0; i < 100; i++)
+		for (unsigned i = 0; i < starts.size() && i < 100; i++)
 			cerr << starts[i] << endl;
+		cerr << "Total size of starts[]: " << starts.size() << endl;
 
 		stringstream ss;
 		ss << "Filename: " << filename << endl;
