@@ -804,10 +804,11 @@ int main(int argc, char* argv[])
 
 		if (argc == 2 && (string) argv[1] == "help")
 		{
-			cerr << endl << "Usage 0: repair <filepath> <minFragSize> <minNumOccurrences>" << endl;
-			cerr << endl << "Usage 1: repair <filepath> <minFragSize> (default minNumOccurrences = " << minNumOccurrences << ")" << endl;
-			cerr << endl << "Usage 2: repair <filepath> (default minFragSize = " << minFragSize << " and minNumOccurrences = " << minNumOccurrences << ") " << endl;
-			cerr << endl << "Usage 3: repair (default file is: " << inputFilepath << ")" << endl;
+			cerr << "Usage:" << endl;
+			cerr << "repair <filepath> <minFragSize> <minNumOccurrences>" << endl;
+			cerr << "repair <filepath> <minFragSize> (default minNumOccurrences = " << minNumOccurrences << ")" << endl;
+			cerr << "repair <filepath> (default minFragSize = " << minFragSize << " and minNumOccurrences = " << minNumOccurrences << ") " << endl;
+			cerr << "repair (default file is: " << inputFilepath << ")" << endl;
 			exit(0);
 		}
 
