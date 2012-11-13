@@ -6,7 +6,6 @@
 #include <iterator>
 #include <sstream>
 #include <locale>
-#include <ctime>
 #include "HeapEntry.h"
 #include "RandomHeap.h"
 #include "Tokenizer.h"
@@ -547,7 +546,7 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 	}
 } 
 
-vector<unsigned> stringToWordIDs(const string& text)
+vector<unsigned> stringToWordIDs(const string& text, unordered_map<unsigned, string>& IDsToWords)
 {
 	// Profiler::getInstance().start("stringToWordIDs");
 	unordered_map<unsigned, unsigned> uniqueWordIDs = unordered_map<unsigned, unsigned>();
@@ -562,7 +561,7 @@ vector<unsigned> stringToWordIDs(const string& text)
 	//		 back_inserter<vector<string> >(tokens));
 	
 	//remove punctuation and produce vector of strings (called tokens)
-	string delimiters = "',.:;\"/!?() []{}\n";
+	string delimiters = ",.:;\"/!?() []{}\n";
 	bool trimEmpty = false;
 	tokenize(text, tokens, delimiters, trimEmpty);
 
@@ -587,6 +586,8 @@ vector<unsigned> stringToWordIDs(const string& text)
 			//Didn't find it, give it an ID
 			theID = nextID();
 			uniqueWordIDs[myHash] = theID;
+			IDsToWords[theID] = tokens[i];
+			// cerr << tokens[i] << endl;
 			//it->second = nextID();
 		}
 		ret.push_back(theID);
@@ -728,22 +729,27 @@ vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long
 	return starts;
 }
 
-void printWordIDFragments(const vector<unsigned>& wordIDs, const vector<unsigned>& starts, ostream& os = cerr)
+//TODO save the fragments and find them in the file, to be able to record their frequencies
+void printWordFragments(const vector<unsigned>& wordIDs, const vector<unsigned>& starts, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
 {
-	unsigned start, end;
+	unsigned start, end, theID;
+	string word;
 	for (unsigned i = 0; i < starts.size() - 1; i++)
 	{
 		start = starts[i];
 		end = starts[i+1];
+		os << "Fragment " << i << ": ";
 		for (unsigned j = start; j < end; j++)
 		{
-			os << wordIDs[j] << " ";
+			theID = wordIDs[j];
+			word = IDsToWords[theID];
+			os << word << " ";
 		}
 		os << endl;
 	}
 }
 
-void writeResults(const vector<unsigned>& wordIDs, const vector<unsigned>& starts, const vector<Association>& associations, const string& outFilename, bool printFragments = false, bool printAssociations = false)
+void writeResults(const vector<unsigned>& wordIDs, const vector<unsigned>& starts, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
 {
 	ofstream os(outFilename.c_str());
 
@@ -758,12 +764,13 @@ void writeResults(const vector<unsigned>& wordIDs, const vector<unsigned>& start
 
 	if (printFragments)
 	{
-		os << "Printing fragments identified by repair (these are word IDs)..." << endl;
-		printWordIDFragments(wordIDs, starts, os);
+		os << "Printing fragments identified by repair..." << endl;
+		printWordFragments(wordIDs, starts, IDsToWords, os);
 	}
 	
 	if (printAssociations)
 	{
+		os << "Printing associations created by repair (symbol -> pair)..." << endl;
 		writeAssociations(associations, os);
 	}
 }
@@ -799,8 +806,8 @@ int main(int argc, char* argv[])
 		int fileSize;
 
 		// Default param values
-		unsigned minFragSize = 10;
-		unsigned minNumOccurrences = 5;
+		unsigned minFragSize = 5; //in words
+		unsigned minNumOccurrences = 5; //pairs that occur less than this amount of times will no be replaced
 
 		if (argc == 2 && (string) argv[1] == "help")
 		{
@@ -823,7 +830,7 @@ int main(int argc, char* argv[])
 
 		string inputFilename = getFileName(inputFilepath);
 
-		cerr << "Minimum fragment size is: " << minFragSize << endl;
+		// cerr << "Minimum fragment size is: " << minFragSize << endl;
 		
 		text = getText(inputFilepath, fileSize);
 
@@ -831,7 +838,14 @@ int main(int argc, char* argv[])
 		//TODO this is roughly tolower, needs a string though, not a char*
 		//std::transform(text.begin(), text.end(), text.begin(), ::tolower);
 
-		vector<unsigned> wordIDs = stringToWordIDs(text);
+		unordered_map<unsigned, string> IDsToWords = unordered_map<unsigned, string>();
+		vector<unsigned> wordIDs = stringToWordIDs(text, IDsToWords);
+
+		for (unordered_map<unsigned, string>::iterator it = IDsToWords.begin(); it != IDsToWords.end(); it++)
+		{
+			// cerr << it->second << endl;
+			// system("pause");
+		}
 
 		//Allocate the heap, hash table, and array of associations
 		RandomHeap myHeap;
@@ -847,10 +861,14 @@ int main(int argc, char* argv[])
 		vector<unsigned> starts = getPartitioning(myHeap, hashTable, minFragSize);
 
 		stringstream outFilenameStream;
-		outFilenameStream << "./Output/results-" << inputFilename;
+		outFilenameStream << "Output/results-" << inputFilename;
 		string outputFilename = outFilenameStream.str();
 
-		writeResults(wordIDs, starts, associations, outputFilename);
+		writeResults(wordIDs, starts, associations, IDsToWords, outputFilename, true, true);
+
+		stringstream command;
+		command << "start " << outputFilename.c_str();
+		system(command.str().c_str());
 
 		stringstream ss;
 		ss << "Filename: " << inputFilepath << endl;
