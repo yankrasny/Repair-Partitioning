@@ -419,7 +419,7 @@ vector<unsigned> undoRepair(const vector<Association>& associations)
 		New occurrences to add:		ax, xd
 		Old occurrences to remove:	ab, bc, cd
 */
-void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<Association>& associations)
+void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<Association>& associations, unsigned minNumOccurrences = 5)
 {
 	while (!myHeap.empty())
 	{
@@ -443,8 +443,7 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 		// TODO think about this number
 		// Thought about it: it should be well below the number of versions
 		// Imagine a fragment that occurs in numVersions - 2 of the versions. That's a good fragment, let's keep it. Maybe numVersions / 2.
-		unsigned minimumNumOccurrences = 5;
-		if (numOccurrences < minimumNumOccurrences)
+		if (numOccurrences < minNumOccurrences)
 			return;
 
 		Occurrence* curr;
@@ -769,12 +768,12 @@ void writeResults(const vector<unsigned>& wordIDs, const vector<unsigned>& start
 	}
 }
 
-string getFileName(const char* filepath)
+string getFileName(const string& filepath)
 {
 	vector<string> tokens;
 	string delimiters = "/\\";
 	bool trimEmpty = false;
-	tokenize(filepath, tokens, delimiters, trimEmpty);
+	tokenize(filepath.c_str(), tokens, delimiters, trimEmpty);
 	return tokens.back();
 }
 
@@ -796,23 +795,32 @@ int main(int argc, char* argv[])
 		Profiler::getInstance().start("all");
 		//The original text, as one document (idea is to process concatenation of all versions)
 		char* text;
-		const char* inputFilepath;
+		string inputFilepath = "Input/ints.txt";
 		int fileSize;
-		unsigned minFragSize;
 
-		if (argc < 2)
-			inputFilepath = "Input/ints.txt";
-		else
-			inputFilepath = argv[1];
+		// Default param values
+		unsigned minFragSize = 10;
+		unsigned minNumOccurrences = 5;
 
-		if (argc < 3)
-			minFragSize = 5;
-		else
+		if (argc == 2 && (string) argv[1] == "help")
+		{
+			cerr << endl << "Usage 0: repair <filepath> <minFragSize> <minNumOccurrences>" << endl;
+			cerr << endl << "Usage 1: repair <filepath> <minFragSize> (default minNumOccurrences = " << minNumOccurrences << ")" << endl;
+			cerr << endl << "Usage 2: repair <filepath> (default minFragSize = " << minFragSize << " and minNumOccurrences = " << minNumOccurrences << ") " << endl;
+			cerr << endl << "Usage 3: repair (default file is: " << inputFilepath << ")" << endl;
+			exit(0);
+		}
+
+		if (argc > 1)
+			inputFilepath = (string)argv[1];
+
+		if (argc > 2)
 			minFragSize = atoi(argv[2]);
 
+		if (argc > 3)
+			minNumOccurrences = atoi(argv[3]);
+
 		string inputFilename = getFileName(inputFilepath);
-		// cerr << inputFilename << endl;
-		// system("pause");
 
 		cerr << "Minimum fragment size is: " << minFragSize << endl;
 		
@@ -833,7 +841,7 @@ int main(int argc, char* argv[])
 		
 		int numPairs = hashTable.size();
 
-		doRepair(myHeap, hashTable, associations);
+		doRepair(myHeap, hashTable, associations, minNumOccurrences);
 		
 		vector<unsigned> starts = getPartitioning(myHeap, hashTable, minFragSize);
 
