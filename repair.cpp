@@ -6,6 +6,7 @@
 #include <iterator>
 #include <sstream>
 #include <locale>
+#include <ctime>
 #include "HeapEntry.h"
 #include "RandomHeap.h"
 #include "Tokenizer.h"
@@ -440,7 +441,9 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 		size_t numOccurrences = max->getSize();
 
 		// TODO think about this number
-		unsigned minimumNumOccurrences = 2;
+		// Thought about it: it should be well below the number of versions
+		// Imagine a fragment that occurs in numVersions - 2 of the versions. That's a good fragment, let's keep it. Maybe numVersions / 2.
+		unsigned minimumNumOccurrences = 5;
 		if (numOccurrences < minimumNumOccurrences)
 			return;
 
@@ -629,14 +632,12 @@ void cleanup(unordered_map<unsigned long long, HashTableEntry*>& hashTable)
 	}
 }
 
-void writeAssociations(const vector<Association>& associations, const string& filename)
+void writeAssociations(const vector<Association>& associations, ostream& os = cerr)
 {
-	ofstream os(filename.c_str());
 	for (size_t i = 0; i < associations.size(); i++)
 	{
 		os << associations[i];
 	}
-	os.close();
 }
 
 void getVersions(vector<char**>& versions)
@@ -685,9 +686,6 @@ vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long
 	if (myHeap.empty())
 		return starts;
 
-	// cerr << myHeap.getMax().getIndex() << endl;
-	// system("pause");
-
 	HeapEntry lastMax = myHeap.getMax();
 	unsigned long long key = lastMax.getKey();
 	
@@ -698,18 +696,16 @@ vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long
 	else
 		prec = oc;
 
-	// cerr << prec->getLeftPositionInSequence() << endl;
-	// system("pause");
-
 	//Run to the left
 	while (prec->getPrec())
-	{
 		prec = prec->getPrec();
-	}
+
 	Occurrence* current = prec;
 
 	unsigned currVal, nextVal, diff;
-	//Starting from the left, read the indexes in order, giving us our partitioning
+	// Starting from the left, read the indexes in order, and group small fragments together
+	// That is, only add an index to the result array if the difference between it and the next one is large
+	starts.push_back(0);
 	while (current)
 	{
 		currVal = current->getLeftPositionInSequence();
@@ -718,9 +714,10 @@ vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long
 			current = current->getSucc();
 			nextVal = current->getLeftPositionInSequence();
 			diff = nextVal - currVal;
-			if (diff > minFragSize)
+			if (diff >= minFragSize)
 			{
-				starts.push_back(currVal);
+				// if (currVal != 0)
+				// 	starts.push_back(currVal);
 				starts.push_back(nextVal);
 			}
 		}
@@ -728,13 +725,57 @@ vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long
 		{
 			break;
 		}
-		// starts.push_back(current->getLeftPositionInSequence());
-		// if (current->getSucc())
-		// 	current = current->getSucc();
-		// else
-		// 	break;
 	}
 	return starts;
+}
+
+void printWordIDFragments(const vector<unsigned>& wordIDs, const vector<unsigned>& starts, ostream& os = cerr)
+{
+	unsigned start, end;
+	for (unsigned i = 0; i < starts.size() - 1; i++)
+	{
+		start = starts[i];
+		end = starts[i+1];
+		for (unsigned j = start; j < end; j++)
+		{
+			os << wordIDs[j] << " ";
+		}
+		os << endl;
+	}
+}
+
+void writeResults(const vector<unsigned>& wordIDs, const vector<unsigned>& starts, const vector<Association>& associations, const string& outFilename, bool printFragments = false, bool printAssociations = false)
+{
+	ofstream os(outFilename.c_str());
+
+	os << "Results of re-pair partitioning..." << endl << endl;
+	os << "First 100 fragment boundaries (or all of them if there are less):" << endl;
+	
+	for (unsigned i = 0; i < starts.size() && i < 100; i++)
+		os << starts[i] << endl;
+	
+	os << "Number of fragment boundaries: " << starts.size() << endl;
+	os << "Number of fragments: " << (starts.size() - 1) << endl << endl;
+
+	if (printFragments)
+	{
+		os << "Printing fragments identified by repair (these are word IDs)..." << endl;
+		printWordIDFragments(wordIDs, starts, os);
+	}
+	
+	if (printAssociations)
+	{
+		writeAssociations(associations, os);
+	}
+}
+
+string getFileName(const char* filepath)
+{
+	vector<string> tokens;
+	string delimiters = "/\\";
+	bool trimEmpty = false;
+	tokenize(filepath, tokens, delimiters, trimEmpty);
+	return tokens.back();
 }
 
 int main(int argc, char* argv[])
@@ -755,23 +796,27 @@ int main(int argc, char* argv[])
 		Profiler::getInstance().start("all");
 		//The original text, as one document (idea is to process concatenation of all versions)
 		char* text;
-		const char* filename;
+		const char* inputFilepath;
 		int fileSize;
 		unsigned minFragSize;
 
 		if (argc < 2)
-			filename = "Input/alice.txt";
+			inputFilepath = "Input/ints.txt";
 		else
-			filename = argv[1];
+			inputFilepath = argv[1];
 
 		if (argc < 3)
-			minFragSize = 20;
+			minFragSize = 5;
 		else
 			minFragSize = atoi(argv[2]);
 
+		string inputFilename = getFileName(inputFilepath);
+		// cerr << inputFilename << endl;
+		// system("pause");
+
 		cerr << "Minimum fragment size is: " << minFragSize << endl;
 		
-		text = getText(filename, fileSize);
+		text = getText(inputFilepath, fileSize);
 
 		//For now just deal with one doc, no separators, TODO add them later
 		//TODO this is roughly tolower, needs a string though, not a char*
@@ -785,31 +830,31 @@ int main(int argc, char* argv[])
 		vector<Association> associations = vector<Association>();
 		
 		extractPairs(wordIDs, myHeap, hashTable);
+		
 		int numPairs = hashTable.size();
 
 		doRepair(myHeap, hashTable, associations);
-
 		
 		vector<unsigned> starts = getPartitioning(myHeap, hashTable, minFragSize);
 
-		for (unsigned i = 0; i < starts.size() && i < 100; i++)
-			cerr << starts[i] << endl;
-		cerr << "Total size of starts[]: " << starts.size() << endl;
+		stringstream outFilenameStream;
+		outFilenameStream << "./Output/results-" << inputFilename;
+		string outputFilename = outFilenameStream.str();
+
+		writeResults(wordIDs, starts, associations, outputFilename);
 
 		stringstream ss;
-		ss << "Filename: " << filename << endl;
+		ss << "Filename: " << inputFilepath << endl;
 		ss << "Size: " << fileSize << " bytes" << endl; 
 		ss << "Word Count: " << wordIDs.size() << endl;
 		ss << "Unique Pair Count (in original file): " << numPairs << endl;
 
-		writeAssociations(associations, "Output/associations-1.txt");
-		
-		// cout << "Checking output... " << endl;
+		// cerr << "Checking output... " << endl;
 		// if (checkOutput(associations, wordIDs))
-		// 	cout << "Output ok!";
+		// 	cerr << "Output ok!";
 		// else
-		// 	cout << "Check failed!";
-		// cout << endl;
+		// 	cerr << "Check failed!";
+		// cerr << endl;
 
 		Profiler::getInstance().end("all");
 		Profiler::getInstance().setInputSpec(ss.str());	
