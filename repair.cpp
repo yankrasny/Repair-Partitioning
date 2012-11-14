@@ -730,23 +730,27 @@ vector<unsigned> getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long
 }
 
 //TODO save the fragments and find them in the file, to be able to record their frequencies
-void printWordFragments(const vector<unsigned>& wordIDs, const vector<unsigned>& starts, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
+vector<vector<unsigned> > printAndSaveFragments(const vector<unsigned>& wordIDs, const vector<unsigned>& starts, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
 {
+	vector<vector<unsigned> > fragments = vector<vector<unsigned> >();
 	unsigned start, end, theID;
 	string word;
 	for (unsigned i = 0; i < starts.size() - 1; i++)
 	{
+		fragments.push_back(vector<unsigned>());
 		start = starts[i];
 		end = starts[i+1];
 		os << "Fragment " << i << ": ";
 		for (unsigned j = start; j < end; j++)
 		{
 			theID = wordIDs[j];
+			fragments[i].push_back(theID);
 			word = IDsToWords[theID];
 			os << word << " ";
 		}
 		os << endl;
 	}
+	return fragments;
 }
 
 void writeResults(const vector<unsigned>& wordIDs, const vector<unsigned>& starts, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
@@ -762,10 +766,11 @@ void writeResults(const vector<unsigned>& wordIDs, const vector<unsigned>& start
 	os << "Number of fragment boundaries: " << starts.size() << endl;
 	os << "Number of fragments: " << (starts.size() - 1) << endl << endl;
 
+	vector<vector<unsigned> > fragments;
 	if (printFragments)
 	{
 		os << "Printing fragments identified by repair..." << endl;
-		printWordFragments(wordIDs, starts, IDsToWords, os);
+		fragments = printAndSaveFragments(wordIDs, starts, IDsToWords, os);
 	}
 	
 	if (printAssociations)
