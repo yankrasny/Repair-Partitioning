@@ -46,7 +46,8 @@ struct Association
 	unsigned left;
 	unsigned right;
 	unsigned freq;
-
+	unsigned startPos; //TODO implement
+	unsigned endPos; //TODO implement
 	Association(unsigned symbol, unsigned left, unsigned right, unsigned freq) : symbol(symbol), left(left), right(right), freq(freq) {}
 };
 
@@ -98,12 +99,11 @@ public:
 //ObjectPool<Occurrence> occurrencePool = ObjectPool<Occurrence>(5000);
 
 
-struct VersionDataItem
+struct NeighborListItem
 {
 	Occurrence* leftMostOcc;
 	unsigned index;
-	unsigned versionSize; //in words
-	VersionDataItem(Occurrence* leftMostOcc, unsigned index, unsigned versionSize) : leftMostOcc(leftMostOcc), index(index), versionSize(versionSize) {}
+	NeighborListItem(Occurrence* leftMostOcc, unsigned index) : leftMostOcc(leftMostOcc), index(index) {}
 };
 
 void doubleLinkOccurrences(Occurrence* prev, Occurrence* curr)
@@ -241,13 +241,14 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashT
 
 		//Create a hash table entry, and initialize it with its heap entry pointer
 		hashTable[key] = new HashTableEntry(hp, prec, succ, leftPosition); //This creates the first occurrence (see the constructor)
-
+		// hashTable[key] = 0;
 		//The order of these calls matters: do this first and the hash table entry won't know the index
+		//Is this still true? TODO
 		myHeap.insert(hp);
 	}
 }
 
-void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<VersionDataItem>& versionData)
+void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<NeighborListItem>& neighborList)
 {
 	vector<unsigned> wordIDs;
 	for (size_t v = 0; v < versions.size(); v++)
@@ -278,7 +279,7 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 			//Maintain a list of pointers to the leftmost occurrence in each version
 			if (i == 0)
 			{
-				versionData.push_back(VersionDataItem(lastAddedOccurrence, v, wordIDs.size()));
+				neighborList.push_back(NeighborListItem(lastAddedOccurrence, v));
 			}
 
 			//Checks for existence of prev, and links them to each other
@@ -425,21 +426,7 @@ vector<unsigned> undoRepair(const vector<Association>& associations)
 	vector<unsigned> result = expand(associations, associations.size() - 1, knownExpansions);
 	
 	return result;
-}
-
-void replaceInVersionData(vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc)
-{
-	// update versionData
-	if (!oldOcc || !newOcc || versionData.size() <= 0)
-		return;
-	for (unsigned i = 0; i < versionData.size(); i++)
-	{
-		if (versionData[i].leftMostOcc == oldOcc)
-		{
-			versionData[i].leftMostOcc = newOcc;
-		}
-	}
-}
+} 
 
 /*
 	While the heap is not empty, get the max and process it (that is, replace all occurrences and modify all prec and succ pointers)
@@ -452,7 +439,7 @@ void replaceInVersionData(vector<VersionDataItem>& versionData, Occurrence* oldO
 		New occurrences to add:		ax, xd
 		Old occurrences to remove:	ab, bc, cd
 */
-void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<Association>& associations, unsigned minNumOccurrences, vector<VersionDataItem>& versionData)
+void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<Association>& associations, unsigned minNumOccurrences, vector<NeighborListItem>& neighborList)
 {
 	while (!myHeap.empty())
 	{
@@ -537,8 +524,6 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			oldRightIndex = curr->getLeftPositionInSequence();
 
 			//Just creates the occurrence in the hash table and heap, doesn't link it to its neighbors
-			//Passing along the index from the pair we're replacing
-			//You get holes eventually (which you want) because 3 pairs get replaced by 2 every time
 			addOrUpdatePair(myHeap, hashTable, newLeftKey, oldLeftIndex);
 			addOrUpdatePair(myHeap, hashTable, newRightKey, oldRightIndex);
 
@@ -561,26 +546,7 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 				newRightOcc = hashTable[newRightKey]->getHeadOccurrence();
 				doubleLinkNeighbors(newLeftOcc, newRightOcc);
 			}
-
-			if (nearLeftEdge || onLeftEdge)
-			{
-				// Updating our list of pointers to the left most occurrences for each version (we need this to read the indexes and figure out the partitioning, see getPartitioning(...))
-				if (newLeftKey)
-				{
-					Occurrence* oldLeftMostOcc;
-					if (nearLeftEdge)
-					{
-						oldLeftMostOcc = prec;
-					}
-					if (onLeftEdge)
-					{
-						oldLeftMostOcc = curr;
-					}
-					Occurrence* newLeftMostOcc = hashTable[newLeftKey]->getHeadOccurrence();
-					replaceInVersionData(versionData, oldLeftMostOcc, newLeftMostOcc);
-				}
-			}
-				
+			
 			//cerr << "Removing curr: " << curr->getLeft() << "," << curr->getRight() << endl;
 			removeOccurrence(myHeap, hashTable, curr);
 			
@@ -594,9 +560,26 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 				//cerr << "Removing prec: " << prec->getLeft() << "," << prec->getRight() << endl;
 				removeOccurrence(myHeap, hashTable, prec);
 			}
+
+			if (nearLeftEdge)
+			{
+				//update neighborList
+				if (newLeftKey)
+				{
+					Occurrence* currLeftMostOcc = hashTable[newLeftKey]->getHeadOccurrence();
+					for (unsigned i = 0; i < neighborList.size(); i++)
+					{
+						if (neighborList[i].leftMostOcc == currLeftMostOcc)
+						{
+							neighborList[i].leftMostOcc = currLeftMostOcc;
+						}
+					}
+					
+				}
+			}
 		}
 	}
-}
+} 
 
 vector<unsigned> stringToWordIDs(const string& text, unordered_map<unsigned, string>& IDsToWords)
 {
@@ -657,7 +640,7 @@ char* getText(const string& filename, int& length)
 
 	if (is.fail())
 	{
-		cerr << "Could not open input file (it might be a directory). Moving on..." << endl;
+		cerr << "Could not open input file. Moving on..." << endl;
 		return NULL;
 	}
 	// get length of file:
@@ -732,16 +715,16 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 	return true;
 }
 
-vector<vector<unsigned> > getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, unsigned minFragSize, vector<VersionDataItem>& versionData)
+vector<vector<unsigned> > getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, unsigned minFragSize, vector<NeighborListItem>& neighborList)
 {
 	vector<vector<unsigned> > ret = vector<vector<unsigned> >();
 	if (myHeap.empty())
 		return ret;
 
-	for (unsigned i = 0; i < versionData.size(); i++)
+	for (unsigned i = 0; i < neighborList.size(); i++)
 	{
 		ret.push_back(vector<unsigned>());
-		Occurrence* current = versionData[i].leftMostOcc;
+		Occurrence* current = neighborList[i].leftMostOcc;
 
 		unsigned currVal, nextVal, diff;
 		// Starting from the left, read the indexes in order, and group small fragments together
@@ -757,33 +740,29 @@ vector<vector<unsigned> > getPartitioning(RandomHeap& myHeap, unordered_map<unsi
 				diff = nextVal - currVal;
 				if (diff >= minFragSize)
 				{
+					// if (currVal != 0)
+					// 	ret[i].push_back(currVal);
 					ret[i].push_back(nextVal);
 				}
 			}
 			else
 			{
-				ret[i].push_back(currVal);
 				break;
 			}
 		}
-		// TODO not sure why this caused all of the last fragments to have size 2
-		if (ret[i].back() != versionData[i].versionSize)
-			ret[i].push_back(versionData[i].versionSize);
 	}
 	return ret;
 }
 
-vector<vector<vector<unsigned> > > printAndSaveFragments(const vector<vector<unsigned> >& versions, const vector<vector<unsigned> >& starts, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
+//TODO save the fragments and find them in the file, to be able to record their frequencies
+vector<vector<vector<unsigned> > > printAndSaveFragments(const vector<unsigned>& wordIDs, const vector<vector<unsigned> >& starts, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
 {
 	vector<vector<vector<unsigned> > > fragments = vector<vector<vector<unsigned> > >();
 	unsigned start, end, theID;
 	string word;
-	vector<unsigned> wordIDs;
 	for (unsigned v = 0; v < starts.size() - 1; v++)
 	{
-		wordIDs = versions[v];
 		fragments.push_back(vector<vector<unsigned> >());
-		os << "Version " << v << endl;
 		for (unsigned i = 0; i < starts[v].size() - 1; i++)
 		{
 			fragments[v].push_back(vector<unsigned>());
@@ -794,39 +773,27 @@ vector<vector<vector<unsigned> > > printAndSaveFragments(const vector<vector<uns
 			{
 				theID = wordIDs[j];
 				fragments[v][i].push_back(theID);
-				
-				// TODO calculate the hash of the fragment, and use it to assign fragment IDs
-
 				word = IDsToWords[theID];
 				os << word << " ";
 			}
 			os << endl;
 		}
-		os << endl;
 	}
 	return fragments;
 }
 
-void writeResults(const vector<vector<unsigned> >& versions, const vector<vector<unsigned> >& starts, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
+void writeResults(const vector<unsigned>& wordIDs, const vector<vector<unsigned> >& starts, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
 {
 	ofstream os(outFilename.c_str());
 
 	os << "Results of re-pair partitioning..." << endl << endl;
-	os << "*** Fragment boundaries ***" << endl;
+	os << "First 100 fragment boundaries (or all of them if there are less):" << endl;
 	
-	unsigned diff(0);
 	for (unsigned v = 0; v < starts.size(); v++)
 	{
 		os << "Version " << v << endl;
-		for (unsigned i = 0; i < starts[v].size() - 1; i++)
-		{
-			if (i < starts[v].size() - 1)
-				diff = starts[v][i+1] - starts[v][i];
-			else
-				diff = 0;
-
-			os << "Fragment " << i << ": " << starts[v][i] << "-" << starts[v][i+1] << " (frag size: " << diff << ")" << endl;
-		}
+		for (unsigned i = 0; i < starts[v].size() && i < 100; i++)
+			os << starts[v][i] << endl;
 		os << endl;
 	}
 
@@ -836,13 +803,13 @@ void writeResults(const vector<vector<unsigned> >& versions, const vector<vector
 	vector<vector<vector<unsigned> > > fragments;
 	if (printFragments)
 	{
-		os << "*** Fragments ***" << endl;
-		fragments = printAndSaveFragments(versions, starts, IDsToWords, os);
+		os << "Printing fragments identified by repair..." << endl;
+		//fragments = printAndSaveFragments(wordIDs, starts, IDsToWords, os);
 	}
 	
 	if (printAssociations)
 	{
-		os << "*** Associations (symbol -> pair) ***" << endl;
+		os << "Printing associations created by repair (symbol -> pair)..." << endl;
 		writeAssociations(associations, os);
 	}
 }
@@ -909,22 +876,16 @@ int main(int argc, char* argv[])
 		string inputFilepath = "./Input/ints/";
 
 		// Default param values
-		unsigned minFragSize = 5; //in words
-		unsigned minNumOccurrences = 5; //pairs that occur less than this amount of times will not be replaced
-		//Initial tests show that minNumOccurrences shouldn't be too small (repair goes too far for our purposes in this case)
-		//And it shouldn't be larger than the number of versions (this is trivial, we expect to get repetition at most numVersions times for inter-version repetitions)
+		unsigned minFragSize = 2; //in words
+		unsigned minNumOccurrences = 2; //pairs that occur less than this amount of times will no be replaced
 
 		if (argc == 2 && (string) argv[1] == "help")
 		{
 			cerr << "Usage:" << endl;
-			cerr << "\trepair <directory> <minFragSize> <minNumOccurrences>" << endl;
-			cerr << "\trepair <directory> <minFragSize>" << endl;
-			cerr << "\trepair <directory>" << endl;
-			cerr << "\trepair " << endl << endl;
-			cerr << "Defaults: " << endl;
-			cerr << "\tdirectory: " << inputFilepath << endl;
-			cerr << "\tminFragSize: " << minFragSize << endl;
-			cerr << "\tminNumOccurrences: " << minNumOccurrences << endl;
+			cerr << "repair <directory filepath> <minFragSize> <minNumOccurrences>" << endl;
+			cerr << "repair <directory filepath> <minFragSize> (default minNumOccurrences = " << minNumOccurrences << ")" << endl;
+			cerr << "repair <directory filepath> (default minFragSize = " << minFragSize << " and minNumOccurrences = " << minNumOccurrences << ") " << endl;
+			cerr << "repair (default directory is: " << inputFilepath << ")" << endl;
 			exit(0);
 		}
 
@@ -969,15 +930,15 @@ int main(int argc, char* argv[])
 		RandomHeap myHeap;
 		unordered_map<unsigned long long, HashTableEntry*> hashTable = unordered_map<unsigned long long, HashTableEntry*> ();
 		vector<Association> associations = vector<Association>();
-		vector<VersionDataItem> versionData = vector<VersionDataItem>();
+		vector<NeighborListItem> neighborList = vector<NeighborListItem>();
 
-		extractPairs(versions, myHeap, hashTable, versionData);
+		extractPairs(versions, myHeap, hashTable, neighborList);
 	
 		int numPairs = hashTable.size();
 
-		doRepair(myHeap, hashTable, associations, minNumOccurrences, versionData);
+		doRepair(myHeap, hashTable, associations, minNumOccurrences, neighborList);
 		
-		const vector<vector<unsigned> > starts = getPartitioning(myHeap, hashTable, minFragSize, versionData);
+		const vector<vector<unsigned> > starts = getPartitioning(myHeap, hashTable, minFragSize, neighborList);
 
 		stringstream outFilenameStream;
 		outFilenameStream << "Output/results" << stripDot(inputFilepath);
@@ -985,10 +946,10 @@ int main(int argc, char* argv[])
 
 		outputFilename = "Output/results.txt";
 
-		bool printFragments = false;
+		bool printFragments = true;
 		bool printAssociations = false;
 
-		writeResults(versions, starts, associations, IDsToWords, outputFilename, printFragments, printAssociations);
+		writeResults(wordIDs, starts, associations, IDsToWords, outputFilename, printFragments, printAssociations);
 
 		stringstream command;
 		command << "start " << outputFilename.c_str();
