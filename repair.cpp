@@ -13,6 +13,8 @@
 #include "Profiler.h"
 using namespace std;
 
+const unsigned MAX_NUM_FRAGMENTS_PER_VERSION(100);
+
 unsigned currentID(0);
 unsigned nextID()
 {
@@ -101,7 +103,7 @@ public:
 struct VersionDataItem
 {
 	Occurrence* leftMostOcc;
-	unsigned index;
+	unsigned index; //index in the original file (the indexes of consecutive occurrences define the interval spanned by those symbols)
 	unsigned versionSize; //in words
 	VersionDataItem(Occurrence* leftMostOcc, unsigned index, unsigned versionSize) : leftMostOcc(leftMostOcc), index(index), versionSize(versionSize) {}
 };
@@ -186,6 +188,7 @@ public:
 			occurrences = next;
 		}
 		delete target;
+		target = NULL;
 	}
 	void addOccurrence(Occurrence* oc)
 	{
@@ -429,7 +432,7 @@ vector<unsigned> undoRepair(const vector<Association>& associations)
 
 void replaceInVersionData(vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc)
 {
-	// update versionData
+	// update the leftmost occurrence in the appropriate entry of the version data
 	if (!oldOcc || !newOcc || versionData.size() <= 0)
 		return;
 	for (unsigned i = 0; i < versionData.size(); i++)
@@ -437,6 +440,7 @@ void replaceInVersionData(vector<VersionDataItem>& versionData, Occurrence* oldO
 		if (versionData[i].leftMostOcc == oldOcc)
 		{
 			versionData[i].leftMostOcc = newOcc;
+			break;
 		}
 	}
 }
@@ -452,7 +456,7 @@ void replaceInVersionData(vector<VersionDataItem>& versionData, Occurrence* oldO
 		New occurrences to add:		ax, xd
 		Old occurrences to remove:	ab, bc, cd
 */
-void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<Association>& associations, unsigned minNumOccurrences, vector<VersionDataItem>& versionData)
+void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<Association>& associations, unsigned repairStoppingPoint, vector<VersionDataItem>& versionData)
 {
 	while (!myHeap.empty())
 	{
@@ -472,8 +476,8 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 
 		// TODO think about this number
 		// Thought about it: it should be well below the number of versions
-		// Imagine a fragment that occurs in numVersions - 2 of the versions. That's a good fragment, let's keep it. Maybe minNumOccurrences := numVersions / 2
-		if (numOccurrences < minNumOccurrences)
+		// Imagine a fragment that occurs in numVersions - 2 of the versions. That's a good fragment, let's keep it. Maybe repairStoppingPoint := numVersions / 2
+		if (numOccurrences < repairStoppingPoint)
 			return;
 
 		Occurrence* curr;
@@ -732,63 +736,84 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 	return true;
 }
 
-vector<vector<unsigned> > getPartitioning(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, unsigned minFragSize, vector<VersionDataItem>& versionData)
+unsigned getPartitioningOneVersion(Occurrence* current, vector<VersionDataItem>& versionData, unsigned* offsets, unsigned versionNum, unsigned minFragSize)
 {
-	vector<vector<unsigned> > ret = vector<vector<unsigned> >();
-	if (myHeap.empty())
-		return ret;
+	unsigned currVal(0); // the current occurrence's starting index
+	unsigned nextVal(0); // the next occurrence's starting index 
+	unsigned diff(0); // the difference between consecutive indexes (a large value signifies a good fragment)
+	unsigned fragmentNum(0); //the number of fragments so far in the current version
 
-	for (unsigned i = 0; i < versionData.size(); i++)
+	while (current)
 	{
-		ret.push_back(vector<unsigned>());
-		Occurrence* current = versionData[i].leftMostOcc;
-
-		unsigned currVal, nextVal, diff;
-		// Starting from the left, read the indexes in order, and group small fragments together
-		// That is, only add an index to the result array if the difference between it and the next one is large
-		ret[i].push_back(0);
-		while (current)
+		//Start the current version from fragment 0
+		fragmentNum = 0;
+		currVal = current->getLeftPositionInSequence();
+		if (current->getSucc())
 		{
-			currVal = current->getLeftPositionInSequence();
-			if (current->getSucc())
+			current = current->getSucc();
+			nextVal = current->getLeftPositionInSequence();
+			diff = nextVal - currVal;
+			if (diff >= minFragSize)
 			{
-				current = current->getSucc();
-				nextVal = current->getLeftPositionInSequence();
-				diff = nextVal - currVal;
-				if (diff >= minFragSize)
-				{
-					ret[i].push_back(nextVal);
-				}
-			}
-			else
-			{
-				ret[i].push_back(currVal);
-				break;
+				offsets[fragmentNum] = nextVal;
+				fragmentNum++;
 			}
 		}
-		// TODO not sure why this caused all of the last fragments to have size 2
-		if (ret[i].back() != versionData[i].versionSize)
-			ret[i].push_back(versionData[i].versionSize);
+		else
+		{
+			// Store the last fragment, and break because current has no right neighbor
+			offsets[fragmentNum] = currVal;
+			break;
+		}
 	}
-	return ret;
+	// TODO not sure why this caused all of the last fragments to have size 2
+	if (offsets[fragmentNum] != versionData[versionNum].versionSize)
+		offsets[fragmentNum] = versionData[versionNum].versionSize - 1;
+
+	return fragmentNum;
 }
 
-vector<vector<vector<unsigned> > > printAndSaveFragments(const vector<vector<unsigned> >& versions, const vector<vector<unsigned> >& starts, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
+unsigned* getPartitioningsAllVersions(RandomHeap& myHeap, unsigned minFragSize, vector<VersionDataItem>& versionData, unsigned* versionPartitionSizes)
+{
+	unsigned maxArraySize = versionData.size() * MAX_NUM_FRAGMENTS_PER_VERSION;
+	unsigned* fragmentList = new unsigned[maxArraySize];
+	
+	if (myHeap.empty())
+		return NULL;
+
+	unsigned versionOffset(0); // after the loop, is set to the total number of fragments (also the size of the starts array)
+	unsigned numFragments(0); // will be reused in the loop for the number of fragments in each version
+
+	//Iterate over all versions
+	for (unsigned i = 0; i < versionData.size(); i++)
+	{
+		Occurrence* startingOccurrence = versionData[i].leftMostOcc; // We've stored the leftmost occurrences for each version throughout repair
+		numFragments = getPartitioningOneVersion(startingOccurrence, versionData, &fragmentList[versionOffset], i, minFragSize); // Do the partitioning for one version, and store the number of fragments
+		versionOffset += numFragments;
+		versionPartitionSizes[i] = numFragments;
+	}
+	return fragmentList;
+}
+
+vector<vector<vector<unsigned> > > printAndSaveFragments(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
 {
 	vector<vector<vector<unsigned> > > fragments = vector<vector<vector<unsigned> > >();
 	unsigned start, end, theID;
 	string word;
 	vector<unsigned> wordIDs;
-	for (unsigned v = 0; v < starts.size() - 1; v++)
+
+	unsigned totalCountFragments(0);
+
+	for (unsigned v = 0; v < versions.size() - 1; v++)
 	{
 		wordIDs = versions[v];
 		fragments.push_back(vector<vector<unsigned> >());
 		os << "Version " << v << endl;
-		for (unsigned i = 0; i < starts[v].size() - 1; i++)
+		for (unsigned i = 0; i < versionPartitionSizes[v] - 1; i++)
 		{
 			fragments[v].push_back(vector<unsigned>());
-			start = starts[v][i];
-			end = starts[v][i+1];
+			start = offsetsAllVersions[totalCountFragments + i];
+			end = offsetsAllVersions[totalCountFragments + i + 1];
 			os << "Fragment " << i << ": ";
 			for (unsigned j = start; j < end; j++)
 			{
@@ -801,31 +826,36 @@ vector<vector<vector<unsigned> > > printAndSaveFragments(const vector<vector<uns
 				os << word << " ";
 			}
 			os << endl;
+			totalCountFragments += versionPartitionSizes[v];
 		}
 		os << endl;
 	}
 	return fragments;
 }
 
-void writeResults(const vector<vector<unsigned> >& versions, const vector<vector<unsigned> >& starts, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
+void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
 {
 	ofstream os(outFilename.c_str());
 
 	os << "Results of re-pair partitioning..." << endl << endl;
 	os << "*** Fragment boundaries ***" << endl;
 	
+	unsigned totalCountFragments(0);
 	unsigned diff(0);
-	for (unsigned v = 0; v < starts.size(); v++)
+	for (unsigned v = 0; v < versions.size(); v++)
 	{
 		os << "Version " << v << endl;
-		for (unsigned i = 0; i < starts[v].size() - 1; i++)
+		for (unsigned i = 0; i < versionPartitionSizes[v] - 1; i++)
 		{
-			if (i < starts[v].size() - 1)
-				diff = starts[v][i+1] - starts[v][i];
+			if (i < versionPartitionSizes[v] - 1)
+				diff = offsetsAllVersions[totalCountFragments + i + 1] - offsetsAllVersions[totalCountFragments + i];
 			else
 				diff = 0;
 
-			os << "Fragment " << i << ": " << starts[v][i] << "-" << starts[v][i+1] << " (frag size: " << diff << ")" << endl;
+			os << "Fragment " << i << ": " << offsetsAllVersions[totalCountFragments + i] << "-" << 
+				offsetsAllVersions[totalCountFragments + i + 1] << " (frag size: " << diff << ")" << endl;
+
+			totalCountFragments += versionPartitionSizes[v];
 		}
 		os << endl;
 	}
@@ -837,7 +867,7 @@ void writeResults(const vector<vector<unsigned> >& versions, const vector<vector
 	if (printFragments)
 	{
 		os << "*** Fragments ***" << endl;
-		fragments = printAndSaveFragments(versions, starts, IDsToWords, os);
+		fragments = printAndSaveFragments(versions, offsetsAllVersions, versionPartitionSizes, IDsToWords, os);
 	}
 	
 	if (printAssociations)
@@ -909,22 +939,29 @@ int main(int argc, char* argv[])
 		string inputFilepath = "./Input/ints/";
 
 		// Default param values
-		unsigned minFragSize = 5; //in words
-		unsigned minNumOccurrences = 5; //pairs that occur less than this amount of times will not be replaced
-		//Initial tests show that minNumOccurrences shouldn't be too small (repair goes too far for our purposes in this case)
-		//And it shouldn't be larger than the number of versions (this is trivial, we expect to get repetition at most numVersions times for inter-version repetitions)
+		/*
+		Initial test show that minFragSize should be proportional to document size
+		*/
+		unsigned minFragSize = 2; //in words
+
+		/*
+		Initial tests show that repairStoppingPoint shouldn't be too small (repair goes too far for our purposes in this case)
+		And it shouldn't be larger than the number of versions (this is trivial, we expect to get repetition 
+		at most numVersions times for inter-version repetitions)
+		*/
+		unsigned repairStoppingPoint = 2; //pairs that occur less than this amount of times will not be replaced
 
 		if (argc == 2 && (string) argv[1] == "help")
 		{
 			cerr << "Usage:" << endl;
-			cerr << "\trepair <directory> <minFragSize> <minNumOccurrences>" << endl;
+			cerr << "\trepair <directory> <minFragSize> <repairStoppingPoint>" << endl;
 			cerr << "\trepair <directory> <minFragSize>" << endl;
 			cerr << "\trepair <directory>" << endl;
 			cerr << "\trepair " << endl << endl;
 			cerr << "Defaults: " << endl;
 			cerr << "\tdirectory: " << inputFilepath << endl;
 			cerr << "\tminFragSize: " << minFragSize << endl;
-			cerr << "\tminNumOccurrences: " << minNumOccurrences << endl;
+			cerr << "\trepairStoppingPoint: " << repairStoppingPoint << endl;
 			exit(0);
 		}
 
@@ -935,7 +972,7 @@ int main(int argc, char* argv[])
 			minFragSize = atoi(argv[2]);
 
 		if (argc > 3)
-			minNumOccurrences = atoi(argv[3]);
+			repairStoppingPoint = atoi(argv[3]);
 		
 		vector<string> inputFilenames = vector<string>();
 		if (getFileNames(inputFilepath, inputFilenames))
@@ -965,19 +1002,39 @@ int main(int argc, char* argv[])
 		// By this time, IDsToWords should contain the mappings of IDs to words in all versions
 		// printIDtoWordMapping(IDsToWords);
 
-		//Allocate the heap, hash table, array of associations, and list of neighbor structures
+		//Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures
 		RandomHeap myHeap;
 		unordered_map<unsigned long long, HashTableEntry*> hashTable = unordered_map<unsigned long long, HashTableEntry*> ();
 		vector<Association> associations = vector<Association>();
 		vector<VersionDataItem> versionData = vector<VersionDataItem>();
 
+
+		Occurrence* oc;
+
 		extractPairs(versions, myHeap, hashTable, versionData);
+
+
+		// for (unsigned i = 0; i < versionData.size(); i++)
+		// {
+		// 	oc = versionData[i].leftMostOcc;
+		// 	// cerr << oc;
+		// }
+
 	
 		int numPairs = hashTable.size();
 
-		doRepair(myHeap, hashTable, associations, minNumOccurrences, versionData);
+		doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData);
+
+
+		for (unsigned i = 0; i < versionData.size(); i++)
+		{
+			oc = versionData[i].leftMostOcc;
+			// cerr << oc;
+		}
+
 		
-		const vector<vector<unsigned> > starts = getPartitioning(myHeap, hashTable, minFragSize, versionData);
+		unsigned* versionPartitionSizes = new unsigned[versions.size()];
+		unsigned* offsetsAllVersions = getPartitioningsAllVersions(myHeap, minFragSize, versionData, versionPartitionSizes);
 
 		stringstream outFilenameStream;
 		outFilenameStream << "Output/results" << stripDot(inputFilepath);
@@ -988,7 +1045,7 @@ int main(int argc, char* argv[])
 		bool printFragments = false;
 		bool printAssociations = false;
 
-		writeResults(versions, starts, associations, IDsToWords, outputFilename, printFragments, printAssociations);
+		writeResults(versions, offsetsAllVersions, versionPartitionSizes, associations, IDsToWords, outputFilename, printFragments, printAssociations);
 
 		stringstream command;
 		command << "start " << outputFilename.c_str();
