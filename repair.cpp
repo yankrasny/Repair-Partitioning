@@ -430,19 +430,20 @@ vector<unsigned> undoRepair(const vector<Association>& associations)
 	return result;
 }
 
-void replaceInVersionData(vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc)
+bool replaceInVersionData(vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc)
 {
 	// update the leftmost occurrence in the appropriate entry of the version data
 	if (!oldOcc || !newOcc || versionData.size() <= 0)
-		return;
+		return false;
 	for (unsigned i = 0; i < versionData.size(); i++)
 	{
 		if (versionData[i].leftMostOcc == oldOcc)
 		{
 			versionData[i].leftMostOcc = newOcc;
-			break;
+			return true;
 		}
 	}
+	return false;
 }
 
 /*
@@ -569,20 +570,37 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			if (nearLeftEdge || onLeftEdge)
 			{
 				// Updating our list of pointers to the left most occurrences for each version (we need this to read the indexes and figure out the partitioning, see getPartitioning(...))
-				if (newLeftKey)
+				Occurrence* oldLeftMostOcc;
+				Occurrence* newLeftMostOcc;
+
+				if (nearLeftEdge)
 				{
-					Occurrence* oldLeftMostOcc;
-					if (nearLeftEdge)
+					oldLeftMostOcc = prec;
+					if (newLeftKey)
 					{
-						oldLeftMostOcc = prec;
+						newLeftMostOcc = hashTable[newLeftKey]->getHeadOccurrence();
 					}
-					if (onLeftEdge)
-					{
-						oldLeftMostOcc = curr;
-					}
-					Occurrence* newLeftMostOcc = hashTable[newLeftKey]->getHeadOccurrence();
-					replaceInVersionData(versionData, oldLeftMostOcc, newLeftMostOcc);
 				}
+				else if (onLeftEdge)
+				{
+					oldLeftMostOcc = curr;
+					if (newRightKey)
+					{
+						newLeftMostOcc = hashTable[newRightKey]->getHeadOccurrence();
+					}
+				}
+				
+				bool leftOccUpdateSucceeded = replaceInVersionData(versionData, oldLeftMostOcc, newLeftMostOcc);
+				if (!leftOccUpdateSucceeded) //should never happen
+				{
+					Occurrence* o;
+					for (unsigned x = 0; x < versionData.size(); x++)
+					{
+						o = versionData[x].leftMostOcc;
+						cerr << o << endl;
+					}
+					exit(1);
+				}					
 			}
 				
 			//cerr << "Removing curr: " << curr->getLeft() << "," << curr->getRight() << endl;
@@ -775,6 +793,7 @@ unsigned getPartitioningOneVersion(Occurrence* current, vector<VersionDataItem>&
 
 unsigned* getPartitioningsAllVersions(RandomHeap& myHeap, unsigned minFragSize, vector<VersionDataItem>& versionData, unsigned* versionPartitionSizes)
 {
+	// Occurrence* o = versionData[0].leftMostOcc;
 	unsigned maxArraySize = versionData.size() * MAX_NUM_FRAGMENTS_PER_VERSION;
 	unsigned* fragmentList = new unsigned[maxArraySize];
 	
@@ -842,11 +861,13 @@ void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAl
 	
 	unsigned totalCountFragments(0);
 	unsigned diff(0);
-	for (unsigned v = 0; v < versions.size(); v++)
+	unsigned numVersions = versions.size();
+	for (unsigned v = 0; v < numVersions; v++)
 	{
 		os << "Version " << v << endl;
 		for (unsigned i = 0; i < versionPartitionSizes[v] - 1; i++)
 		{
+			cerr << offsetsAllVersions[i];
 			if (i < versionPartitionSizes[v] - 1)
 				diff = offsetsAllVersions[totalCountFragments + i + 1] - offsetsAllVersions[totalCountFragments + i];
 			else
@@ -1024,7 +1045,6 @@ int main(int argc, char* argv[])
 		int numPairs = hashTable.size();
 
 		doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData);
-
 
 		for (unsigned i = 0; i < versionData.size(); i++)
 		{
