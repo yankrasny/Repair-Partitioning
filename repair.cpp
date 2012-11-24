@@ -761,10 +761,12 @@ unsigned getPartitioningOneVersion(Occurrence* current, vector<VersionDataItem>&
 	unsigned diff(0); // the difference between consecutive indexes (a large value signifies a good fragment)
 	unsigned fragmentNum(0); //the number of fragments so far in the current version
 
+	if (current)
+	{
+		offsets[0] = 0;
+	}
 	while (current)
 	{
-		//Start the current version from fragment 0
-		fragmentNum = 0;
 		currVal = current->getLeftPositionInSequence();
 		if (current->getSucc())
 		{
@@ -773,13 +775,14 @@ unsigned getPartitioningOneVersion(Occurrence* current, vector<VersionDataItem>&
 			diff = nextVal - currVal;
 			if (diff >= minFragSize)
 			{
-				offsets[fragmentNum] = nextVal;
 				fragmentNum++;
+				offsets[fragmentNum] = nextVal;			
 			}
 		}
 		else
 		{
 			// Store the last fragment, and break because current has no right neighbor
+			fragmentNum++;
 			offsets[fragmentNum] = currVal;
 			break;
 		}
@@ -793,7 +796,6 @@ unsigned getPartitioningOneVersion(Occurrence* current, vector<VersionDataItem>&
 
 unsigned* getPartitioningsAllVersions(RandomHeap& myHeap, unsigned minFragSize, vector<VersionDataItem>& versionData, unsigned* versionPartitionSizes)
 {
-	// Occurrence* o = versionData[0].leftMostOcc;
 	unsigned maxArraySize = versionData.size() * MAX_NUM_FRAGMENTS_PER_VERSION;
 	unsigned* fragmentList = new unsigned[maxArraySize];
 	
@@ -854,6 +856,11 @@ vector<vector<vector<unsigned> > > printAndSaveFragments(const vector<vector<uns
 
 void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
 {
+	// for (unsigned i = 0; i < versions.size(); i++)
+	// {
+	// 	unsigned s = versionPartitionSizes[i];
+	// 	cerr << s;
+	// }
 	ofstream os(outFilename.c_str());
 
 	os << "Results of re-pair partitioning..." << endl << endl;
@@ -864,20 +871,32 @@ void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAl
 	unsigned numVersions = versions.size();
 	for (unsigned v = 0; v < numVersions; v++)
 	{
-		os << "Version " << v << endl;
-		for (unsigned i = 0; i < versionPartitionSizes[v] - 1; i++)
+		unsigned numFragsInVersion = versionPartitionSizes[v];
+
+		if (numFragsInVersion < 1)
 		{
-			cerr << offsetsAllVersions[i];
+			continue;
+		}
+		os << "Version " << v << endl;
+		// os << "Num Fragments: " << numFragsInVersion << endl;
+		for (unsigned i = 0; i < numFragsInVersion - 1; i++)
+		{
+			// cerr << offsetsAllVersions[i];
 			if (i < versionPartitionSizes[v] - 1)
-				diff = offsetsAllVersions[totalCountFragments + i + 1] - offsetsAllVersions[totalCountFragments + i];
+			{
+				unsigned currOffset = offsetsAllVersions[totalCountFragments + i];
+				unsigned nextOffset = offsetsAllVersions[totalCountFragments + i + 1];
+				diff = nextOffset - currOffset;
+			}
 			else
+			{
 				diff = 0;
+			}
 
 			os << "Fragment " << i << ": " << offsetsAllVersions[totalCountFragments + i] << "-" << 
 				offsetsAllVersions[totalCountFragments + i + 1] << " (frag size: " << diff << ")" << endl;
-
-			totalCountFragments += versionPartitionSizes[v];
 		}
+		totalCountFragments += numFragsInVersion;
 		os << endl;
 	}
 
