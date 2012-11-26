@@ -11,9 +11,11 @@
 #include "RandomHeap.h"
 #include "Tokenizer.h"
 #include "Profiler.h"
+#include "md5/md5.h"
 using namespace std;
 
 const unsigned MAX_NUM_FRAGMENTS_PER_VERSION(100);
+const unsigned MAX_FRAG_LENGTH(1000000);
 
 unsigned currentID(0);
 unsigned nextID()
@@ -816,42 +818,57 @@ unsigned* getPartitioningsAllVersions(RandomHeap& myHeap, unsigned minFragSize, 
 	return fragmentList;
 }
 
-vector<vector<vector<unsigned> > > printAndSaveFragments(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
+vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
 {
-	vector<vector<vector<unsigned> > > fragments = vector<vector<vector<unsigned> > >();
+	vector<vector<char* > > fragmentHashes = vector<vector<char* > >();
 	unsigned start, end, theID;
 	string word;
 	vector<unsigned> wordIDs;
-
+	
+	MD5 md5;
+	char* concatOfWordIDs;
+	
 	unsigned totalCountFragments(0);
 
-	for (unsigned v = 0; v < versions.size() - 1; v++)
+	// Iterate over versions
+	for (unsigned v = 0; v < versions.size(); v++)
 	{
 		wordIDs = versions[v];
-		fragments.push_back(vector<vector<unsigned> >());
+		fragmentHashes.push_back(vector<char* >());
 		os << "Version " << v << endl;
+
+		// One version: iterate over the words in that version
 		for (unsigned i = 0; i < versionPartitionSizes[v] - 1; i++)
 		{
-			fragments[v].push_back(vector<unsigned>());
+			fragmentHashes[v].push_back( new char[128] ); // md5 produces 128 bit output
 			start = offsetsAllVersions[totalCountFragments + i];
 			end = offsetsAllVersions[totalCountFragments + i + 1];
 			os << "Fragment " << i << ": ";
+			stringstream ss;
 			for (unsigned j = start; j < end; j++)
 			{
 				theID = wordIDs[j];
-				fragments[v][i].push_back(theID);
-				
-				// TODO calculate the hash of the fragment, and use it to assign fragment IDs
+				ss << theID << ",";
 
-				word = IDsToWords[theID];
-				os << word << " ";
+				// word = IDsToWords[theID];
+				// os << word << " ";
 			}
-			os << endl;
-			totalCountFragments += versionPartitionSizes[v];
+			// Store the concatenation of the IDs for this fragment
+			concatOfWordIDs = new char[MAX_FRAG_LENGTH];
+			strcpy(concatOfWordIDs, ss.str().c_str());
+			
+			// Calculate the hash of the fragment
+			fragmentHashes[v][i] = md5.digestString(concatOfWordIDs);
+			ss.str("");
+			
+			os << concatOfWordIDs << endl;
+			delete [] concatOfWordIDs;
+			concatOfWordIDs = NULL;
 		}
+		totalCountFragments += versionPartitionSizes[v];
 		os << endl;
 	}
-	return fragments;
+	return fragmentHashes;
 }
 
 void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
@@ -903,7 +920,7 @@ void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAl
 	// os << "Number of fragment boundaries: " << starts.size() << endl;
 	// os << "Number of fragments: " << (starts.size() - 1) << endl << endl;
 
-	vector<vector<vector<unsigned> > > fragments;
+	vector<vector<char* > > fragments;
 	if (printFragments)
 	{
 		os << "*** Fragments ***" << endl;
@@ -962,6 +979,15 @@ void printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& 
 
 int main(int argc, char* argv[])
 {
+	// MD5 md5 ;
+	// puts( md5.digestString( "HELLO THERE I AM MD5!" ) ) ;
+
+	// // print the digest for a binary file on disk.
+	// puts( md5.digestFile( "C:\\WINDOWS\\notepad.exe" ) ) ;
+
+	// system("pause");
+	// return 0;
+
 	//createOutputDir();
 
 	//heap, repair
@@ -1081,7 +1107,7 @@ int main(int argc, char* argv[])
 
 		outputFilename = "Output/results.txt";
 
-		bool printFragments = false;
+		bool printFragments = true;
 		bool printAssociations = false;
 
 		writeResults(versions, offsetsAllVersions, versionPartitionSizes, associations, IDsToWords, outputFilename, printFragments, printAssociations);
@@ -1108,5 +1134,16 @@ int main(int argc, char* argv[])
 		Profiler::getInstance().writeResults("Output/profile-functions.txt");
 		// cleanup(hashTable);
 		// system("pause");
+
+		// unsigned len = 5;
+		// char* arr = new char[len];
+		// for (unsigned i = 65; i < len; i++) {
+		// 	arr[i] = (char)i+1;
+		// }
+		// MD5 m = MD5();
+		// cerr << hash2(arr, len);
+
+
+
 	}
 }
