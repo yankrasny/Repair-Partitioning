@@ -819,19 +819,6 @@ unsigned* getPartitioningsAllVersions(RandomHeap& myHeap, unsigned minFragSize, 
 
 vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
 {
-	// for (unsigned v = 0; v < versions.size(); v++)
-	// {
-	// 	for (unsigned i = 0; i < versionPartitionSizes[v] - 1; i++)
-	// 	{
-	// 		unsigned start = offsetsAllVersions[i];
-	// 		unsigned end = offsetsAllVersions[i + 1];
-	// 		cerr << "start: " << start << endl;
-	// 		cerr << "end: " << end << endl;
-	// 	}
-	// }
-	// system("pause");
-	// exit(0);
-
 	vector<vector<char* > > fragmentHashes = vector<vector<char* > >();
 	unsigned start, end, theID;
 	string word;
@@ -846,13 +833,6 @@ vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& v
 	for (unsigned v = 0; v < versions.size(); v++)
 	{
 		wordIDs = versions[v]; // all the word IDs for version v
-		// for (unsigned w = 0; w < wordIDs.size(); w++)
-		// {
-		// 	unsigned wID = wordIDs[w];
-		// 	cerr << wID;
-		// }
-		// system("pause");
-
 		fragmentHashes.push_back(vector<char* >());
 		os << "Version " << v << endl;
 
@@ -881,7 +861,7 @@ vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& v
 			fragmentHashes[v].push_back(hash);
 			ss.str("");
 			
-			os << concatOfWordIDs << ": " << hash << endl;
+			os << "hash (" << hash << ")" << endl;
 			delete [] concatOfWordIDs;
 			concatOfWordIDs = NULL;
 		}
@@ -893,11 +873,6 @@ vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& v
 
 void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
 {
-	// for (unsigned i = 0; i < versions.size(); i++)
-	// {
-	// 	unsigned s = versionPartitionSizes[i];
-	// 	cerr << s;
-	// }
 	ofstream os(outFilename.c_str());
 
 	os << "Results of re-pair partitioning..." << endl << endl;
@@ -915,10 +890,8 @@ void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAl
 			continue;
 		}
 		os << "Version " << v << endl;
-		// os << "Num Fragments: " << numFragsInVersion << endl;
 		for (unsigned i = 0; i < numFragsInVersion - 1; i++)
 		{
-			// cerr << offsetsAllVersions[i];
 			if (i < versionPartitionSizes[v] - 1)
 			{
 				unsigned currOffset = offsetsAllVersions[totalCountFragments + i];
@@ -1102,35 +1075,30 @@ int main(int argc, char* argv[])
 		// system("pause");
 
 		//Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures
+		
 		RandomHeap myHeap;
+		
 		unordered_map<unsigned long long, HashTableEntry*> hashTable = unordered_map<unsigned long long, HashTableEntry*> ();
+		
 		vector<Association> associations = vector<Association>();
+		
 		vector<VersionDataItem> versionData = vector<VersionDataItem>();
-
-
-		Occurrence* oc;
 
 		extractPairs(versions, myHeap, hashTable, versionData);
 
-
+		// Occurrence* oc;
 		// for (unsigned i = 0; i < versionData.size(); i++)
 		// {
 		// 	oc = versionData[i].leftMostOcc;
 		// 	// cerr << oc;
 		// }
-
 	
 		int numPairs = hashTable.size();
 
 		doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData);
-
-		for (unsigned i = 0; i < versionData.size(); i++)
-		{
-			oc = versionData[i].leftMostOcc;
-			// cerr << oc;
-		}
 		
 		unsigned* versionPartitionSizes = new unsigned[versions.size()];
+
 		unsigned* offsetsAllVersions = getPartitioningsAllVersions(myHeap, minFragSize, versionData, versionPartitionSizes);
 
 		stringstream outFilenameStream;
@@ -1141,7 +1109,6 @@ int main(int argc, char* argv[])
 
 		bool printFragments = true;
 		bool printAssociations = false;
-
 		writeResults(versions, offsetsAllVersions, versionPartitionSizes, associations, IDsToWords, outputFilename, printFragments, printAssociations);
 
 		stringstream command;
@@ -1166,16 +1133,5 @@ int main(int argc, char* argv[])
 		Profiler::getInstance().writeResults("Output/profile-functions.txt");
 		// cleanup(hashTable);
 		// system("pause");
-
-		// unsigned len = 5;
-		// char* arr = new char[len];
-		// for (unsigned i = 65; i < len; i++) {
-		// 	arr[i] = (char)i+1;
-		// }
-		// MD5 m = MD5();
-		// cerr << hash2(arr, len);
-
-
-
 	}
 }
