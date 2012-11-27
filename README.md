@@ -20,9 +20,13 @@ Version 2 -> [1 2 20 4 5 6 7 8 9 10 11 12 13 14 15 16 8 17 18 4 19]
 Version 3 -> [1 2 3 4 5 6 7 8 9 10 11 12 10 14 21 16 8 17 18 4 19]
 
 A good paritioning will find repeating fragments across versions, so first we identify those fragments:
+
 A -> [1 2 3 4 5 6 7 8 9 10 11 12]
+
 B -> [13 14 15 16 8 17 18 4 19]
+
 C -> [1 2 20 4 5 6 7 8 9 10 11 12]
+
 D -> [10 14 21 16 8 17 18 4 19]
 
 Applying this back to the versions gives us:
