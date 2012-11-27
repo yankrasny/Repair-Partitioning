@@ -5,17 +5,11 @@ This is an implementation of the string re-pairing algorithm, intended for use i
 
 The input is several text files (the versions of a document). The output is a partitioning of each version such as many redundant fragments as possible show up in the partitions of each version. So for example, here are three versions of a (very) small document:
 
-Version 1
-Alice was beginning to get very tired of sitting by her sister on the
-bank, and of having nothing to do:
+Version 1 -> Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do:
 
-Version 2
-Alice was starting to get very tired of sitting by her sister on the
-bank, and of having nothing to do:
+Version 2 -> Alice was starting to get very tired of sitting by her sister on the bank, and of having nothing to do:
 
-Version 3
-Alice was beginning to get very tired of sitting by her sister by the 
-lake, and of having nothing to do:
+Version 3 -> Alice was beginning to get very tired of sitting by her sister by the lake, and of having nothing to do:
 
 Ignoring punctuation and spacing, we want to identify the common sequences of words, so first we convert the text to integer arrays:
 
