@@ -622,10 +622,9 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 	}
 }
 
-vector<unsigned> stringToWordIDs(const string& text, unordered_map<unsigned, string>& IDsToWords)
+vector<unsigned> stringToWordIDs(const string& text, unordered_map<unsigned, string>& IDsToWords, unordered_map<unsigned, unsigned>& uniqueWordIDs)
 {
 	// Profiler::getInstance().start("stringToWordIDs");
-	unordered_map<unsigned, unsigned> uniqueWordIDs = unordered_map<unsigned, unsigned>();
 
 	vector<unsigned> ret = vector<unsigned>();
 
@@ -820,6 +819,19 @@ unsigned* getPartitioningsAllVersions(RandomHeap& myHeap, unsigned minFragSize, 
 
 vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
 {
+	// for (unsigned v = 0; v < versions.size(); v++)
+	// {
+	// 	for (unsigned i = 0; i < versionPartitionSizes[v] - 1; i++)
+	// 	{
+	// 		unsigned start = offsetsAllVersions[i];
+	// 		unsigned end = offsetsAllVersions[i + 1];
+	// 		cerr << "start: " << start << endl;
+	// 		cerr << "end: " << end << endl;
+	// 	}
+	// }
+	// system("pause");
+	// exit(0);
+
 	vector<vector<char* > > fragmentHashes = vector<vector<char* > >();
 	unsigned start, end, theID;
 	string word;
@@ -833,14 +845,20 @@ vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& v
 	// Iterate over versions
 	for (unsigned v = 0; v < versions.size(); v++)
 	{
-		wordIDs = versions[v];
+		wordIDs = versions[v]; // all the word IDs for version v
+		// for (unsigned w = 0; w < wordIDs.size(); w++)
+		// {
+		// 	unsigned wID = wordIDs[w];
+		// 	cerr << wID;
+		// }
+		// system("pause");
+
 		fragmentHashes.push_back(vector<char* >());
 		os << "Version " << v << endl;
 
 		// One version: iterate over the words in that version
 		for (unsigned i = 0; i < versionPartitionSizes[v] - 1; i++)
-		{
-			fragmentHashes[v].push_back( new char[128] ); // md5 produces 128 bit output
+		{			
 			start = offsetsAllVersions[totalCountFragments + i];
 			end = offsetsAllVersions[totalCountFragments + i + 1];
 			os << "Fragment " << i << ": ";
@@ -858,10 +876,12 @@ vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& v
 			strcpy(concatOfWordIDs, ss.str().c_str());
 			
 			// Calculate the hash of the fragment
-			fragmentHashes[v][i] = md5.digestString(concatOfWordIDs);
+			char* hash = new char[128]; // md5 produces 128 bit output
+			hash = md5.digestString(concatOfWordIDs);
+			fragmentHashes[v].push_back(hash);
 			ss.str("");
 			
-			os << concatOfWordIDs << endl;
+			os << concatOfWordIDs << ": " << hash << endl;
 			delete [] concatOfWordIDs;
 			concatOfWordIDs = NULL;
 		}
@@ -1045,10 +1065,17 @@ int main(int argc, char* argv[])
 			return errno;
 
 		char* text;
+		
 		int fileSize;
-		vector<vector<unsigned> > versions = vector<vector<unsigned> >();
+		
+		vector<vector<unsigned> > versions = vector<vector<unsigned> >(); //each inner vector is the wordIDs for one version
+		
 		vector<unsigned> wordIDs;
+		
 		unordered_map<unsigned, string> IDsToWords = unordered_map<unsigned, string>();
+
+		unordered_map<unsigned, unsigned> uniqueWordIDs = unordered_map<unsigned, unsigned>();
+		
 		for (unsigned i = 0; i < inputFilenames.size(); i++)
 		{
 			stringstream filenameSS;
@@ -1059,7 +1086,12 @@ int main(int argc, char* argv[])
 				continue;
 			// cerr << text;
 			// system("pause");
-			wordIDs = stringToWordIDs(text, IDsToWords);
+			wordIDs = stringToWordIDs(text, IDsToWords, uniqueWordIDs);
+			// for (unsigned w = 0; w < wordIDs.size(); w++)
+			// {
+			// 	cerr << wordIDs[w] << endl;
+			// }
+			// cerr << endl;
 			versions.push_back(wordIDs);
 			delete text;
 			text = NULL;
@@ -1067,6 +1099,7 @@ int main(int argc, char* argv[])
 		
 		// By this time, IDsToWords should contain the mappings of IDs to words in all versions
 		// printIDtoWordMapping(IDsToWords);
+		// system("pause");
 
 		//Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures
 		RandomHeap myHeap;
@@ -1096,7 +1129,6 @@ int main(int argc, char* argv[])
 			oc = versionData[i].leftMostOcc;
 			// cerr << oc;
 		}
-
 		
 		unsigned* versionPartitionSizes = new unsigned[versions.size()];
 		unsigned* offsetsAllVersions = getPartitioningsAllVersions(myHeap, minFragSize, versionData, versionPartitionSizes);
