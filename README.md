@@ -11,7 +11,7 @@ Version 2 -> Alice was starting to get very tired of sitting by her sister on th
 
 Version 3 -> Alice was beginning to get very tired of sitting by her sister by the lake, and of having nothing to do:
 
-Ignoring punctuation and spacing, we want to identify the common sequences of words, so first we convert the text to integer arrays:
+Ignoring punctuation and spacing, we want to identify the common sequences of words, so first we convert the words to word IDs:
 
 Version 1 -> [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 8 17 18 4 19]
 
