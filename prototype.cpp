@@ -175,13 +175,60 @@ int main(int argc, char* argv[])
 		*/
 		unsigned repairStoppingPoint = 2; //pairs that occur less than this amount of times will not be replaced
 
+
+		/*
+
+		TODO make a usage tree, then code it here
+		
+		Create options for varying variables
+		
+		Ex:
+		$ prototype Input/alice/
+		(1) To vary minFragSize
+		(2) To vary repairStoppingPoint
+		
+		$ 1
+		Varying minFragSize...
+
+		Enter constant value for repairStoppingPoint: 6
+		
+		Enter lower bound for minFragSize (int): 4
+		Enter upper bound for minFragSize (int): 10
+		Enter increment (int): 2
+
+		Running Repair Partitioning with...
+			repairStoppingPoint = 6
+			minFragSize = 4
+
+			score: 105.68
+
+		Running Repair Partitioning with...
+			repairStoppingPoint = 6
+			minFragSize = 6
+
+			score: 940.20
+
+		Running Repair Partitioning with...
+			repairStoppingPoint = 6
+			minFragSize = 8
+
+			score: 1,766.45
+
+		Running Repair Partitioning with...
+			repairStoppingPoint = 6
+			minFragSize = 10
+
+			score: 560.78
+
+		*/
+
 		if (argc == 2 && (string) argv[1] == "help")
 		{
 			cerr << "Usage:" << endl;
-			cerr << "\trepair <directory> <minFragSize> <repairStoppingPoint>" << endl;
-			cerr << "\trepair <directory> <minFragSize>" << endl;
-			cerr << "\trepair <directory>" << endl;
-			cerr << "\trepair " << endl << endl;
+			cerr << "\t" << argv[0] << " <directory> <minFragSize> <repairStoppingPoint>" << endl;
+			cerr << "\t" << argv[0] << " <directory> <minFragSize>" << endl;
+			cerr << "\t" << argv[0] << " <directory>" << endl;
+			cerr << "\t" << argv[0] << "" << endl << endl;
 			cerr << "Defaults: " << endl;
 			cerr << "\tdirectory: " << inputFilepath << endl;
 			cerr << "\tminFragSize: " << minFragSize << endl;

@@ -21,6 +21,9 @@
 #include "UndoRepair.h"
 #include "Util.h"
 
+// TODO make this a class
+// members can include the heap, vector<VersionData>
+
 void doubleLinkOccurrences(Occurrence* prev, Occurrence* curr);
 
 void doubleLinkNeighbors(Occurrence* prec, Occurrence* curr);
