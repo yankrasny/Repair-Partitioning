@@ -17,6 +17,12 @@ using namespace std;
 const unsigned MAX_NUM_FRAGMENTS_PER_VERSION(100);
 const unsigned MAX_FRAG_LENGTH(1000000);
 
+unsigned currentFragID(0);
+unsigned nextFragID()
+{
+	return ++currentFragID;
+}
+
 unsigned currentID(0);
 unsigned nextID()
 {
@@ -768,8 +774,8 @@ unsigned getPartitioningOneVersion(Occurrence* current, vector<VersionDataItem>&
 	}
 	while (current)
 	{
-		currVal = current->getLeftPositionInSequence();
-		if (current->getSucc())
+		currVal = current->getLeftPositionInSequence();		
+		if (current->getSucc()) // Move to the right, calculate difference and add the index if we like it
 		{
 			current = current->getSucc();
 			nextVal = current->getLeftPositionInSequence();
@@ -780,15 +786,14 @@ unsigned getPartitioningOneVersion(Occurrence* current, vector<VersionDataItem>&
 				offsets[fragmentNum] = nextVal;			
 			}
 		}
-		else
-		{
-			// Store the last fragment, and break because current has no right neighbor
+		else // Store the last fragment, and break because current has no right neighbor
+		{			
 			fragmentNum++;
 			offsets[fragmentNum] = currVal;
 			break;
 		}
 	}
-	// TODO not sure why this caused all of the last fragments to have size 2
+	// We have to cover the whole document, and we may have done replacement on the end of it
 	if (offsets[fragmentNum] != versionData[versionNum].versionSize)
 		offsets[fragmentNum] = versionData[versionNum].versionSize - 1;
 
@@ -817,10 +822,26 @@ unsigned* getPartitioningsAllVersions(RandomHeap& myHeap, unsigned minFragSize, 
 	return fragmentList;
 }
 
-vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
+struct FragInfo
 {
-	vector<vector<char* > > fragmentHashes = vector<vector<char* > >();
-	unsigned start, end, theID;
+	friend ostream& operator<<(ostream& os, const FragInfo& f)
+	{
+		return os << f.id << " -> " << "(count = " << f.count << ", fragSize = " << f.fragSize << ")" << endl;
+	}
+
+	unsigned id;
+	unsigned count;
+	unsigned fragSize;
+	string hash;
+
+	FragInfo() : id(-1), count(0), fragSize(0), hash("") {}
+	FragInfo(unsigned id, unsigned count, unsigned fragSize, const string& hash) : id(id), count(count), fragSize(fragSize), hash(hash) {}
+};
+
+vector<vector<FragInfo > > getFragmentHashes(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr, bool print = false)
+{
+	vector<vector<FragInfo > > fragmentHashes = vector<vector<FragInfo > >();
+	unsigned start, end, theID, fragSize;
 	string word;
 	vector<unsigned> wordIDs;
 	
@@ -833,15 +854,18 @@ vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& v
 	for (unsigned v = 0; v < versions.size(); v++)
 	{
 		wordIDs = versions[v]; // all the word IDs for version v
-		fragmentHashes.push_back(vector<char* >());
-		os << "Version " << v << endl;
+		fragmentHashes.push_back(vector<FragInfo >());
+		if (print)
+			os << "Version " << v << endl;
 
 		// One version: iterate over the words in that version
 		for (unsigned i = 0; i < versionPartitionSizes[v] - 1; i++)
 		{			
 			start = offsetsAllVersions[totalCountFragments + i];
 			end = offsetsAllVersions[totalCountFragments + i + 1];
-			os << "Fragment " << i << ": ";
+			fragSize = end - start;
+			if (print)
+				os << "Fragment " << i << ": ";
 			stringstream ss;
 			for (unsigned j = start; j < end; j++)
 			{
@@ -856,19 +880,58 @@ vector<vector<char* > > printAndSaveFragments(const vector<vector<unsigned> >& v
 			strcpy(concatOfWordIDs, ss.str().c_str());
 			
 			// Calculate the hash of the fragment
-			char* hash = new char[128]; // md5 produces 128 bit output
+			string hash; // = new char[128]; // md5 produces 128 bit output
 			hash = md5.digestString(concatOfWordIDs);
-			fragmentHashes[v].push_back(hash);
+			fragmentHashes[v].push_back(FragInfo(0, 0, fragSize, hash));
 			ss.str("");
 			
-			os << "hash (" << hash << ")" << endl;
+			if (print)
+				os << "hash (" << hash << ")" << endl;
 			delete [] concatOfWordIDs;
 			concatOfWordIDs = NULL;
 		}
 		totalCountFragments += versionPartitionSizes[v];
-		os << endl;
+		if (print)
+			os << endl;
 	}
 	return fragmentHashes;
+}
+
+void updateFragmentHashMap(vector<vector<FragInfo> >& fragmentHashes, unordered_map<string, FragInfo>& uniqueFrags)
+{
+	unordered_map<string, FragInfo>::iterator it;
+	for (size_t i = 0; i < fragmentHashes.size(); i++)
+	{
+		for (size_t j = 0; j < fragmentHashes[i].size(); j++)
+		{
+			FragInfo frag = fragmentHashes[i][j];
+			string myHash = frag.hash;
+
+			unsigned theID;
+			if (uniqueFrags.count(myHash))
+			{
+				//found it, so use its ID
+				theID = uniqueFrags[myHash].id;
+				uniqueFrags[myHash].count++;
+			}
+			else
+			{
+				//Didn't find it, give it an ID
+				theID = nextFragID();
+				frag.id = theID;
+				frag.count = 1;
+				uniqueFrags[myHash] = frag;
+			}
+		}
+	}
+}
+
+unsigned getScore(unordered_map<string, FragInfo>& uniqueFrags, ostream& os = cerr)
+{
+	for (unordered_map<string, FragInfo>::iterator it = uniqueFrags.begin(); it != uniqueFrags.end(); it++)
+	{
+		os << it->second;
+	}
 }
 
 void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
@@ -913,12 +976,16 @@ void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAl
 	// os << "Number of fragment boundaries: " << starts.size() << endl;
 	// os << "Number of fragments: " << (starts.size() - 1) << endl << endl;
 
-	vector<vector<char* > > fragments;
-	if (printFragments)
-	{
-		os << "*** Fragments ***" << endl;
-		fragments = printAndSaveFragments(versions, offsetsAllVersions, versionPartitionSizes, IDsToWords, os);
-	}
+	vector<vector<FragInfo > > fragmentHashes;
+	os << "*** Fragments ***" << endl;
+	fragmentHashes = getFragmentHashes(versions, offsetsAllVersions, versionPartitionSizes, IDsToWords, os, printFragments);
+
+	// Assign fragment IDs and stick them in a hashmap
+	unordered_map<string, FragInfo> uniqueFrags;
+	updateFragmentHashMap(fragmentHashes, uniqueFrags);
+
+	// Now decide on the score for this partitioning
+	unsigned score = getScore(uniqueFrags, os);
 	
 	if (printAssociations)
 	{
@@ -1085,13 +1152,6 @@ int main(int argc, char* argv[])
 		vector<VersionDataItem> versionData = vector<VersionDataItem>();
 
 		extractPairs(versions, myHeap, hashTable, versionData);
-
-		// Occurrence* oc;
-		// for (unsigned i = 0; i < versionData.size(); i++)
-		// {
-		// 	oc = versionData[i].leftMostOcc;
-		// 	// cerr << oc;
-		// }
 	
 		int numPairs = hashTable.size();
 
@@ -1100,6 +1160,12 @@ int main(int argc, char* argv[])
 		unsigned* versionPartitionSizes = new unsigned[versions.size()];
 
 		unsigned* offsetsAllVersions = getPartitioningsAllVersions(myHeap, minFragSize, versionData, versionPartitionSizes);
+
+		if (!offsetsAllVersions)
+		{
+			// Maybe repairStoppingPoint was too low
+			exit(1);
+		}
 
 		stringstream outFilenameStream;
 		outFilenameStream << "Output/results" << stripDot(inputFilepath);
