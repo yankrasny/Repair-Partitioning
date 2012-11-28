@@ -1,3 +1,6 @@
+#ifndef OBJECT_POOL_H
+#define OBJECT_POOL_H
+
 #include <vector>
 
 template<class T>
@@ -36,3 +39,5 @@ public:
 		//pool[numInUse - 1]->T();
 	}
 };
+
+#endif
