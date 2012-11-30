@@ -173,40 +173,6 @@ double runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<u
 		cerr << "Score: " << score << endl;
 
 	return score;
-
-	// stringstream outFilenameStream;
-	// outFilenameStream << "Output/results" << stripDot(inputFilepath);
-	// string outputFilename = outFilenameStream.str();
-
-	// outputFilename = "Output/results.txt";
-
-	// bool printFragments = true;
-	// bool printAssociations = false;
-	// writeResults(versions, offsetsAllVersions, versionPartitionSizes, associations, IDsToWords, outputFilename, printFragments, printAssociations);
-
-	// stringstream command;
-	// command << "start " << outputFilename.c_str();
-	// system(command.str().c_str());
-
-	// stringstream ss;
-	// ss << "Filename: " << inputFilepath << endl;
-	// ss << "Size: " << fileSize << " bytes" << endl; 
-	// ss << "Word Count: " << wordIDs.size() << endl;
-	// ss << "Unique Pair Count (in original file): " << numPairs << endl;
-
-	// cerr << "Checking output... " << endl;
-	// if (checkOutput(associations, wordIDs))
-	// 	cerr << "Output ok!";
-	// else
-	// 	cerr << "Check failed!";
-	// cerr << endl;
-
-	// Profiler::getInstance().end("all");
-	// Profiler::getInstance().setInputSpec(ss.str());
-	// Profiler::getInstance().writeResults("Output/profile-functions.txt");
-
-	// cleanup(hashTable);
-	// system("pause");
 }
 
 unsigned currentFragID = 0;
@@ -344,6 +310,10 @@ int main(int argc, char* argv[])
 		cerr << "Best partitioning happened with" << endl;
 		cerr << "minFragSize: " << bestMinFragSize << ", repairStoppingPoint: " << bestRepairStoppingPoint << endl;
 
+		// stringstream outFilenameStream;
+		// outFilenameStream << "Output/results" << stripDot(inputFilepath);
+		// string outputFilename = outFilenameStream.str();
+
 		string outputFilename = "Output/results.txt";
 
 		bool printFragments = true;
@@ -353,5 +323,25 @@ int main(int argc, char* argv[])
 		stringstream command;
 		command << "start " << outputFilename.c_str();
 		system(command.str().c_str());
+
+		// stringstream ss;
+		// ss << "Filename: " << inputFilepath << endl;
+		// ss << "Size: " << fileSize << " bytes" << endl; 
+		// ss << "Word Count: " << wordIDs.size() << endl;
+		// ss << "Unique Pair Count (in original file): " << numPairs << endl;
+
+		// cerr << "Checking output... " << endl;
+		// if (checkOutput(associations, wordIDs))
+		// 	cerr << "Output ok!";
+		// else
+		// 	cerr << "Check failed!";
+		// cerr << endl;
+
+		// Profiler::getInstance().end("all");
+		// Profiler::getInstance().setInputSpec(ss.str());
+		// Profiler::getInstance().writeResults("Output/profile-functions.txt");
+
+		// cleanup(hashTable);
+		// system("pause");
 	}
 }
