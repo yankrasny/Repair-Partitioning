@@ -39,7 +39,18 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 	return true;
 }
 
-double getScore(unordered_map<string, FragInfo>& uniqueFrags, ostream& os = cerr)
+// TODO normalize: I think we can get a rigorous definition of score
+// If all versions are exactly the same, then the score should be 100
+// What does it mean for all versions to be the same? Well each fragment found will occur in all versions. 
+// So a term with count in it should really be (count / numVersions)
+// And a term with fragSize should really be (fragSize / docSize)
+// Try to express it all as a percentage (so denominator will have something with the doc size and num versions as well)
+
+// Maybe just SUM ( ((count[i] / numVersions) * (fragSize / docSize)) / (numVersions * docSize) )
+// Write that out and think about it
+
+// If no redundancy was found, the score should be zero (although with repair, that isn't likely at all)
+double getScore(unordered_map<string, FragInfo>& uniqueFrags, unsigned numVersions, ostream& os = cerr)
 {
 	double term;
 	double sum(0);
@@ -48,7 +59,7 @@ double getScore(unordered_map<string, FragInfo>& uniqueFrags, ostream& os = cerr
 		term = it->second.count * it->second.fragSize;
 		sum += term;
 	}
-	return sum / uniqueFrags.size();
+	return sum / (uniqueFrags.size() * numVersions);
 }
 
 
@@ -111,7 +122,7 @@ void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAl
 	updateFragmentHashMap(fragmentHashes, uniqueFrags);
 
 	// Now decide on the score for this partitioning
-	double score = getScore(uniqueFrags, os);
+	double score = getScore(uniqueFrags, versions.size(), os);
 	os << "Score: " << score << endl;
 	
 	if (printAssociations)
@@ -168,7 +179,7 @@ double runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<u
 	updateFragmentHashMap(fragmentHashes, uniqueFrags);
 
 	// Now decide on the score for this partitioning
-	double score = getScore(uniqueFrags, cerr);
+	double score = getScore(uniqueFrags, versions.size(), cerr);
 	if (printFragments)
 		cerr << "Score: " << score << endl;
 
@@ -286,6 +297,14 @@ int main(int argc, char* argv[])
 			{
 				score = runRepairPartitioning(versions, IDsToWords, offsetsAllVersions, versionPartitionSizes, associations, minFragSize, repairStoppingPoint, false);
 				cerr << "minFragSize: " << minFragSize << ", repairStoppingPoint: " << repairStoppingPoint << ", score: " << score << endl;
+
+				for (unsigned v = 0; v < versions.size(); v++)
+				{
+					if (versionPartitionSizes[v] < 1)
+					{
+						score = 0.0;
+					}
+				}
 
 				if (score > max)
 				{
