@@ -130,22 +130,90 @@ void printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& 
 }
 
 
+double runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<unsigned, string>& IDsToWords, 
+	unsigned*& offsetsAllVersions, unsigned*& versionPartitionSizes, vector<Association>& associations,
+	unsigned minFragSize, unsigned repairStoppingPoint, bool printFragments = false)
+{
+	//Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures
+	
+	RandomHeap myHeap;
+	
+	unordered_map<unsigned long long, HashTableEntry*> hashTable = unordered_map<unsigned long long, HashTableEntry*> ();
+	
+	associations = vector<Association>();
+	
+	vector<VersionDataItem> versionData = vector<VersionDataItem>();
+
+	extractPairs(versions, myHeap, hashTable, versionData);
+
+	int numPairs = hashTable.size();
+
+	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData);
+	
+	versionPartitionSizes = new unsigned[versions.size()];
+
+	offsetsAllVersions = getPartitioningsAllVersions(myHeap, minFragSize, versionData, versionPartitionSizes);
+
+	if (!offsetsAllVersions)
+	{
+		// Maybe repairStoppingPoint was too low
+		return 0.0;
+	}
+
+	vector<vector<FragInfo > > fragmentHashes;
+	fragmentHashes = getFragmentHashes(versions, offsetsAllVersions, versionPartitionSizes, IDsToWords, cerr, printFragments);
+
+	// Assign fragment IDs and stick them in a hashmap
+	unordered_map<string, FragInfo> uniqueFrags;
+	updateFragmentHashMap(fragmentHashes, uniqueFrags);
+
+	// Now decide on the score for this partitioning
+	double score = getScore(uniqueFrags, cerr);
+	if (printFragments)
+		cerr << "Score: " << score << endl;
+
+	return score;
+
+	// stringstream outFilenameStream;
+	// outFilenameStream << "Output/results" << stripDot(inputFilepath);
+	// string outputFilename = outFilenameStream.str();
+
+	// outputFilename = "Output/results.txt";
+
+	// bool printFragments = true;
+	// bool printAssociations = false;
+	// writeResults(versions, offsetsAllVersions, versionPartitionSizes, associations, IDsToWords, outputFilename, printFragments, printAssociations);
+
+	// stringstream command;
+	// command << "start " << outputFilename.c_str();
+	// system(command.str().c_str());
+
+	// stringstream ss;
+	// ss << "Filename: " << inputFilepath << endl;
+	// ss << "Size: " << fileSize << " bytes" << endl; 
+	// ss << "Word Count: " << wordIDs.size() << endl;
+	// ss << "Unique Pair Count (in original file): " << numPairs << endl;
+
+	// cerr << "Checking output... " << endl;
+	// if (checkOutput(associations, wordIDs))
+	// 	cerr << "Output ok!";
+	// else
+	// 	cerr << "Check failed!";
+	// cerr << endl;
+
+	// Profiler::getInstance().end("all");
+	// Profiler::getInstance().setInputSpec(ss.str());
+	// Profiler::getInstance().writeResults("Output/profile-functions.txt");
+
+	// cleanup(hashTable);
+	// system("pause");
+}
 
 unsigned currentFragID = 0;
 unsigned currentID = 0;
 
 int main(int argc, char* argv[])
 {
-	
-	// MD5 md5 ;
-	// puts( md5.digestString( "HELLO THERE I AM MD5!" ) ) ;
-
-	// // print the digest for a binary file on disk.
-	// puts( md5.digestFile( "C:\\WINDOWS\\notepad.exe" ) ) ;
-
-	// system("pause");
-	// return 0;
-
 	//createOutputDir();
 
 	//heap, repair
@@ -174,53 +242,6 @@ int main(int argc, char* argv[])
 		at most numVersions times for inter-version repetitions)
 		*/
 		unsigned repairStoppingPoint = 2; //pairs that occur less than this amount of times will not be replaced
-
-
-		/*
-
-		TODO make a usage tree, then code it here
-		
-		Create options for varying variables
-		
-		Ex:
-		$ prototype Input/alice/
-		(1) To vary minFragSize
-		(2) To vary repairStoppingPoint
-		
-		$ 1
-		Varying minFragSize...
-
-		Enter constant value for repairStoppingPoint: 6
-		
-		Enter lower bound for minFragSize (int): 4
-		Enter upper bound for minFragSize (int): 10
-		Enter increment (int): 2
-
-		Running Repair Partitioning with...
-			repairStoppingPoint = 6
-			minFragSize = 4
-
-			score: 105.68
-
-		Running Repair Partitioning with...
-			repairStoppingPoint = 6
-			minFragSize = 6
-
-			score: 940.20
-
-		Running Repair Partitioning with...
-			repairStoppingPoint = 6
-			minFragSize = 8
-
-			score: 1,766.45
-
-		Running Repair Partitioning with...
-			repairStoppingPoint = 6
-			minFragSize = 10
-
-			score: 560.78
-
-		*/
 
 		if (argc == 2 && (string) argv[1] == "help")
 		{
@@ -269,14 +290,7 @@ int main(int argc, char* argv[])
 			text = getText(filename, fileSize);
 			if (!text)
 				continue;
-			// cerr << text;
-			// system("pause");
 			wordIDs = stringToWordIDs(text, IDsToWords, uniqueWordIDs);
-			// for (unsigned w = 0; w < wordIDs.size(); w++)
-			// {
-			// 	cerr << wordIDs[w] << endl;
-			// }
-			// cerr << endl;
 			versions.push_back(wordIDs);
 			delete text;
 			text = NULL;
@@ -286,63 +300,58 @@ int main(int argc, char* argv[])
 		// printIDtoWordMapping(IDsToWords);
 		// system("pause");
 
-		//Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures
-		
-		RandomHeap myHeap;
-		
-		unordered_map<unsigned long long, HashTableEntry*> hashTable = unordered_map<unsigned long long, HashTableEntry*> ();
-		
-		vector<Association> associations = vector<Association>();
-		
-		vector<VersionDataItem> versionData = vector<VersionDataItem>();
+		vector<Association> associations;
 
-		extractPairs(versions, myHeap, hashTable, versionData);
-	
-		int numPairs = hashTable.size();
+		unsigned* offsetsAllVersions(NULL);
+		unsigned* versionPartitionSizes(NULL);
 
-		doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData);
-		
-		unsigned* versionPartitionSizes = new unsigned[versions.size()];
+		unsigned* bestOffsetsAllVersions(NULL);
+		unsigned* bestVersionPartitionSizes(NULL);
 
-		unsigned* offsetsAllVersions = getPartitioningsAllVersions(myHeap, minFragSize, versionData, versionPartitionSizes);
+		unsigned bestMinFragSize;
+		unsigned bestRepairStoppingPoint;
 
-		if (!offsetsAllVersions)
+		double score(0.0);
+		double max(0.0);
+		// This crashes after 4 lines of output
+		for ( minFragSize = 10; minFragSize < 30; minFragSize += 10 )
 		{
-			// Maybe repairStoppingPoint was too low
-			exit(1);
+			for ( repairStoppingPoint = 2; repairStoppingPoint < 20; repairStoppingPoint += 2 )
+			{
+				score = runRepairPartitioning(versions, IDsToWords, offsetsAllVersions, versionPartitionSizes, associations, minFragSize, repairStoppingPoint, false);
+				cerr << "minFragSize: " << minFragSize << ", repairStoppingPoint: " << repairStoppingPoint << ", score: " << score << endl;
+
+				if (score > max)
+				{
+					max = score;
+					bestMinFragSize = minFragSize;
+					bestRepairStoppingPoint = repairStoppingPoint;
+
+					bestOffsetsAllVersions = offsetsAllVersions;
+					bestVersionPartitionSizes = versionPartitionSizes;
+				}
+				else
+				{
+					delete offsetsAllVersions;
+					offsetsAllVersions = NULL;
+
+					delete versionPartitionSizes;
+					versionPartitionSizes = NULL;				
+				}
+			}
 		}
 
-		stringstream outFilenameStream;
-		outFilenameStream << "Output/results" << stripDot(inputFilepath);
-		string outputFilename = outFilenameStream.str();
+		cerr << "Best partitioning happened with" << endl;
+		cerr << "minFragSize: " << bestMinFragSize << ", repairStoppingPoint: " << bestRepairStoppingPoint << endl;
 
-		outputFilename = "Output/results.txt";
+		string outputFilename = "Output/results.txt";
 
 		bool printFragments = true;
 		bool printAssociations = false;
-		writeResults(versions, offsetsAllVersions, versionPartitionSizes, associations, IDsToWords, outputFilename, printFragments, printAssociations);
+		writeResults(versions, bestOffsetsAllVersions, bestVersionPartitionSizes, associations, IDsToWords, outputFilename, printFragments, printAssociations);
 
 		stringstream command;
 		command << "start " << outputFilename.c_str();
 		system(command.str().c_str());
-
-		stringstream ss;
-		ss << "Filename: " << inputFilepath << endl;
-		ss << "Size: " << fileSize << " bytes" << endl; 
-		ss << "Word Count: " << wordIDs.size() << endl;
-		ss << "Unique Pair Count (in original file): " << numPairs << endl;
-
-		// cerr << "Checking output... " << endl;
-		// if (checkOutput(associations, wordIDs))
-		// 	cerr << "Output ok!";
-		// else
-		// 	cerr << "Check failed!";
-		// cerr << endl;
-
-		Profiler::getInstance().end("all");
-		Profiler::getInstance().setInputSpec(ss.str());	
-		Profiler::getInstance().writeResults("Output/profile-functions.txt");
-		// cleanup(hashTable);
-		// system("pause");
 	}
 }
