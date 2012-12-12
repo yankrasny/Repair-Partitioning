@@ -5,6 +5,9 @@
 using namespace std;
 
 /*
+
+Add a comment
+
 We must be able to re-extract for the algorithm to be correct
 Associations must be monotonically decreasing for the algorithm to be optimal
 */
@@ -303,6 +306,7 @@ int main(int argc, char* argv[])
 					if (versionPartitionSizes[v] < 1)
 					{
 						score = 0.0;
+						break;
 					}
 				}
 
@@ -321,7 +325,7 @@ int main(int argc, char* argv[])
 					offsetsAllVersions = NULL;
 
 					delete versionPartitionSizes;
-					versionPartitionSizes = NULL;				
+					versionPartitionSizes = NULL;
 				}
 			}
 		}
