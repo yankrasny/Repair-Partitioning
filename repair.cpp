@@ -156,8 +156,12 @@ bool replaceInVersionData(vector<VersionDataItem>& versionData, Occurrence* oldO
 	Example of one iteration: abcd -> axd (replacing bc with symbol x)
 		New occurrences to add:		ax, xd
 		Old occurrences to remove:	ab, bc, cd
+
+	We used to rely on the linked lists in the end to do the partitioning
+	Now we're going to use associations
 */
-void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<Association>& associations, unsigned repairStoppingPoint, vector<VersionDataItem>& versionData)
+void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<Association>& associations, 
+	unsigned repairStoppingPoint, vector<VersionDataItem>& versionData)
 {
 	while (!myHeap.empty())
 	{

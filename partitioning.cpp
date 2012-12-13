@@ -3,6 +3,15 @@
 #include "Partitioning.h"
 using namespace std;
 
+
+/*
+
+TODO make this a class, and use some inheritance to try different partitioning methods
+
+
+
+*/
+
 unsigned getPartitioningOneVersion(Occurrence* current, vector<VersionDataItem>& versionData, unsigned* offsets, unsigned versionNum, unsigned minFragSize)
 {
 	unsigned currVal(0); // the current occurrence's starting index
