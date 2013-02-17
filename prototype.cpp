@@ -208,7 +208,7 @@ int main(int argc, char* argv[])
 	if (test == "repair")
 	{
 		Profiler::getInstance().start("all");
-		string inputFilepath = "./Input/ints/";
+		string inputFilepath = "./Input/alice/";
 
 		// Default param values
 		/*

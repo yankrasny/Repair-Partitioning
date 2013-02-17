@@ -8,7 +8,11 @@ using namespace std;
 
 TODO make this a class, and use some inheritance to try different partitioning methods
 
+Well write the other version first, and see if it fits.
+	
+	No, wtf? It must fit. That's the whole point of a class bro...
 
+	Just realized how different the implementations are, the params and data are different
 
 */
 
@@ -161,3 +165,13 @@ void updateFragmentHashMap(vector<vector<FragInfo> >& fragmentHashes, unordered_
 		}
 	}
 }
+
+/*
+New Method: use the expansions from repair
+
+*/
+
+//We can call this with associations, some position (for example the last one like below to expand the whole thing), and a map for memoization
+//expand(associations, associations.size(), knownExpansions);
+
+
