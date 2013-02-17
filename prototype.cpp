@@ -1,7 +1,7 @@
-#include "Repair.h"
-#include "UndoRepair.h"
-#include "Partitioning.h"
-#include "Util.h"
+#include "repair-algorithm/Repair.h"
+#include "repair-algorithm/UndoRepair.h"
+#include "partitioning/Partitioning.h"
+#include "util/Util.h"
 using namespace std;
 
 /*
