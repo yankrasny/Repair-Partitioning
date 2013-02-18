@@ -8,8 +8,8 @@ class Occurrence;
 struct VersionDataItem
 {
 	Occurrence* leftMostOcc;
-	unsigned index; //index in the original file (the indexes of consecutive occurrences define the interval spanned by those symbols)
-	unsigned versionSize; //in words
+	unsigned index; // index in the original file (the indexes of consecutive occurrences define the interval spanned by those symbols)
+	unsigned versionSize; // in words
 	VersionDataItem(Occurrence* leftMostOcc, unsigned index, unsigned versionSize) : leftMostOcc(leftMostOcc), index(index), versionSize(versionSize) {}
 };
 
