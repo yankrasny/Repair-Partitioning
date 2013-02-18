@@ -40,7 +40,7 @@ unsigned long long getNewRightKey(unsigned symbol, Occurrence* succ);
 
 unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec);
 
-bool replaceInVersionData(std::vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc);
+bool updateLeftmostOccurrence(std::vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc);
 
 void doRepair(RandomHeap& myHeap, std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
 	std::vector<Association>& associations, unsigned repairStoppingPoint, std::vector<VersionDataItem>& versionData);

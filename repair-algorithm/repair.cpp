@@ -130,7 +130,7 @@ unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec)
 } 
 
 
-bool replaceInVersionData(vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc)
+bool updateLeftmostOccurrence(vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc)
 {
 	// update the leftmost occurrence in the appropriate entry of the version data
 	if (!oldOcc || !newOcc || versionData.size() <= 0)
@@ -294,14 +294,14 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 					}
 				}
 				
-				bool leftOccUpdateSucceeded = replaceInVersionData(versionData, oldLeftMostOcc, newLeftMostOcc);
-				if (!leftOccUpdateSucceeded) //should never happen
+				bool leftOccUpdateSucceeded = updateLeftmostOccurrence(versionData, oldLeftMostOcc, newLeftMostOcc);
+				if (!leftOccUpdateSucceeded) // should never happen, unless there's a problem with versionData or that function.
 				{
 					Occurrence* o;
 					for (unsigned x = 0; x < versionData.size(); x++)
 					{
 						o = versionData[x].leftMostOcc;
-						cerr << o << endl;
+						cerr << "Leftmost Occurrence update failed, occurrence: " << o << endl;
 					}
 					exit(1);
 				}					
