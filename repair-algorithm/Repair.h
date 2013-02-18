@@ -12,7 +12,7 @@
 #include "md5/md5.h"
 #include "Occurrence.h"
 #include "HashTableEntry.h"
-#include "HeapEntry.h"
+#include "../random-heap/HeapEntry.h"
 #include "../random-heap/RandomHeap.h"
 #include "../util/Tokenizer.h"
 #include "../util/Profiler.h"

@@ -18,4 +18,7 @@
 # Outputs
 Output/*
 
+# NetBeans
+nbproject/
+
 test.cpp

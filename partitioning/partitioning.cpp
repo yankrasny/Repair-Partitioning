@@ -1,5 +1,5 @@
 #include <sstream>
-#include "repair-algorithm/Occurrence.h"
+#include "../repair-algorithm/Occurrence.h"
 #include "Partitioning.h"
 using namespace std;
 

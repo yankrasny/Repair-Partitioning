@@ -1,2 +1,4 @@
+SOURCES = $(wildcard *.cpp) $(wildcard util/*.cpp) $(wildcard repair-algorithm/*.cpp) $(wildcard random-heap/*.cpp) $(wildcard partitioning/*.cpp)
+
 all:
-	g++ *.cpp -o repair -O3 -std=c++0x
+	g++ $(SOURCES) -o repair -O3 -std=c++0x

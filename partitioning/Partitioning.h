@@ -8,9 +8,9 @@
 #include <unordered_map>
 #include "md5/md5.h"
 // #include "Partitioning.h"
-#include "repair-algorithm/Occurrence.h"
-#include "random-heap/RandomHeap.h"
-#include "repair-algorithm/MetaClasses.h"
+#include "../repair-algorithm/Occurrence.h"
+#include "../random-heap/RandomHeap.h"
+#include "../repair-algorithm/MetaClasses.h"
 
 
 class Occurrence;
