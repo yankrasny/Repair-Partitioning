@@ -12,11 +12,10 @@
 #include "md5/md5.h"
 #include "Occurrence.h"
 #include "HashTableEntry.h"
+#include "MetaClasses.h"
 #include "../random-heap/HeapEntry.h"
 #include "../random-heap/RandomHeap.h"
-#include "../util/Tokenizer.h"
 #include "../util/Profiler.h"
-#include "MetaClasses.h"
 #include "../util/FileUtils.h"
 #include "UndoRepair.h"
 #include "Util.h"
@@ -44,9 +43,6 @@ bool updateLeftmostOccurrence(std::vector<VersionDataItem>& versionData, Occurre
 
 void doRepair(RandomHeap& myHeap, std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
 	std::vector<Association>& associations, unsigned repairStoppingPoint, std::vector<VersionDataItem>& versionData);
-
-std::vector<unsigned> stringToWordIDs(const std::string& text, std::unordered_map<unsigned, std::string>& IDsToWords, 
-	std::unordered_map<unsigned, unsigned>& uniqueWordIDs);
 
 void cleanup(std::unordered_map<unsigned long long, HashTableEntry*>& hashTable);
 

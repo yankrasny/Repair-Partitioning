@@ -87,6 +87,12 @@ vector<unsigned> expand(const vector<Association>& associations, int pos, unorde
 
 Extract back to original string
 
+TODO IMPORTANT: we need to also know the root of each version here
+	ex: associations contains all of the associations for 3 versions
+	version0 root: 1829
+	version1 root: 314
+	version2 root: 1667
+
 */
 vector<unsigned> undoRepair(const vector<Association>& associations)
 {

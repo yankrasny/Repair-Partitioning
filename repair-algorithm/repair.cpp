@@ -23,7 +23,8 @@ void doubleLinkNeighbors(Occurrence* prec, Occurrence* curr)
 		prec->setSucc(curr);
 }
 
-void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, unsigned long long key, unsigned leftPosition, Occurrence* prec, Occurrence* succ)
+void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
+	unsigned long long key, unsigned leftPosition, Occurrence* prec, Occurrence* succ)
 {
 	if (key == 0)
 		return;
@@ -47,7 +48,8 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashT
 	}
 }
 
-void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<VersionDataItem>& versionData)
+void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap, 
+	unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<VersionDataItem>& versionData)
 {
 	vector<unsigned> wordIDs;
 	for (size_t v = 0; v < versions.size(); v++)
@@ -96,7 +98,8 @@ void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp)
 	}
 }
 
-void removeOccurrence(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, Occurrence* oc)
+void removeOccurrence(RandomHeap& myHeap, unordered_map<unsigned long long, 
+	HashTableEntry*>& hashTable, Occurrence* oc)
 {
 	if (!oc)
 	{
@@ -133,6 +136,7 @@ unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec)
 bool updateLeftmostOccurrence(vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc)
 {
 	// update the leftmost occurrence in the appropriate entry of the version data
+	// This gets called rarely: when the left most occcurence is replaced during repair
 	if (!oldOcc || !newOcc || versionData.size() <= 0)
 		return false;
 	for (unsigned i = 0; i < versionData.size(); i++)
@@ -159,9 +163,11 @@ bool updateLeftmostOccurrence(vector<VersionDataItem>& versionData, Occurrence* 
 
 	We used to rely on the linked lists in the end to do the partitioning
 	Now we're going to use associations
+	-> Now we're going to build some trees inside here -yk, 2/24/13
+
 */
-void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<Association>& associations, 
-	unsigned repairStoppingPoint, vector<VersionDataItem>& versionData)
+void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
+	vector<Association>& associations, unsigned repairStoppingPoint, vector<VersionDataItem>& versionData)
 {
 	while (!myHeap.empty())
 	{
@@ -323,53 +329,6 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 		}
 	}
 }
-
-vector<unsigned> stringToWordIDs(const string& text, unordered_map<unsigned, string>& IDsToWords, unordered_map<unsigned, unsigned>& uniqueWordIDs)
-{
-	vector<unsigned> ret = vector<unsigned>();
-
-    istringstream iss(text);
-	
-	vector<string> tokens;
-	//copy(istream_iterator<string>(iss),
-	//		 istream_iterator<string>(),
-	//		 back_inserter<vector<string> >(tokens));
-	
-	//remove punctuation and produce vector of strings (called tokens)
-	string delimiters = ",.:;\"/!?() []{}\n";
-	bool trimEmpty = false;
-	tokenize(text, tokens, delimiters, trimEmpty);
-
-	//Would it be faster to download the code for a hash function? TODO
-	locale loc;
-	const collate<char>& coll = use_facet<collate<char> >(loc);
-	unsigned myHash;
-
-	unordered_map<unsigned, unsigned>::iterator it;
-	for (size_t i = 0; i < tokens.size(); i++)
-	{
-		myHash = coll.hash(tokens[i].data(), tokens[i].data() + tokens[i].length());
-		it = uniqueWordIDs.find(myHash);
-		unsigned theID;
-		if (it != uniqueWordIDs.end())
-		{
-			//found it, so use its ID
-			theID = it->second;
-		}
-		else
-		{
-			//Didn't find it, give it an ID
-			theID = nextID();
-			uniqueWordIDs[myHash] = theID;
-			IDsToWords[theID] = tokens[i];
-			// cerr << tokens[i] << endl;
-			//it->second = nextID();
-		}
-		ret.push_back(theID);
-	}
-	return ret;
-}
-
 
 void cleanup(unordered_map<unsigned long long, HashTableEntry*>& hashTable)
 {
