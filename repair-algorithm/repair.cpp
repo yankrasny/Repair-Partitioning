@@ -167,7 +167,8 @@ bool updateLeftmostOccurrence(vector<VersionDataItem>& versionData, Occurrence* 
 
 */
 void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
-	vector<Association>& associations, unsigned repairStoppingPoint, vector<VersionDataItem>& versionData)
+	vector<Association>& associations, unsigned repairStoppingPoint, vector<VersionDataItem>& versionData,
+	RepairTree& repairTree)
 {
 	while (!myHeap.empty())
 	{
@@ -175,13 +176,13 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 		unsigned symbolToTheLeft;
 		unsigned symbolToTheRight;
 		
-		//Get the max from the heap
+		// Get the max from the heap
 		HeapEntry hp = myHeap.getMax();
 
-		//The string of 2 chars, used to key into the hashmap
+		// The string of 2 chars, used to key into the hashmap
 		unsigned long long key = hp.getKey();
 
-		//Get the hash table entry (so all occurrences and so on)
+		// Get the hash table entry (so all occurrences and so on)
 		HashTableEntry* max = hashTable[key];
 		size_t numOccurrences = max->getSize();
 
@@ -195,30 +196,33 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 		Occurrence* prec;
 		Occurrence* succ;
 
-		//Will use this as the new symbol (say we're replacing abcd with axd, this is x)
+		// Will use this as the new symbol (say we're replacing abcd with axd, this is x)
 		symbol = nextID();
 
-		//For all occurrences of this entry, do the replacement and modify the corresponding entries
+		// For all occurrences of this entry, do the replacement and modify the corresponding entries
 		for (size_t i = 0; i < numOccurrences; i++)
 		{
 			Occurrence* newLeftOcc(NULL);
 			Occurrence* newRightOcc(NULL);
 			
-			//Get the occurrence and its neighbors
+			// Get the occurrence and its neighbors
 			curr = max->getHeadOccurrence();
 
-			//If curr is null, we have a problem. This should never happen.
+			// Build up the Repair tree
+			repairTree->addNode(curr);
+
+			// If curr is null, we have a problem. This should never happen.
 			if (!curr)
 				break;
 
 			prec = curr->getPrec();
 			succ = curr->getSucc();
 
-			//Store the association before you do anything else
+			// Store the association before you do anything else
 			if (i == 0)
 				associations.push_back(Association(symbol, curr->getLeft(), curr->getRight(), numOccurrences));
 			
-			//Now go through all the edge cases (because of the links we have to make, there are a lot)
+			// Now go through all the edge cases (because of the links we have to make, there are a lot)
 			bool onLeftEdge(false);
 			bool onRightEdge(false);
 			bool nearLeftEdge(false);
@@ -227,7 +231,7 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			unsigned long long newLeftKey;
 			unsigned long long newRightKey;
 
-			//Use these bools instead of following the pointers repeatedly
+			// Use these bools instead of following the pointers repeatedly
 			if (!prec)
 				onLeftEdge = true;
 			else
@@ -251,27 +255,27 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 
 			oldRightIndex = curr->getLeftPositionInSequence();
 
-			//Just creates the occurrence in the hash table and heap, doesn't link it to its neighbors
-			//Passing along the index from the pair we're replacing
-			//You get holes eventually (which you want) because 3 pairs get replaced by 2 every time
+			// Just creates the occurrence in the hash table and heap, doesn't link it to its neighbors
+			// Passing along the index from the pair we're replacing
+			// You get holes eventually (which you want) because 3 pairs get replaced by 2 every time
 			addOrUpdatePair(myHeap, hashTable, newLeftKey, oldLeftIndex);
 			addOrUpdatePair(myHeap, hashTable, newRightKey, oldRightIndex);
 
 			if (!nearLeftEdge && !onLeftEdge)
 			{
-				//Have 2 neighbors to the left
+				// Have 2 neighbors to the left
 				newLeftOcc = hashTable[newLeftKey]->getHeadOccurrence();
 				doubleLinkNeighbors(prec->getPrec(), newLeftOcc);
 			}
 			if (!nearRightEdge && !onRightEdge)
 			{
-				//Have 2 neighbors to the right
+				// Have 2 neighbors to the right
 				newRightOcc = hashTable[newRightKey]->getHeadOccurrence();
 				doubleLinkNeighbors(newRightOcc, succ->getSucc());
 			}
 			if (!onRightEdge && !onLeftEdge)
 			{
-				//A neighbor on each side, link them
+				// A neighbor on each side, link them
 				newLeftOcc = hashTable[newLeftKey]->getHeadOccurrence();
 				newRightOcc = hashTable[newRightKey]->getHeadOccurrence();
 				doubleLinkNeighbors(newLeftOcc, newRightOcc);

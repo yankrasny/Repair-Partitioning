@@ -2,6 +2,7 @@
 #include "repair-algorithm/UndoRepair.h"
 #include "partitioning/Partitioning.h"
 #include "repair-algorithm/Util.h"
+#include "repair-algorithm/RepairTree.h"
 using namespace std;
 
 /*
@@ -160,9 +161,12 @@ double runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<u
 
 	extractPairs(versions, myHeap, hashTable, versionData);
 
-	int numPairs = hashTable.size();
+	int  numPairs = hashTable.size();
 
-	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData);
+	// Not used, just here for compatibility's sake
+	RepairTree repairTree();
+
+	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
 	
 	versionPartitionSizes = new unsigned[versions.size()];
 
@@ -188,6 +192,37 @@ double runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<u
 
 	return score;
 }
+
+double runRepairPartitioning2(vector<vector<unsigned> > versions, unordered_map<unsigned, string>& IDsToWords, 
+	unsigned*& offsetsAllVersions, unsigned*& versionPartitionSizes, vector<Association>& associations,
+	unsigned minFragSize, unsigned repairStoppingPoint, bool printFragments = false)
+{
+	//Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures
+	
+	RandomHeap myHeap;
+	
+	unordered_map<unsigned long long, HashTableEntry*> hashTable = unordered_map<unsigned long long, HashTableEntry*> ();
+	
+	associations = vector<Association>();
+	
+	vector<VersionDataItem> versionData = vector<VersionDataItem>();
+
+	extractPairs(versions, myHeap, hashTable, versionData);
+
+	int numPairs = hashTable.size();
+
+	RepairTree repairTree();
+
+	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
+
+	// repairTree is now set
+	/*
+		Magic goes here
+	*/
+
+	return score;
+}
+
 
 unsigned currentFragID = 0;
 unsigned currentID = 0;
