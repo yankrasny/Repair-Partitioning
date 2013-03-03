@@ -1,53 +1,135 @@
+#ifndef REPAIR_TREE_H
+#define REPAIR_TREE_H
+
 #include "RepairTreeNode.h"
 #include "Occurrence.h"
-#include <list>
+#include <set>
 
 class RepairTree
 {
-	RepairTreeNode* head(NULL);
+	/*
+		This is only used if we go all the way with repair
+	*/
+	RepairTreeNode* head;
 
-	// TODO haven't decided on a data structure. std::list is a placeholder
-	// If repair terminates early, then currentLevel represents the nodes of the document that have resulted from repair (I know that sounds obvious)  
-	std::list<RepairTreeNode*> currentLevel;
+	/*
+		If repair terminates early, then currentLevel represents the nodes of the document 
+		that have resulted from repair (I know that sounds obvious)  
+	*/
+	std::multiset<RepairTreeNode*> currentLevel;
+
+	/*
+		
+	*/
+	bool done;
+
 public:
-	RepairTree() {}
+	RepairTree()
+	{
+		currentLevel = std::multiset<RepairTreeNode*>();
+		done = false;
+		head = NULL;
+	}
 
-	// Again, std::list is a placeholder
-	// Also, getCover can be getCut or something, just wanted to show that the result of this must not leave out any parts of the document
-	std::list<RepairTreeNode*> getCover()
+	RepairTreeNode* getHead()
+	{
+		return head;
+	}
+
+	/*
+		getCover can be getCut or something, just wanted to show that the result of this must 
+		not leave out any parts of the document
+	*/
+	std::multiset<RepairTreeNode*> getCover()
 	{
 		// TODO this is where the magic happens
 		// The next step is to produce what Jinru calls a base partition
+
+		// Actually a really good first step, it's definitely a cover!
+		return currentLevel;
 	}
 
-	// TODO this is still pseudocode
-	void addNode(Occurrence* oc)
+	/*
+		Summary: Adds a node to the repair tree, connecting to the children and neighbors
+
+		Description:
+			This is called in two ways: during the first run through the string, and during repair itself.
+				1) During the first run:
+					- we know our left neighbor (see prevTreeNode in extractPairs())
+					- we don't have any children
+					- So pass symbol, NULL, leftNeighbor
+				2) During repair
+					- we don't know our left neighbor (this is figured out by the children)
+					- we do have children, and we need to find them
+					- So pass symbol, oc, NULL
+
+	*/
+	RepairTreeNode* addNode(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor)
 	{
-		if (done || !oc)
+		if (done)
+			return NULL;
+
+		RepairTreeNode* leftChild(NULL);
+		RepairTreeNode* rightChild(NULL);
+
+
+		// This is not a leaf: oc contains a left and a right, so search for them
+		// If we find them next to each other, make a new node and connect them as children
+		if (oc)
 		{
-			return;
+			unsigned leftPos = oc->getLeftPositionInSequence();
+			
+			unsigned left = oc->getLeft();
+			unsigned right = oc->getRight();
+
+			// Search the current level for right
+			// Finding all of the rights is O(n) -> bad but we'll optimize
+			std::multiset<RepairTreeNode*>::iterator it;
+			for (it = currentLevel.begin(); it != currentLevel.end(); it++)
+			{
+				RepairTreeNode* currNode = *it;   
+				if (currNode->getSymbol() == right)
+				{
+					// OK, we found a node that can be the right child of our new node
+					rightChild = currNode;
+					
+					// Now see if that node's left neighbor can be the left child of our new node
+					if (rightChild->getLeftNeighbor()->getSymbol() == left)
+					{
+						leftChild = rightChild->getLeftNeighbor();
+						
+						// Once found, remove them from the current level
+						currentLevel.erase(leftChild);
+						currentLevel.erase(rightChild);
+					}
+				}
+			}
 		}
 
-		unsigned left = oc->getLeft();
-		unsigned right = oc->getRight();
-
-		// Search the current level for left, right, get leftChild and rightChild
-
-		// Once found, remove them from the current level
-		currentLevel.remove(leftChild);
-		currentLevel.remove(rightChild);
+		// This part is fucking brilliant
+		if (leftChild && !leftNeighbor)
+		{
+			leftNeighbor = leftChild->getLeftNeighbor();
+		}
 
 		// Create the new node as a parent of the two children
-		RepairTreeNode newNode = new RepairTreeNode(leftChild, rightChild);		
-		
-		// And now add newNode to the current level
-		currentLevel.add(newNode);
+		RepairTreeNode* newNode = new RepairTreeNode(symbol, leftChild, rightChild, leftNeighbor);
 
-		if (currentLevel.size() == 1)
+		// And now add newNode to the current level
+		currentLevel.insert(newNode);
+
+		// The size is 1 twice, after adding one node, and in the end
+		// We want it to be the latter, so check for existence of children (the first node won't have any)
+		if (currentLevel.size() == 1 && (leftChild || rightChild))
 		{
 			// We are done with repair, the only node left in the current level is the root
-			head = currentLevel[0];
+			std::multiset<RepairTreeNode*>::iterator it = currentLevel.begin();
+			this->head = *it;
 			done = true;
 		}
+
+		return newNode;
 	}
-}
+};
+
+#endif

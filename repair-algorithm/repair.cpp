@@ -49,7 +49,8 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashT
 }
 
 void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap, 
-	unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<VersionDataItem>& versionData)
+	unordered_map<unsigned long long, HashTableEntry*>& hashTable, vector<VersionDataItem>& versionData,
+	RepairTree& repairTree)
 {
 	vector<unsigned> wordIDs;
 	for (size_t v = 0; v < versions.size(); v++)
@@ -58,12 +59,18 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 
 		wordIDs = versions[v];
 
-		//The previous entry in the HT (used to set preceding and succeeding pointers)
+		// The previous entry in the HT (used to set preceding and succeeding pointers)
 		Occurrence* prevOccurrence(NULL);
 
-		//Go through the string and get all overlapping pairs, and process them
+		RepairTreeNode* prevTreeNode(NULL);
+
+		// Go through the string and get all overlapping pairs, and process them
 		for (size_t i = 0; i < wordIDs.size() - 1; i++)
 		{
+			// Building level 1 of the repair tree
+			// prevTreeNode is to maintain neighbor associations
+			prevTreeNode = repairTree.addNode(wordIDs[i], NULL, prevTreeNode);
+
 			currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
 			// unsigned left = getLeft(currPair);
 			// unsigned right = getRight(currPair);
@@ -72,19 +79,19 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 			// cerr << "Right: " << right << endl;
 			addOrUpdatePair(myHeap, hashTable, currPair, i);
 
-			//The first occurrence was the last one added because we add to the head
+			// The first occurrence was the last one added because we add to the head
 			Occurrence* lastAddedOccurrence = hashTable[currPair]->getHeadOccurrence();
 
-			//Maintain a list of pointers to the leftmost occurrence in each version
+			// Maintain a list of pointers to the leftmost occurrence in each version
 			if (i == 0)
 			{
 				versionData.push_back(VersionDataItem(lastAddedOccurrence, v, wordIDs.size()));
 			}
 
-			//Checks for existence of prev, and links them to each other
+			// Checks for existence of prev, and links them to each other
 			doubleLinkNeighbors(prevOccurrence, lastAddedOccurrence);
 
-			//Update the previous occurrence variable
+			// Update the previous occurrence variable
 			prevOccurrence = lastAddedOccurrence;
 		}		
 	}
@@ -209,7 +216,7 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			curr = max->getHeadOccurrence();
 
 			// Build up the Repair tree
-			repairTree->addNode(curr);
+			repairTree.addNode(symbol, curr, NULL);
 
 			// If curr is null, we have a problem. This should never happen.
 			if (!curr)

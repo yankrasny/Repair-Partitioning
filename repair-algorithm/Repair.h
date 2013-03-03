@@ -17,7 +17,8 @@
 #include "../random-heap/RandomHeap.h"
 #include "../util/Profiler.h"
 #include "../util/FileUtils.h"
-#include "UndoRepair.h"
+#include "RepairTree.h"
+// #include "UndoRepair.h"
 #include "Util.h"
 
 // TODO make this a class
@@ -27,9 +28,12 @@ void doubleLinkOccurrences(Occurrence* prev, Occurrence* curr);
 
 void doubleLinkNeighbors(Occurrence* prec, Occurrence* curr);
 
-void addOrUpdatePair(RandomHeap& myHeap, std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, unsigned long long key, unsigned leftPosition, Occurrence* prec = NULL, Occurrence* succ = NULL);
+void addOrUpdatePair(RandomHeap& myHeap, std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
+	unsigned long long key, unsigned leftPosition, Occurrence* prec = NULL, Occurrence* succ = NULL);
 
-void extractPairs(const std::vector<std::vector<unsigned> >& versions, RandomHeap& myHeap, std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, std::vector<VersionDataItem>& versionData);
+void extractPairs(const std::vector<std::vector<unsigned> >& versions, RandomHeap& myHeap, 
+	std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
+	std::vector<VersionDataItem>& versionData, RepairTree& repairTree);
 
 void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp);
 
@@ -42,7 +46,8 @@ unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec);
 bool updateLeftmostOccurrence(std::vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc);
 
 void doRepair(RandomHeap& myHeap, std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
-	std::vector<Association>& associations, unsigned repairStoppingPoint, std::vector<VersionDataItem>& versionData);
+	std::vector<Association>& associations, unsigned repairStoppingPoint, 
+	std::vector<VersionDataItem>& versionData, RepairTree& repairTree);
 
 void cleanup(std::unordered_map<unsigned long long, HashTableEntry*>& hashTable);
 

@@ -1,7 +1,6 @@
 #ifndef OCCURRENCE_H
 #define OCCURRENCE_H
 
-#include <string>
 #include "Util.h"
 
 //An Occurrence, which interacts with other occurrences when it gets replaced by a symbol
@@ -25,22 +24,25 @@ public:
 
 	Occurrence(unsigned long long key, unsigned leftPositionInSequence) : prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), leftPositionInSequence(leftPositionInSequence), next(NULL), prev(NULL) {}
 
-	Occurrence* getNext();
-	Occurrence* getPrev();
-	Occurrence* getPrec();
-	Occurrence* getSucc();
+	Occurrence* getNext() { return next; }
+	Occurrence* getPrev() { return prev; }
+	Occurrence* getPrec() { return prec; }
+	Occurrence* getSucc() { return succ; }
 
-	unsigned getLeft()	const;
-	unsigned getRight()	const;
+	unsigned getLeft()	const { return left; }
+	unsigned getRight()	const { return right; }
 
-	unsigned getLeftPositionInSequence() const;
+	unsigned getLeftPositionInSequence() const { return leftPositionInSequence; }
 
-	void setNext(Occurrence* next);
-	void setPrev(Occurrence* prev);
-	void setPrec(Occurrence* prec);
-	void setSucc(Occurrence* succ);
+	void setNext(Occurrence* next) { this->next = next; }
+	void setPrev(Occurrence* prev) { this->prev = prev; }
+	void setPrec(Occurrence* prec) { this->prec = prec; }
+	void setSucc(Occurrence* succ) { this->succ = succ; }
 
-	unsigned long long getPair();
+	unsigned long long getPair()
+	{
+		return combineToUInt64(left, right);
+	}
 };
 
 #endif

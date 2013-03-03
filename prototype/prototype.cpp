@@ -1,18 +1,11 @@
-#include "repair-algorithm/Repair.h"
-#include "repair-algorithm/UndoRepair.h"
-#include "partitioning/Partitioning.h"
-#include "repair-algorithm/Util.h"
-#include "repair-algorithm/RepairTree.h"
+#include "prototype.h"
 using namespace std;
 
 /*
-
-Add a comment
-
 We must be able to re-extract for the algorithm to be correct
 Associations must be monotonically decreasing for the algorithm to be optimal
 */
-bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
+bool Prototype::checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 {
 	//Check to see whether it's correct
 	vector<unsigned> extractedWordIDs = undoRepair(associations);
@@ -54,7 +47,7 @@ bool checkOutput(vector<Association> associations, vector<unsigned> wordIDs)
 // Write that out and think about it
 
 // If no redundancy was found, the score should be zero (although with repair, that isn't likely at all)
-double getScore(unordered_map<string, FragInfo>& uniqueFrags, unsigned numVersions, ostream& os = cerr)
+double Prototype::getScore(unordered_map<string, FragInfo>& uniqueFrags, unsigned numVersions, ostream& os)
 {
 	double term;
 	double sum(0);
@@ -67,7 +60,7 @@ double getScore(unordered_map<string, FragInfo>& uniqueFrags, unsigned numVersio
 }
 
 
-void writeAssociations(const vector<Association>& associations, ostream& os = cerr)
+void Prototype::writeAssociations(const vector<Association>& associations, ostream& os)
 {
 	for (size_t i = 0; i < associations.size(); i++)
 	{
@@ -75,7 +68,9 @@ void writeAssociations(const vector<Association>& associations, ostream& os = ce
 	}
 }
 
-void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, bool printFragments = false, bool printAssociations = false)
+void Prototype::writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, 
+	const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, 
+	const string& outFilename, bool printFragments, bool printAssociations)
 {
 	ofstream os(outFilename.c_str());
 
@@ -136,7 +131,7 @@ void writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAl
 	}
 }
 
-void printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& os = cerr)
+void Prototype::printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& os)
 {
 	for (unordered_map<unsigned, string>::iterator it = IDsToWords.begin(); it != IDsToWords.end(); it++)
 	{
@@ -145,11 +140,11 @@ void printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& 
 }
 
 
-double runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<unsigned, string>& IDsToWords, 
+double Prototype::runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<unsigned, string>& IDsToWords, 
 	unsigned*& offsetsAllVersions, unsigned*& versionPartitionSizes, vector<Association>& associations,
-	unsigned minFragSize, unsigned repairStoppingPoint, bool printFragments = false)
+	unsigned minFragSize, unsigned repairStoppingPoint, bool printFragments)
 {
-	//Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures
+	// Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures
 	
 	RandomHeap myHeap;
 	
@@ -159,12 +154,12 @@ double runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<u
 	
 	vector<VersionDataItem> versionData = vector<VersionDataItem>();
 
-	extractPairs(versions, myHeap, hashTable, versionData);
+	// Not used, just here for compatibility's sake
+	RepairTree repairTree;
+
+	extractPairs(versions, myHeap, hashTable, versionData, repairTree);
 
 	int  numPairs = hashTable.size();
-
-	// Not used, just here for compatibility's sake
-	RepairTree repairTree();
 
 	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
 	
@@ -193,41 +188,7 @@ double runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<u
 	return score;
 }
 
-double runRepairPartitioning2(vector<vector<unsigned> > versions, unordered_map<unsigned, string>& IDsToWords, 
-	unsigned*& offsetsAllVersions, unsigned*& versionPartitionSizes, vector<Association>& associations,
-	unsigned minFragSize, unsigned repairStoppingPoint, bool printFragments = false)
-{
-	//Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures
-	
-	RandomHeap myHeap;
-	
-	unordered_map<unsigned long long, HashTableEntry*> hashTable = unordered_map<unsigned long long, HashTableEntry*> ();
-	
-	associations = vector<Association>();
-	
-	vector<VersionDataItem> versionData = vector<VersionDataItem>();
-
-	extractPairs(versions, myHeap, hashTable, versionData);
-
-	int numPairs = hashTable.size();
-
-	RepairTree repairTree();
-
-	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
-
-	// repairTree is now set
-	/*
-		Magic goes here
-	*/
-
-	return score;
-}
-
-
-unsigned currentFragID = 0;
-unsigned currentID = 0;
-
-int main(int argc, char* argv[])
+int Prototype::run(int argc, char* argv[])
 {
 	//createOutputDir();
 

@@ -1,21 +1,54 @@
+#ifndef REPAIR_TREE_NODE_H
+#define REPAIR_TREE_NODE_H
+
+#include "Util.h"
+
 class RepairTreeNode
 {
-	int* expansion(NULL);
-	int leftBound;
-	int rightBound;
+	unsigned symbol;
 
-	RepairTreeNode* leftChild(NULL);
-	RepairTreeNode* rightChild(NULL);
+	unsigned leftBound;
+
+	RepairTreeNode* leftChild;
+	RepairTreeNode* rightChild;
+
+	RepairTreeNode* leftNeighbor;
+	RepairTreeNode* rightNeighbor;
 
 public:
-	RepairTreeNode(RepairTreeNode* leftChild, RepairTreeNode* rightChild) : leftChild(leftChild), rightChild(rightChild)
+	RepairTreeNode() : symbol(0), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL) {}
+	RepairTreeNode(unsigned symbol, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor) 
+		: symbol(symbol), leftChild(leftChild), rightChild(rightChild), leftNeighbor(leftNeighbor)
 	{
-		// TODO this is fake
-		expansion = leftChild->getExpansion() + rightChild->getExpansion();
+		if (leftChild)
+		{
+			leftBound = leftChild->getLeftBound();	
+		}
+		if (leftNeighbor)
+		{
+			leftNeighbor->setRightNeighbor(this);	
+		}
 	}
 
-	int* getExpansion()
+	unsigned getSymbol()
 	{
-		// TODO
+		return symbol;
 	}
-}
+
+	unsigned getLeftBound()
+	{
+		return leftBound;
+	}
+
+	RepairTreeNode* getLeftNeighbor()
+	{
+		return leftNeighbor;
+	}
+
+	void setRightNeighbor(RepairTreeNode* newRightNeighbor)
+	{
+		this->rightNeighbor = newRightNeighbor;
+	}
+};
+
+#endif
