@@ -216,7 +216,9 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			curr = max->getHeadOccurrence();
 
 			// Build up the Repair tree
-			repairTree.addNode(symbol, curr, NULL);
+			// cerr << "Symbol: " << symbol << ", numOccurrences: " << numOccurrences << endl;
+			// system("pause");
+			repairTree.addNode(symbol, curr, NULL);			
 
 			// If curr is null, we have a problem. This should never happen.
 			if (!curr)

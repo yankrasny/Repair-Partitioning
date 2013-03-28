@@ -17,6 +17,9 @@ class RepairTreeNode
 
 public:
 	RepairTreeNode() : symbol(0), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL) {}
+
+	RepairTreeNode(unsigned symbol) : symbol(symbol), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL) {}
+
 	RepairTreeNode(unsigned symbol, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor) 
 		: symbol(symbol), leftChild(leftChild), rightChild(rightChild), leftNeighbor(leftNeighbor)
 	{
@@ -30,17 +33,17 @@ public:
 		}
 	}
 
-	unsigned getSymbol()
+	unsigned getSymbol() const
 	{
 		return symbol;
 	}
 
-	unsigned getLeftBound()
+	unsigned getLeftBound() const
 	{
 		return leftBound;
 	}
 
-	RepairTreeNode* getLeftNeighbor()
+	RepairTreeNode* getLeftNeighbor() const
 	{
 		return leftNeighbor;
 	}

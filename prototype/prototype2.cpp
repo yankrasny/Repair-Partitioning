@@ -110,12 +110,12 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 
 	extractPairs(versions, myHeap, hashTable, versionData, repairTree);
 
-	// int numPairs = hashTable.size();
+	int numPairs = hashTable.size();
 
-	// doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
+	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
 
-	// cerr << repairTree.getHead();
-	// system("pause");
+	cerr << repairTree.getHead();
+	system("pause");
 
 	// repairTree is now set
 	/*
