@@ -66,8 +66,12 @@ public:
 	}
 
 	/*
-		1) The children are NULL and leftNeighbor is set
-		2) The children are set and leftNeighbor is NULL
+		Summary: creates a RepairTreeNode and adds is to currentLevel
+
+		Description:
+			This function is called in one of two ways:
+				1) The children are NULL and leftNeighbor is set
+				2) The children are set and leftNeighbor is NULL
 	*/
 	RepairTreeNode* createAndInsertNode(unsigned symbol, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor)
 	{
@@ -89,7 +93,7 @@ public:
 	}
 
 	/*
-		Summary: Adds a node to the repair tree, connecting to the children and neighbors
+		Summary: Adds all the nodes for a symbol to the repair tree
 
 		Description:
 			This is called in two ways: during the first run through the string, and during repair itself.
@@ -106,7 +110,7 @@ public:
 	RepairTreeNode* addNode(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor)
 	{
 		if (done)
-			return NULL; // maybe return head?
+			return NULL;
 
 		// TODO will this always be set in the code below?
 		RepairTreeNode* newNode = NULL;
@@ -125,15 +129,19 @@ public:
 			unsigned left = oc->getLeft();
 			unsigned right = oc->getRight();
 
+			// Just need this for the equal_range function
 			RepairTreeNode* testNode = new RepairTreeNode(right);
 
 			// Search the current level for nodes whose symbol is right
 			std::pair<RepairTreeSet::iterator, RepairTreeSet::iterator> rightMatches = equal_range(currentLevel.begin(), currentLevel.end(), testNode);
 
+			// Delete the test node used for the call to equal_range()
+			delete testNode;
+			testNode = NULL;
+
 			// Iterate through all of those nodes
-			// Ok so iterating through and deleting one by ope probably won't work because iterators are a bitch
-			// Idea: iterate through and schedule them for deletion
-			for (RepairTreeSet::iterator it = rightMatches.first; it != rightMatches.second; )
+			// If the left neighbor has the correct value, we can add the node
+			for (RepairTreeSet::iterator it = rightMatches.first; it != rightMatches.second; it++)
 			{
 				RepairTreeNode* rightChild = *it;
 
@@ -141,25 +149,29 @@ public:
 				if (rightChild->getLeftNeighbor()->getSymbol() == left)
 				{
 					leftChild = rightChild->getLeftNeighbor();
+					
+					// Consider passing NULL instead of leftNeighbor (what's semantically better?)
 					newNode = createAndInsertNode(symbol, leftChild, rightChild, leftNeighbor);
+				}
+			}
 
-					// Once found, remove them from the current level
-					// CAREFUL: this will mess up the iterators, even with the it++ in that else
-					// So perhaps we need to reorganize this structure. How else can we remove the ones that need to go?
-					currentLevel.erase(leftChild);
-					currentLevel.erase(rightChild);
-
-					leftChild = NULL;
-					rightChild = NULL;
+			// To maintain currentLevel, delete the ones that now have parents
+			RepairTreeNode* targetNode(NULL);
+			for (RepairTreeSet::iterator it = currentLevel.begin(); it != currentLevel.end(); )
+			{
+				targetNode = *it;
+				if (!targetNode->hasParent())
+				{
+					currentLevel.erase(targetNode);
 				}
 				else
 				{
 					it++;
 				}
 			}
-
-			// To erase a range
-			// currentLevel.erase(rightMatches.first, rightMatches.second);
+			if (targetNode)
+				delete targetNode;
+			targetNode = NULL;
 		}
 		else
 		{
@@ -179,5 +191,48 @@ public:
 		return newNode;
 	}
 };
+
+/* Alternate implementation: sparse array
+
+1 2 3 1 2 4 [n = 6]
+
+numLevels = ceil(log2(n)) + 1
+numNodes = sum(2^numLevels) for range(0, n-1)
+array = allocate(numNodes)
+
+(5 -> 1,2)
+
+[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+
+[1 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 3 1 2 0 0 0 0 6 5 0 0 7 4 8]
+
+[lvl(n) lvl(n-1) ... lvl(0)]
+[Leaves .............. Root]
+
+5 3 5 4
+
+(6 -> 5,3)
+
+6 5 4
+
+(7 -> 6,5)
+
+7 4
+
+(8 -> 7,4)
+
+8
+
+					8
+				   / \
+				  7   4
+				 /\  
+				6  5
+			   /\  /\
+			  5  3 1 2
+			 /\
+			1  2
+
+*/
 
 #endif

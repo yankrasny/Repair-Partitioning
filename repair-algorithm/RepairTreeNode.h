@@ -15,22 +15,45 @@ class RepairTreeNode
 	RepairTreeNode* leftNeighbor;
 	RepairTreeNode* rightNeighbor;
 
+	RepairTreeNode* parent;
+
 public:
-	RepairTreeNode() : symbol(0), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL) {}
+	RepairTreeNode() : symbol(0), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL) {}
 
-	RepairTreeNode(unsigned symbol) : symbol(symbol), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL) {}
+	RepairTreeNode(unsigned symbol) : symbol(symbol), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL) {}
 
-	RepairTreeNode(unsigned symbol, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor) 
+	RepairTreeNode(unsigned symbol, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor)
 		: symbol(symbol), leftChild(leftChild), rightChild(rightChild), leftNeighbor(leftNeighbor)
 	{
+		// TODO is this correct?
 		if (leftChild)
 		{
 			leftBound = leftChild->getLeftBound();	
 		}
+
+		// This part is fine
 		if (leftNeighbor)
 		{
 			leftNeighbor->setRightNeighbor(this);	
 		}
+
+		rightChild->setParent(this);
+		leftChild->setParent(this);
+	}
+
+	RepairTreeNode* getParent() const
+	{
+		return this->parent;
+	}
+
+	bool hasParent() const
+	{
+		return (bool) parent;
+	}
+
+	void setParent(RepairTreeNode* parent)
+	{
+		this->parent = parent;
 	}
 
 	unsigned getSymbol() const
