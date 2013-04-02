@@ -69,7 +69,7 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 		{
 			// Building level 1 of the repair tree
 			// prevTreeNode is to maintain neighbor associations
-			prevTreeNode = repairTree.addNode(wordIDs[i], NULL, prevTreeNode);
+			prevTreeNode = repairTree.addNode(wordIDs[i], NULL, prevTreeNode, i);
 
 			currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
 			// unsigned left = getLeft(currPair);

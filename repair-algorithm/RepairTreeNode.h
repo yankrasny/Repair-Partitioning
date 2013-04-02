@@ -22,8 +22,8 @@ public:
 
 	RepairTreeNode(unsigned symbol) : symbol(symbol), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL) {}
 
-	RepairTreeNode(unsigned symbol, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor)
-		: symbol(symbol), leftChild(leftChild), rightChild(rightChild), leftNeighbor(leftNeighbor)
+	RepairTreeNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor)
+		: symbol(symbol), leftBound(leftBound), leftChild(leftChild), rightChild(rightChild), leftNeighbor(leftNeighbor)
 	{
 		// TODO is this correct?
 		if (leftChild)

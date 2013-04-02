@@ -73,7 +73,7 @@ public:
 				1) The children are NULL and leftNeighbor is set
 				2) The children are set and leftNeighbor is NULL
 	*/
-	RepairTreeNode* createAndInsertNode(unsigned symbol, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor)
+	RepairTreeNode* createAndInsertNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor)
 	{
 		// This part is fucking brilliant
 		// In the case where we scan for children, we don't pass a left neighbor
@@ -84,7 +84,7 @@ public:
 		}
 
 		// Create the new node as a parent of the two children
-		RepairTreeNode* newNode = new RepairTreeNode(symbol, leftChild, rightChild, leftNeighbor);
+		RepairTreeNode* newNode = new RepairTreeNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
 
 		// And now add newNode to the current level
 		currentLevel.insert(newNode);
@@ -107,7 +107,7 @@ public:
 					- So pass symbol, oc, NULL
 
 	*/
-	RepairTreeNode* addNode(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor)
+	RepairTreeNode* addNode(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor, unsigned leftBound = 0)
 	{
 		if (done)
 			return NULL;
@@ -122,8 +122,7 @@ public:
 		// If we find them next to each other, connect them as children
 		if (oc)
 		{
-			// TODO add this to the RepairTreeNode constructor
-			unsigned leftPos = oc->getLeftPositionInSequence();
+			leftBound = oc->getLeftPositionInSequence();
 			
 			// An occurrence has a left and right character. symbol is the parent of those two characters in this tree.
 			unsigned left = oc->getLeft();
@@ -151,7 +150,7 @@ public:
 					leftChild = rightChild->getLeftNeighbor();
 					
 					// Consider passing NULL instead of leftNeighbor (what's semantically better?)
-					newNode = createAndInsertNode(symbol, leftChild, rightChild, leftNeighbor);
+					newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
 				}
 			}
 
@@ -170,12 +169,11 @@ public:
 		}
 		else
 		{
-			newNode = createAndInsertNode(symbol, leftChild, rightChild, leftNeighbor);
+			newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
 		}
 
 		// The size is 1 twice, after adding one node, and in the end
 		// We want it to be the latter, so check for existence of children (the first node won't have any)
-		std::cout << newNode << std::endl;
 		if (currentLevel.size() == 1 && newNode && (newNode->getLeftChild() || newNode->getRightChild()))
 		{
 			std::cout << "Here" << std::endl;
@@ -189,48 +187,5 @@ public:
 		return newNode;
 	}
 };
-
-/* Alternate implementation: sparse array
-
-1 2 3 1 2 4 [n = 6]
-
-numLevels = ceil(log2(n)) + 1
-numNodes = sum(2^numLevels) for range(0, n-1)
-array = allocate(numNodes)
-
-(5 -> 1,2)
-
-[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
-
-[1 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 5 3 1 2 0 0 0 0 6 5 0 0 7 4 8]
-
-[lvl(n) lvl(n-1) ... lvl(0)]
-[Leaves .............. Root]
-
-5 3 5 4
-
-(6 -> 5,3)
-
-6 5 4
-
-(7 -> 6,5)
-
-7 4
-
-(8 -> 7,4)
-
-8
-
-					8
-				   / \
-				  7   4
-				 /\  
-				6  5
-			   /\  /\
-			  5  3 1 2
-			 /\
-			1  2
-
-*/
 
 #endif

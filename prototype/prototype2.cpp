@@ -115,7 +115,14 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
 
 	cerr << repairTree.getHead();
-	
+
+	RepairTreeSet cover = repairTree.getCover();
+	for (auto it = cover.begin(); it != cover.end(); it++)
+	{
+		RepairTreeNode* r = *it;
+		cerr << "Left Bound: " << r->getLeftBound() << endl;	
+		cerr << "Symbol: " << r->getSymbol() << endl;	
+	}
 	system("pause");
 
 	// repairTree is now set
