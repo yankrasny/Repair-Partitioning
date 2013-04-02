@@ -37,8 +37,15 @@ public:
 			leftNeighbor->setRightNeighbor(this);	
 		}
 
-		rightChild->setParent(this);
-		leftChild->setParent(this);
+		if (rightChild)
+		{
+			rightChild->setParent(this);
+		}
+
+		if (leftChild)
+		{
+			leftChild->setParent(this);
+		}
 	}
 
 	RepairTreeNode* getParent() const
@@ -74,6 +81,16 @@ public:
 	void setRightNeighbor(RepairTreeNode* newRightNeighbor)
 	{
 		this->rightNeighbor = newRightNeighbor;
+	}
+
+	RepairTreeNode* getLeftChild()
+	{
+		return leftChild;
+	}
+	
+	RepairTreeNode* getRightChild()
+	{
+		return rightChild;
 	}
 };
 

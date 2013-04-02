@@ -156,22 +156,17 @@ public:
 			}
 
 			// To maintain currentLevel, delete the ones that now have parents
-			RepairTreeNode* targetNode(NULL);
 			for (RepairTreeSet::iterator it = currentLevel.begin(); it != currentLevel.end(); )
 			{
-				targetNode = *it;
-				if (!targetNode->hasParent())
+				if ( !((*it)->hasParent()) )
 				{
-					currentLevel.erase(targetNode);
+					currentLevel.erase(it++);
 				}
 				else
 				{
-					it++;
+					++it;
 				}
 			}
-			if (targetNode)
-				delete targetNode;
-			targetNode = NULL;
 		}
 		else
 		{
@@ -180,10 +175,13 @@ public:
 
 		// The size is 1 twice, after adding one node, and in the end
 		// We want it to be the latter, so check for existence of children (the first node won't have any)
-		if (currentLevel.size() == 1 && (leftChild || rightChild))
+		std::cout << newNode << std::endl;
+		if (currentLevel.size() == 1 && newNode && (newNode->getLeftChild() || newNode->getRightChild()))
 		{
+			std::cout << "Here" << std::endl;
+			system("pause");
 			// We are done with repair, the only node left in the current level is the root
-			std::multiset<RepairTreeNode*>::iterator it = currentLevel.begin();
+			RepairTreeSet::iterator it = currentLevel.begin();
 			this->head = *it;
 			done = true;
 		}
