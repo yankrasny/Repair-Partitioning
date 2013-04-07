@@ -93,7 +93,9 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 
 			// Update the previous occurrence variable
 			prevOccurrence = lastAddedOccurrence;
-		}		
+		}
+		// The loop goes to size - 1, so we need to take care of the last wordID
+		prevTreeNode = repairTree.addNode(wordIDs.back(), NULL, prevTreeNode, wordIDs.size() - 1);
 	}
 }
 
@@ -216,7 +218,7 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			curr = max->getHeadOccurrence();
 
 			// Build up the Repair tree
-			repairTree.addNode(symbol, curr, NULL);			
+			repairTree.addNode(symbol, curr, NULL);
 
 			// If curr is null, we have a problem. This should never happen.
 			if (!curr)

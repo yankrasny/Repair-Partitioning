@@ -1,5 +1,6 @@
 #include "prototype/prototype.h"
 #include "prototype/prototype2.h"
+#include <assert.h>
 using namespace std;
 
 unsigned currentFragID = 0;

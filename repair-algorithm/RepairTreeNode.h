@@ -22,19 +22,17 @@ public:
 
 	RepairTreeNode(unsigned symbol) : symbol(symbol), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL) {}
 
-	RepairTreeNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor)
-		: symbol(symbol), leftBound(leftBound), leftChild(leftChild), rightChild(rightChild), leftNeighbor(leftNeighbor)
+	RepairTreeNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor)
+		: symbol(symbol), leftBound(leftBound), leftChild(leftChild), rightChild(rightChild), leftNeighbor(leftNeighbor), rightNeighbor(rightNeighbor)
 	{
-		// TODO is this correct?
-		if (leftChild)
-		{
-			leftBound = leftChild->getLeftBound();	
-		}
-
-		// This part is fine
 		if (leftNeighbor)
 		{
-			leftNeighbor->setRightNeighbor(this);	
+			leftNeighbor->setRightNeighbor(this);
+		}
+
+		if (rightNeighbor)
+		{
+			rightNeighbor->setLeftNeighbor(this);
 		}
 
 		if (rightChild)
@@ -77,10 +75,20 @@ public:
 	{
 		return leftNeighbor;
 	}
+	
+	RepairTreeNode* getRightNeighbor() const
+	{
+		return rightNeighbor;
+	}
 
 	void setRightNeighbor(RepairTreeNode* newRightNeighbor)
 	{
 		this->rightNeighbor = newRightNeighbor;
+	}
+
+	void setLeftNeighbor(RepairTreeNode* newLeftNeighbor)
+	{
+		this->leftNeighbor = newLeftNeighbor;
 	}
 
 	RepairTreeNode* getLeftChild()

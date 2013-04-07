@@ -62,6 +62,7 @@ public:
 		// The next step is to produce what Jinru calls a base partition
 
 		// Actually a really good first step, it's definitely a cover!
+		// Wait, is it? If this is called sometime in the middle of the algorithm, it might not be.
 		return currentLevel;
 	}
 
@@ -73,9 +74,9 @@ public:
 				1) The children are NULL and leftNeighbor is set
 				2) The children are set and leftNeighbor is NULL
 	*/
-	RepairTreeNode* createAndInsertNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor)
+	RepairTreeNode* createAndInsertNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, 
+		RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor = NULL)
 	{
-		// This part is fucking brilliant
 		// In the case where we scan for children, we don't pass a left neighbor
 		// We inherit our child's left neighbor
 		if (leftChild && !leftNeighbor)
@@ -83,8 +84,13 @@ public:
 			leftNeighbor = leftChild->getLeftNeighbor();
 		}
 
+		if (rightChild && !rightNeighbor)
+		{
+			rightNeighbor = rightChild->getRightNeighbor();
+		}
+
 		// Create the new node as a parent of the two children
-		RepairTreeNode* newNode = new RepairTreeNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
+		RepairTreeNode* newNode = new RepairTreeNode(symbol, leftBound, leftChild, rightChild, leftNeighbor, rightNeighbor);
 
 		// And now add newNode to the current level
 		currentLevel.insert(newNode);
@@ -93,7 +99,7 @@ public:
 	}
 
 	/*
-		Summary: Adds all the nodes for a symbol to the repair tree
+		Summary: Creates and adds all the nodes for a symbol to the repair tree
 
 		Description:
 			This is called in two ways: during the first run through the string, and during repair itself.
@@ -107,12 +113,14 @@ public:
 					- So pass symbol, oc, NULL
 
 	*/
-	RepairTreeNode* addNode(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor, unsigned leftBound = 0)
+	RepairTreeNode* addNode(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor, 
+		unsigned leftBound = 0)
 	{
 		if (done)
 			return NULL;
 
 		// TODO will this always be set in the code below?
+		// It has to be. If it's not that's a bug.
 		RepairTreeNode* newNode = NULL;
 
 		RepairTreeNode* leftChild(NULL);
@@ -131,17 +139,25 @@ public:
 			// Just need this for the equal_range function
 			RepairTreeNode* testNode = new RepairTreeNode(right);
 
+			std::cerr << "Begin: " << *(currentLevel.begin()) << ", End: " << *(currentLevel.end()) << std::endl;
+
 			// Search the current level for nodes whose symbol is right
+			// Maybe try RepairTreeNodeComparator as the fourth parameter
 			std::pair<RepairTreeSet::iterator, RepairTreeSet::iterator> rightMatches = equal_range(currentLevel.begin(), currentLevel.end(), testNode);
+
+			std::cerr << "First: " << *(rightMatches.first) << ", Second: " << *(rightMatches.second) << std::endl;
+			system("pause");
 
 			// Delete the test node used for the call to equal_range()
 			delete testNode;
-			testNode = NULL;
+			// To make sure we don't accidentally refer to it again
+			testNode = NULL; 
 
 			// Iterate through all of those nodes
 			// If the left neighbor has the correct value, we can add the node
 			for (RepairTreeSet::iterator it = rightMatches.first; it != rightMatches.second; it++)
 			{
+				std::cerr << "inside right matches loop" << std::endl;
 				RepairTreeNode* rightChild = *it;
 
 				// If the current node's left neighbor has symbol == left, then these two should have the new node as a parent
@@ -151,20 +167,32 @@ public:
 					
 					// Consider passing NULL instead of leftNeighbor (what's semantically better?)
 					newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
+					std::cerr << "New node symbol: " << newNode->getSymbol() << std::endl;
+					std::cerr << "New node left child symbol: " << newNode->getLeftChild()->getSymbol() << std::endl;
+					std::cerr << "New node right child symbol: " << newNode->getRightChild()->getSymbol() << std::endl;
+					system("pause");
 				}
 			}
+
+			// std::cerr << "Current level size right before erase loop: " << currentLevel.size() << std::endl;
+			// system("pause");
 
 			// To maintain currentLevel, delete the ones that now have parents
 			for (RepairTreeSet::iterator it = currentLevel.begin(); it != currentLevel.end(); )
 			{
-				if ( !((*it)->hasParent()) )
+				// std::cerr << "Symbol: " << (*it)->getSymbol() << std::endl;
+				if ( ( (*it)->hasParent() ) )
 				{
+					// std::cerr << "Has parent:" << (*it)->getParent() << std::endl;
 					currentLevel.erase(it++);
+
 				}
 				else
 				{
+					// std::cerr << "DOES NOT have parent." << std::endl;
 					++it;
 				}
+				system("pause");
 			}
 		}
 		else
@@ -172,11 +200,17 @@ public:
 			newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
 		}
 
+		// std::cerr << "currentLevel.size(): " << currentLevel.size() << std::endl;
+		// std::cerr << "newNode: " << newNode << std::endl << std::endl;
+		// system("pause");
+
+		// assert(newNode != NULL);
+
 		// The size is 1 twice, after adding one node, and in the end
 		// We want it to be the latter, so check for existence of children (the first node won't have any)
-		if (currentLevel.size() == 1 && newNode && (newNode->getLeftChild() || newNode->getRightChild()))
+		if (currentLevel.size() == 1 && (newNode->getLeftChild() || newNode->getRightChild()))
 		{
-			std::cout << "Here" << std::endl;
+			std::cout << "Done!" << std::endl;
 			system("pause");
 			// We are done with repair, the only node left in the current level is the root
 			RepairTreeSet::iterator it = currentLevel.begin();

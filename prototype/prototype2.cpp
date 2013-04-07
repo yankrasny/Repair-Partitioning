@@ -110,11 +110,12 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 
 	extractPairs(versions, myHeap, hashTable, versionData, repairTree);
 
-	int numPairs = hashTable.size();
+	// not being used
+	// int numPairs = hashTable.size();
 
 	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
 
-	cerr << repairTree.getHead();
+	cerr << "Head pointer: " << repairTree.getHead() << endl;
 
 	RepairTreeSet cover = repairTree.getCover();
 	for (auto it = cover.begin(); it != cover.end(); it++)
@@ -123,7 +124,6 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 		cerr << "Left Bound: " << r->getLeftBound() << endl;	
 		cerr << "Symbol: " << r->getSymbol() << endl;	
 	}
-	system("pause");
 
 	// repairTree is now set
 	/*
@@ -214,6 +214,12 @@ int Prototype2::run(int argc, char* argv[])
 			if (!text)
 				continue;
 			wordIDs = stringToWordIDs(text, IDsToWords, uniqueWordIDs);
+			cerr << "Version " << i << endl;
+			for (unsigned j = 0; j < wordIDs.size(); j++)
+			{
+				cerr << wordIDs[j] << ",";
+			}
+			cerr << endl << endl;
 			versions.push_back(wordIDs);
 			delete text;
 			text = NULL;
