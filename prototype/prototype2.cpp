@@ -110,12 +110,9 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 
 	extractPairs(versions, myHeap, hashTable, versionData, repairTree);
 
-	// not being used
-	// int numPairs = hashTable.size();
-
 	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
 
-	cerr << "Head pointer: " << repairTree.getHead() << endl;
+	// cerr << "Head pointer: " << repairTree.getHead() << endl;
 
 	RepairTreeSet cover = repairTree.getCover();
 	for (auto it = cover.begin(); it != cover.end(); it++)
@@ -164,7 +161,7 @@ int Prototype2::run(int argc, char* argv[])
 		And it shouldn't be larger than the number of versions (this is trivial, we expect to get repetition 
 		at most numVersions times for inter-version repetitions)
 		*/
-		unsigned repairStoppingPoint = 2; //pairs that occur less than this amount of times will not be replaced
+		unsigned repairStoppingPoint = 1; //pairs that occur less than this amount of times will not be replaced
 
 		if (argc == 2 && (string) argv[1] == "help")
 		{

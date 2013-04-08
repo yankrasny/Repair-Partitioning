@@ -53,7 +53,7 @@ public:
 
 	bool hasParent() const
 	{
-		return (bool) parent;
+		return parent != NULL;
 	}
 
 	void setParent(RepairTreeNode* parent)

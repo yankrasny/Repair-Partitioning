@@ -69,7 +69,7 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 		{
 			// Building level 1 of the repair tree
 			// prevTreeNode is to maintain neighbor associations
-			prevTreeNode = repairTree.addNode(wordIDs[i], NULL, prevTreeNode, i);
+			prevTreeNode = repairTree.addNodes(wordIDs[i], NULL, prevTreeNode, i);
 
 			currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
 			// unsigned left = getLeft(currPair);
@@ -95,7 +95,7 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 			prevOccurrence = lastAddedOccurrence;
 		}
 		// The loop goes to size - 1, so we need to take care of the last wordID
-		prevTreeNode = repairTree.addNode(wordIDs.back(), NULL, prevTreeNode, wordIDs.size() - 1);
+		prevTreeNode = repairTree.addNodes(wordIDs.back(), NULL, prevTreeNode, wordIDs.size() - 1);
 	}
 }
 
@@ -208,6 +208,12 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 		// Will use this as the new symbol (say we're replacing abcd with axd, this is x)
 		symbol = nextID();
 
+		curr = max->getHeadOccurrence();
+
+		// Build up the Repair tree
+		// Add all the nodes for this symbol -> left, right
+		repairTree.addNodes(symbol, curr, NULL);
+
 		// For all occurrences of this entry, do the replacement and modify the corresponding entries
 		for (size_t i = 0; i < numOccurrences; i++)
 		{
@@ -216,9 +222,6 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			
 			// Get the occurrence and its neighbors
 			curr = max->getHeadOccurrence();
-
-			// Build up the Repair tree
-			repairTree.addNode(symbol, curr, NULL);
 
 			// If curr is null, we have a problem. This should never happen.
 			if (!curr)

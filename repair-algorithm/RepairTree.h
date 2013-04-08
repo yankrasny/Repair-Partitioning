@@ -11,15 +11,26 @@
 	We want nodes with the same symbol to be next to each other
 	so that we can use the function equal_range()
 */
-struct RepairTreeNodeComparator
+class RepairTreeNodeComparator
 {
-	bool operator() (const RepairTreeNode* lhs, const RepairTreeNode* rhs) const
+public:
+	bool operator() (const RepairTreeNode* const lhs, const RepairTreeNode* const rhs) const
 	{
+		// std::cerr << "lhs->getSymbol(): " << lhs->getSymbol() << std::endl;
+		// std::cerr << "rhs->getSymbol(): " << rhs->getSymbol() << std::endl;
+		// std::cerr << "lhs->getSymbol() < rhs->getSymbol(): " << (lhs->getSymbol() < rhs->getSymbol()) << std::endl;
 		return lhs->getSymbol() < rhs->getSymbol();
 	}
 };
 
 typedef std::multiset<RepairTreeNode*, RepairTreeNodeComparator> RepairTreeSet;
+
+// std::pair<RepairTreeSet::iterator, RepairTreeSet::iterator> CustomEqualRange (const RepairTreeSet& theSet, int lowerBound, int range)
+// {
+// 	RepairTreeSet::iterator lower = theMap.lower_bound(lowerBound);
+// 	RepairTreeSet::iterator upper = theMap.upper_bound(lowerBound + range);
+// 	return std::make_pair(lower, upper);
+// }
 
 class RepairTree
 {
@@ -113,7 +124,7 @@ public:
 					- So pass symbol, oc, NULL
 
 	*/
-	RepairTreeNode* addNode(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor, 
+	RepairTreeNode* addNodes(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor, 
 		unsigned leftBound = 0)
 	{
 		if (done)
@@ -139,25 +150,18 @@ public:
 			// Just need this for the equal_range function
 			RepairTreeNode* testNode = new RepairTreeNode(right);
 
-			std::cerr << "Begin: " << *(currentLevel.begin()) << ", End: " << *(currentLevel.end()) << std::endl;
-
 			// Search the current level for nodes whose symbol is right
-			// Maybe try RepairTreeNodeComparator as the fourth parameter
-			std::pair<RepairTreeSet::iterator, RepairTreeSet::iterator> rightMatches = equal_range(currentLevel.begin(), currentLevel.end(), testNode);
+			std::pair<RepairTreeSet::iterator, RepairTreeSet::iterator> rightMatches = currentLevel.equal_range(testNode);
 
-			std::cerr << "First: " << *(rightMatches.first) << ", Second: " << *(rightMatches.second) << std::endl;
-			system("pause");
-
-			// Delete the test node used for the call to equal_range()
+			// Release mem and clear ref for the test node used for the call to equal_range()
 			delete testNode;
-			// To make sure we don't accidentally refer to it again
-			testNode = NULL; 
+			testNode = NULL;
 
 			// Iterate through all of those nodes
 			// If the left neighbor has the correct value, we can add the node
 			for (RepairTreeSet::iterator it = rightMatches.first; it != rightMatches.second; it++)
 			{
-				std::cerr << "inside right matches loop" << std::endl;
+				// std::cerr << "inside right matches loop" << std::endl;
 				RepairTreeNode* rightChild = *it;
 
 				// If the current node's left neighbor has symbol == left, then these two should have the new node as a parent
@@ -167,32 +171,31 @@ public:
 					
 					// Consider passing NULL instead of leftNeighbor (what's semantically better?)
 					newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
-					std::cerr << "New node symbol: " << newNode->getSymbol() << std::endl;
-					std::cerr << "New node left child symbol: " << newNode->getLeftChild()->getSymbol() << std::endl;
-					std::cerr << "New node right child symbol: " << newNode->getRightChild()->getSymbol() << std::endl;
-					system("pause");
+					// std::cerr << "New node symbol: " << newNode->getSymbol() << std::endl;
+					// std::cerr << "New node left child symbol: " << newNode->getLeftChild()->getSymbol() << std::endl;
+					// std::cerr << "New node right child symbol: " << newNode->getRightChild()->getSymbol() << std::endl;
+					// system("pause");
 				}
 			}
 
-			// std::cerr << "Current level size right before erase loop: " << currentLevel.size() << std::endl;
-			// system("pause");
-
+			// std::cerr << "symbol: " << symbol << std::endl;
+			// std::cerr << "left: " << left << std::endl;
+			// std::cerr << "right: " << right << std::endl;
 			// To maintain currentLevel, delete the ones that now have parents
 			for (RepairTreeSet::iterator it = currentLevel.begin(); it != currentLevel.end(); )
 			{
-				// std::cerr << "Symbol: " << (*it)->getSymbol() << std::endl;
+				// std::cerr << "it->getSymbol(): " << (*it)->getSymbol() << std::endl;
 				if ( ( (*it)->hasParent() ) )
 				{
 					// std::cerr << "Has parent:" << (*it)->getParent() << std::endl;
 					currentLevel.erase(it++);
-
 				}
 				else
 				{
 					// std::cerr << "DOES NOT have parent." << std::endl;
 					++it;
 				}
-				system("pause");
+				// system("pause");
 			}
 		}
 		else
@@ -200,23 +203,26 @@ public:
 			newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
 		}
 
+		std::cerr << "symbol: " << symbol << std::endl;
+		// if (oc)
+		// 	std::cerr << "(left, right): (" << oc->getLeft() << ", " << oc->getRight() << ")" << std::endl;
 		// std::cerr << "currentLevel.size(): " << currentLevel.size() << std::endl;
 		// std::cerr << "newNode: " << newNode << std::endl << std::endl;
 		// system("pause");
 
-		// assert(newNode != NULL);
+		// This part didn't account for versions, rethinking it TODO
 
 		// The size is 1 twice, after adding one node, and in the end
 		// We want it to be the latter, so check for existence of children (the first node won't have any)
-		if (currentLevel.size() == 1 && (newNode->getLeftChild() || newNode->getRightChild()))
-		{
-			std::cout << "Done!" << std::endl;
-			system("pause");
-			// We are done with repair, the only node left in the current level is the root
-			RepairTreeSet::iterator it = currentLevel.begin();
-			this->head = *it;
-			done = true;
-		}
+		// if (currentLevel.size() == 1 && (newNode->getLeftChild() || newNode->getRightChild()))
+		// {
+		// 	std::cout << "Done!" << std::endl;
+		// 	system("pause");
+		// 	// We are done with repair, the only node left in the current level is the root
+		// 	RepairTreeSet::iterator it = currentLevel.begin();
+		// 	this->head = *it;
+		// 	done = true;
+		// }
 
 		return newNode;
 	}
