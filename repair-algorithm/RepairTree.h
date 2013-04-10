@@ -16,29 +16,14 @@ class RepairTreeNodeComparator
 public:
 	bool operator() (const RepairTreeNode* const lhs, const RepairTreeNode* const rhs) const
 	{
-		// std::cerr << "lhs->getSymbol(): " << lhs->getSymbol() << std::endl;
-		// std::cerr << "rhs->getSymbol(): " << rhs->getSymbol() << std::endl;
-		// std::cerr << "lhs->getSymbol() < rhs->getSymbol(): " << (lhs->getSymbol() < rhs->getSymbol()) << std::endl;
 		return lhs->getSymbol() < rhs->getSymbol();
 	}
 };
 
 typedef std::multiset<RepairTreeNode*, RepairTreeNodeComparator> RepairTreeSet;
 
-// std::pair<RepairTreeSet::iterator, RepairTreeSet::iterator> CustomEqualRange (const RepairTreeSet& theSet, int lowerBound, int range)
-// {
-// 	RepairTreeSet::iterator lower = theMap.lower_bound(lowerBound);
-// 	RepairTreeSet::iterator upper = theMap.upper_bound(lowerBound + range);
-// 	return std::make_pair(lower, upper);
-// }
-
 class RepairTree
 {
-	/*
-		This is only used if we go all the way with repair
-	*/
-	RepairTreeNode* head;
-
 	/*
 		If repair terminates early, then currentLevel represents the nodes of the document 
 		that have resulted from repair (I know that sounds obvious)  
@@ -55,12 +40,6 @@ public:
 	{
 		currentLevel = RepairTreeSet();
 		done = false;
-		head = NULL;
-	}
-
-	RepairTreeNode* getHead() const
-	{
-		return head;
 	}
 
 	/*
@@ -127,11 +106,11 @@ public:
 	RepairTreeNode* addNodes(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor, 
 		unsigned leftBound = 0)
 	{
+		// TODO set this somewhere, or just get rid of it
 		if (done)
 			return NULL;
 
-		// TODO will this always be set in the code below?
-		// It has to be. If it's not that's a bug.
+		// This always has to be set in the code below (if not, we have a bug)
 		RepairTreeNode* newNode = NULL;
 
 		RepairTreeNode* leftChild(NULL);
@@ -161,41 +140,32 @@ public:
 			// If the left neighbor has the correct value, we can add the node
 			for (RepairTreeSet::iterator it = rightMatches.first; it != rightMatches.second; it++)
 			{
-				// std::cerr << "inside right matches loop" << std::endl;
 				RepairTreeNode* rightChild = *it;
 
 				// If the current node's left neighbor has symbol == left, then these two should have the new node as a parent
-				if (rightChild->getLeftNeighbor()->getSymbol() == left)
+				if (rightChild->getLeftNeighbor() != NULL) // Edge case
 				{
-					leftChild = rightChild->getLeftNeighbor();
-					
-					// Consider passing NULL instead of leftNeighbor (what's semantically better?)
-					newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
-					// std::cerr << "New node symbol: " << newNode->getSymbol() << std::endl;
-					// std::cerr << "New node left child symbol: " << newNode->getLeftChild()->getSymbol() << std::endl;
-					// std::cerr << "New node right child symbol: " << newNode->getRightChild()->getSymbol() << std::endl;
-					// system("pause");
+					if (rightChild->getLeftNeighbor()->getSymbol() == left)
+					{
+						leftChild = rightChild->getLeftNeighbor();
+						
+						// Consider passing NULL instead of leftNeighbor (what's semantically better?)
+						newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
+					}
 				}
 			}
 
-			// std::cerr << "symbol: " << symbol << std::endl;
-			// std::cerr << "left: " << left << std::endl;
-			// std::cerr << "right: " << right << std::endl;
 			// To maintain currentLevel, delete the ones that now have parents
 			for (RepairTreeSet::iterator it = currentLevel.begin(); it != currentLevel.end(); )
 			{
-				// std::cerr << "it->getSymbol(): " << (*it)->getSymbol() << std::endl;
 				if ( ( (*it)->hasParent() ) )
 				{
-					// std::cerr << "Has parent:" << (*it)->getParent() << std::endl;
 					currentLevel.erase(it++);
 				}
 				else
 				{
-					// std::cerr << "DOES NOT have parent." << std::endl;
 					++it;
 				}
-				// system("pause");
 			}
 		}
 		else
@@ -203,26 +173,7 @@ public:
 			newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
 		}
 
-		std::cerr << "symbol: " << symbol << std::endl;
-		// if (oc)
-		// 	std::cerr << "(left, right): (" << oc->getLeft() << ", " << oc->getRight() << ")" << std::endl;
-		// std::cerr << "currentLevel.size(): " << currentLevel.size() << std::endl;
-		// std::cerr << "newNode: " << newNode << std::endl << std::endl;
-		// system("pause");
-
-		// This part didn't account for versions, rethinking it TODO
-
-		// The size is 1 twice, after adding one node, and in the end
-		// We want it to be the latter, so check for existence of children (the first node won't have any)
-		// if (currentLevel.size() == 1 && (newNode->getLeftChild() || newNode->getRightChild()))
-		// {
-		// 	std::cout << "Done!" << std::endl;
-		// 	system("pause");
-		// 	// We are done with repair, the only node left in the current level is the root
-		// 	RepairTreeSet::iterator it = currentLevel.begin();
-		// 	this->head = *it;
-		// 	done = true;
-		// }
+		// Account for versions, rethinking it TODO
 
 		return newNode;
 	}

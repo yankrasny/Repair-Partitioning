@@ -23,7 +23,7 @@ public:
 	RepairTreeNode(unsigned symbol) : symbol(symbol), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL) {}
 
 	RepairTreeNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor)
-		: symbol(symbol), leftBound(leftBound), leftChild(leftChild), rightChild(rightChild), leftNeighbor(leftNeighbor), rightNeighbor(rightNeighbor)
+		: symbol(symbol), leftBound(leftBound), leftChild(leftChild), rightChild(rightChild), leftNeighbor(leftNeighbor), rightNeighbor(rightNeighbor), parent(NULL)
 	{
 		if (leftNeighbor)
 		{
