@@ -17,13 +17,19 @@ class RepairTreeNode
 
 	RepairTreeNode* parent;
 
+	unsigned versionNum;
+
 public:
-	RepairTreeNode() : symbol(0), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL) {}
+	RepairTreeNode() : symbol(0), leftBound(0), leftChild(NULL), rightChild(NULL), 
+		leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0) {}
 
-	RepairTreeNode(unsigned symbol) : symbol(symbol), leftBound(0), leftChild(NULL), rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL) {}
+	RepairTreeNode(unsigned symbol) : symbol(symbol), leftBound(0), leftChild(NULL), 
+		rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0) {}
 
-	RepairTreeNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor)
-		: symbol(symbol), leftBound(leftBound), leftChild(leftChild), rightChild(rightChild), leftNeighbor(leftNeighbor), rightNeighbor(rightNeighbor), parent(NULL)
+	RepairTreeNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, 
+		RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor, versionNum = 0) :
+			symbol(symbol), leftBound(leftBound), leftChild(leftChild), rightChild(rightChild), 
+			leftNeighbor(leftNeighbor), rightNeighbor(rightNeighbor), parent(NULL), versionNum(versionNum)
 	{
 		if (leftNeighbor)
 		{
@@ -43,7 +49,15 @@ public:
 		if (leftChild)
 		{
 			leftChild->setParent(this);
+
+			// Inherit the version number from children, so we can know which version a node belongs to
+			versionNum = leftChild->versionNum;
 		}
+	}
+
+	unsigned getVersionNum() const
+	{
+		return versionNum;
 	}
 
 	RepairTreeNode* getParent() const

@@ -165,6 +165,8 @@ double Prototype::runRepairPartitioning(vector<vector<unsigned> > versions, unor
 	
 	versionPartitionSizes = new unsigned[versions.size()];
 
+	DocumentPartition d = DocumentPartition();
+
 	offsetsAllVersions = getPartitioningsAllVersions(myHeap, minFragSize, versionData, versionPartitionSizes);
 
 	if (!offsetsAllVersions)

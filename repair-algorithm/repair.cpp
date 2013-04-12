@@ -69,24 +69,22 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 		{
 			// Building level 1 of the repair tree
 			// prevTreeNode is to maintain neighbor associations
-			prevTreeNode = repairTree.addNodes(wordIDs[i], NULL, prevTreeNode, i);
+			prevTreeNode = repairTree.addNodes(wordIDs[i], NULL, prevTreeNode, v, i);
 
+			// Save some metadata for each version
+			if (i == 0)
+			{
+				versionData.push_back(VersionDataItem(prevTreeNode, v, wordIDs.size()));
+			}
+
+			// Squeeze the pair of two unsigned numbers together for storage
 			currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
-			// unsigned left = getLeft(currPair);
-			// unsigned right = getRight(currPair);
 
-			// cerr << "Left: " << left << endl;
-			// cerr << "Right: " << right << endl;
+			// Add the pair to our structures
 			addOrUpdatePair(myHeap, hashTable, currPair, i);
 
 			// The first occurrence was the last one added because we add to the head
 			Occurrence* lastAddedOccurrence = hashTable[currPair]->getHeadOccurrence();
-
-			// Maintain a list of pointers to the leftmost occurrence in each version
-			if (i == 0)
-			{
-				versionData.push_back(VersionDataItem(lastAddedOccurrence, v, wordIDs.size()));
-			}
 
 			// Checks for existence of prev, and links them to each other
 			doubleLinkNeighbors(prevOccurrence, lastAddedOccurrence);
@@ -95,7 +93,7 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 			prevOccurrence = lastAddedOccurrence;
 		}
 		// The loop goes to size - 1, so we need to take care of the last wordID
-		prevTreeNode = repairTree.addNodes(wordIDs.back(), NULL, prevTreeNode, wordIDs.size() - 1);
+		prevTreeNode = repairTree.addNodes(wordIDs.back(), NULL, prevTreeNode, versions.size() - 1, wordIDs.size() - 1);
 	}
 }
 
@@ -140,24 +138,6 @@ unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec)
 	unsigned symbolToTheLeft = prec->getLeft();
 	return combineToUInt64(symbolToTheLeft, symbol);
 } 
-
-
-bool updateLeftmostOccurrence(vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc)
-{
-	// update the leftmost occurrence in the appropriate entry of the version data
-	// This gets called rarely: when the left most occcurence is replaced during repair
-	if (!oldOcc || !newOcc || versionData.size() <= 0)
-		return false;
-	for (unsigned i = 0; i < versionData.size(); i++)
-	{
-		if (versionData[i].leftMostOcc == oldOcc)
-		{
-			versionData[i].leftMostOcc = newOcc;
-			return true;
-		}
-	}
-	return false;
-}
 
 /*
 	While the heap is not empty, get the max and process it (that is, replace all occurrences and modify all prec and succ pointers)
@@ -293,42 +273,6 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 				doubleLinkNeighbors(newLeftOcc, newRightOcc);
 			}
 
-			if (nearLeftEdge || onLeftEdge)
-			{
-				// Updating our list of pointers to the left most occurrences for each version (we need this to read the indexes and figure out the partitioning, see getPartitioning(...))
-				Occurrence* oldLeftMostOcc;
-				Occurrence* newLeftMostOcc;
-
-				if (nearLeftEdge)
-				{
-					oldLeftMostOcc = prec;
-					if (newLeftKey)
-					{
-						newLeftMostOcc = hashTable[newLeftKey]->getHeadOccurrence();
-					}
-				}
-				else if (onLeftEdge)
-				{
-					oldLeftMostOcc = curr;
-					if (newRightKey)
-					{
-						newLeftMostOcc = hashTable[newRightKey]->getHeadOccurrence();
-					}
-				}
-				
-				bool leftOccUpdateSucceeded = updateLeftmostOccurrence(versionData, oldLeftMostOcc, newLeftMostOcc);
-				if (!leftOccUpdateSucceeded) // should never happen, unless there's a problem with versionData or that function.
-				{
-					Occurrence* o;
-					for (unsigned x = 0; x < versionData.size(); x++)
-					{
-						o = versionData[x].leftMostOcc;
-						cerr << "Leftmost Occurrence update failed, occurrence: " << o << endl;
-					}
-					exit(1);
-				}					
-			}
-				
 			//cerr << "Removing curr: " << curr->getLeft() << "," << curr->getRight() << endl;
 			removeOccurrence(myHeap, hashTable, curr);
 			

@@ -3,14 +3,44 @@
 
 #include <ostream>
 
-class Occurrence;
-
-struct VersionDataItem
+class VersionDataItem
 {
-	Occurrence* leftMostOcc;
-	unsigned index; // index in the original file (the indexes of consecutive occurrences define the interval spanned by those symbols)
-	unsigned versionSize; // in words
-	VersionDataItem(Occurrence* leftMostOcc, unsigned index, unsigned versionSize) : leftMostOcc(leftMostOcc), index(index), versionSize(versionSize) {}
+private:
+	RepairTreeNode* firstNode;
+	RepairTreeNode* rootNode;
+	unsigned versionNum; // aka versionID
+	unsigned versionSize; // aka number of words
+public:
+	VersionDataItem(RepairTreeNode* firstNode, unsigned versionNum, unsigned versionSize)
+		: firstNode(firstNode), versionNum(versionNum), versionSize(versionSize), rootNode(NULL) {}
+
+	RepairTreeNode* getRootNode() const
+	{
+		if (rootNode)
+			return rootNode;
+
+		RepairTreeNode* current = firstNode;
+		if (current)
+		{
+			while (true)
+			{
+				if (current->getParent()) // current has a parent, so current is not our root
+				{
+					current = current->getParent();
+				}
+				else // current does not have a parent, it must be our root, set it and don't loop through again
+				{
+					rootNode = current;
+					return rootNode;
+				}					
+			}
+		}
+	}
+
+	unsigned getVersionSize() const
+	{
+		return versionSize;
+	}
 };
 
 

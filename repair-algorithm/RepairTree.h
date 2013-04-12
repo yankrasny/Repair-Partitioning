@@ -42,17 +42,8 @@ public:
 		done = false;
 	}
 
-	/*
-		getCover can be getCut or something, just wanted to show that the result of this must 
-		not leave out any parts of the document
-	*/
-	RepairTreeSet getCover()
+	RepairTreeSet getCurrentLevel()
 	{
-		// TODO this is where the magic happens
-		// The next step is to produce what Jinru calls a base partition
-
-		// Actually a really good first step, it's definitely a cover!
-		// Wait, is it? If this is called sometime in the middle of the algorithm, it might not be.
 		return currentLevel;
 	}
 
@@ -65,8 +56,10 @@ public:
 				2) The children are set and leftNeighbor is NULL
 	*/
 	RepairTreeNode* createAndInsertNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, 
-		RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor = NULL)
+		RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, unsigned versionNum = 0)
 	{
+		RepairTreeNode* rightNeighbor = NULL;
+
 		// In the case where we scan for children, we don't pass a left neighbor
 		// We inherit our child's left neighbor
 		if (leftChild && !leftNeighbor)
@@ -80,7 +73,7 @@ public:
 		}
 
 		// Create the new node as a parent of the two children
-		RepairTreeNode* newNode = new RepairTreeNode(symbol, leftBound, leftChild, rightChild, leftNeighbor, rightNeighbor);
+		RepairTreeNode* newNode = new RepairTreeNode(symbol, leftBound, leftChild, rightChild, leftNeighbor, rightNeighbor, versionNum);
 
 		// And now add newNode to the current level
 		currentLevel.insert(newNode);
@@ -103,8 +96,7 @@ public:
 					- So pass symbol, oc, NULL
 
 	*/
-	RepairTreeNode* addNodes(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor, 
-		unsigned leftBound = 0)
+	RepairTreeNode* addNodes(unsigned symbol, Occurrence* oc, RepairTreeNode* leftNeighbor, unsigned versionNum = 0, unsigned leftBound = 0)
 	{
 		// TODO set this somewhere, or just get rid of it
 		if (done)
@@ -170,11 +162,9 @@ public:
 		}
 		else
 		{
-			newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor);
+			newNode = createAndInsertNode(symbol, leftBound, leftChild, rightChild, leftNeighbor, versionNum);
 		}
-
-		// Account for versions, rethinking it TODO
-
+		
 		return newNode;
 	}
 };

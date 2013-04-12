@@ -112,20 +112,9 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 
 	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
 
-	RepairTreeSet cover = repairTree.getCover();
-	for (auto it = cover.begin(); it != cover.end(); it++)
-	{
-		RepairTreeNode* r = *it;
-		cerr << "Left Bound: " << r->getLeftBound() << endl;	
-		cerr << "Symbol: " << r->getSymbol() << endl;	
-	}
-	cerr << "Num Versions: " << versionData.size() << endl;
-	cerr << "Cover Size: " << cover.size() << endl;
+	RepairDocumentPartition partition = RepairDocumentPartition(repairTree, versionData);
 
-	// repairTree is now set
-	/*
-		Magic goes here
-	*/
+	offsetsAllVersions = partition.getOffsets();
 
 	double score = 0.0;
 	return score;
