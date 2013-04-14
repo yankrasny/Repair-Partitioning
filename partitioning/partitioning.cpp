@@ -28,10 +28,8 @@ SortedNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNode* root
 	}
 	if (root->getLeftChild() && root->getRightChild())
 	{
-		SortedNodeSet leftPart = this->getNodesNthLevelDown(root->getLeftChild(), numLevelsDown - 1, nodes);
-		SortedNodeSet rightPart = this->getNodesNthLevelDown(root->getRightChild(), numLevelsDown - 1, nodes);
-		nodes.insert(leftPart.begin(), leftPart.end());
-		nodes.insert(rightPart.begin(), rightPart.end());
+		this->getNodesNthLevelDown(root->getLeftChild(), numLevelsDown - 1, nodes);
+		this->getNodesNthLevelDown(root->getRightChild(), numLevelsDown - 1, nodes);
 	}
 	return nodes;
 }

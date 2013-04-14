@@ -49,18 +49,6 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 	// The number of fragments in each version
 	versionPartitionSizes = partition.getVersionSizes();
 
-	// Get the sum of numbers of fragments over all versions
-	unsigned sum = 0;
-	for (unsigned i = 0; i < versions.size(); i++)
-	{
-		sum += versionPartitionSizes[i];
-	}	
-
-	for (unsigned i = 0; i < sum; i++)
-	{
-		cerr << offsetsAllVersions[i] << ",";
-	}
-
 	partition.writeResults(versions, IDsToWords, "./Output/results.txt", printFragments, printAssociations);
 
 	if (printAssociations)
