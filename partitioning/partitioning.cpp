@@ -2,33 +2,57 @@
 #include "Partitioning.h"
 using namespace std;
 
-SortedNodeSet RepairDocumentPartition::getPartitioningOneVersionRecursive(RepairTreeNode* root, unsigned numLevelsDown, SortedNodeSet& nodes)
+double RepairDocumentPartition::getScore(ostream& os)
+{
+	double term;
+	double sum(0);
+	for (unordered_map<string, FragInfo>::iterator it = uniqueFrags.begin(); it != uniqueFrags.end(); it++)
+	{
+		term = it->second.count * it->second.fragSize;
+		sum += term;
+	}
+	return sum / (uniqueFrags.size() * versionData.size());
+}
+
+SortedNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedNodeSet& nodes)
 {
 	if (numLevelsDown < 1) return nodes;
 	if (numLevelsDown == 1)
 	{
-		nodes.insert(root->getLeftChild());
-		nodes.insert(root->getRightChild());
+		if (root->getLeftChild() && root->getRightChild())
+		{
+			nodes.insert(root->getLeftChild());
+			nodes.insert(root->getRightChild());			
+		}
 		return nodes;
 	}
-	nodes.insert(this->getPartitioningOneVersionRecursive(root->getLeftChild(), numLevelsDown - 1, nodes));
-	nodes.insert(this->getPartitioningOneVersionRecursive(root->getRightChild(), numLevelsDown - 1, nodes));
+	if (root->getLeftChild() && root->getRightChild())
+	{
+		SortedNodeSet leftPart = this->getNodesNthLevelDown(root->getLeftChild(), numLevelsDown - 1, nodes);
+		SortedNodeSet rightPart = this->getNodesNthLevelDown(root->getRightChild(), numLevelsDown - 1, nodes);
+		nodes.insert(leftPart.begin(), leftPart.end());
+		nodes.insert(rightPart.begin(), rightPart.end());
+	}
 	return nodes;
 }
 
 unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, unsigned* bounds, unsigned minFragSize, unsigned versionSize)
 {
 	SortedNodeSet nodes = SortedNodeSet();
-	nodes = getPartitioningOneVersionRecursive(root, numLevelsDown, nodes);
+	nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
 
 	unsigned numFrags = 0;
 	for (auto it = nodes.begin(); it != nodes.end(); ++it)
 	{
-		// These left bounds should be sorted (see the comparator at the top)
+		RepairTreeNode* current = *it;
+
+		// These left bounds are already sorted (see the comparator at the top)
 		bounds[numFrags] = current->getLeftBound();
 		numFrags++;
 	}
+	// We're working with left bounds, so we always need to add the last one on the right
 	bounds[numFrags] = versionSize;
+	numFrags++;
 
 	// TODO Handle this
 	if (numFrags > MAX_NUM_FRAGMENTS_PER_VERSION)
@@ -44,19 +68,21 @@ void RepairDocumentPartition::setPartitioningsAllVersions(unsigned numLevelsDown
 	unsigned versionOffset(0); // after the loop, is set to the total number of fragments (also the size of the starts array)
 	unsigned numFragments(0); // will be reused in the loop for the number of fragments in each version
 
+	RepairTreeNode* rootForThisVersion = NULL;
+
 	// Iterate over all versions
 	for (unsigned i = 0; i < this->versionData.size(); i++)
 	{
 		rootForThisVersion = this->versionData[i].getRootNode();
 
 		// Do the partitioning for one version, and store the number of fragments
-		numFragments = getPartitioningOneVersion(rootForThisVersion, numLevelsDown, &(this->fragmentList[versionOffset]), minFragSize, versionData[i].getVersionSize());
+		numFragments = getPartitioningOneVersion(rootForThisVersion, numLevelsDown, &(this->offsets[versionOffset]), minFragSize, versionData[i].getVersionSize());
 		versionOffset += numFragments;
 		this->versionSizes[i] = numFragments;
 	}
 }
 
-void RepairDocumentPartition::setFragments(const vector<vector<unsigned> >& versions, ostream& os, bool print)
+void RepairDocumentPartition::setFragmentInfo(const vector<vector<unsigned> >& versions, ostream& os, bool print)
 {
 	unsigned start, end, theID, fragSize;
 	string word;
@@ -87,6 +113,8 @@ void RepairDocumentPartition::setFragments(const vector<vector<unsigned> >& vers
 			for (unsigned j = start; j < end; j++)
 			{
 				theID = wordIDs[j];
+
+				// Need a delimiter to ensure uniqueness (1,2,3 is different from 12,3)
 				ss << theID << ",";
 			}
 
@@ -124,13 +152,13 @@ void RepairDocumentPartition::updateUniqueFragmentHashMap()
 			unsigned theID;
 			if (this->uniqueFrags.count(myHash))
 			{
-				//found it, so use its ID
+				// Found it, so use its ID
 				theID = this->uniqueFrags[myHash].id;
 				this->uniqueFrags[myHash].count++;
 			}
 			else
 			{
-				//Didn't find it, give it an ID
+				// Didn't find it, give it an ID
 				theID = nextFragID();
 				frag.id = theID;
 				frag.count = 1;
@@ -139,3 +167,72 @@ void RepairDocumentPartition::updateUniqueFragmentHashMap()
 		}
 	}
 }
+
+void RepairDocumentPartition::writeResults(const vector<vector<unsigned> >& versions, unordered_map<unsigned, string>& IDsToWords, 
+	const string& outFilename, bool printFragments, bool printAssociations)
+{
+	ofstream os(outFilename.c_str());
+
+	os << "Results of re-pair partitioning..." << endl << endl;
+	os << "*** Fragment boundaries ***" << endl;
+	
+	unsigned totalCountFragments(0);
+	unsigned diff(0);
+	unsigned numVersions = versions.size();
+	for (unsigned v = 0; v < numVersions; v++)
+	{
+		unsigned numFragsInVersion = versionSizes[v];
+
+		if (numFragsInVersion < 1)
+		{
+			continue;
+		}
+		os << "Version " << v << endl;
+		for (unsigned i = 0; i < numFragsInVersion - 1; i++)
+		{
+			if (i < numFragsInVersion - 1)
+			{
+				unsigned currOffset = offsets[totalCountFragments + i];
+				unsigned nextOffset = offsets[totalCountFragments + i + 1];
+				diff = nextOffset - currOffset;
+			}
+			else
+			{
+				diff = 0;
+			}
+
+			os << "Fragment " << i << ": " << offsets[totalCountFragments + i] << "-" << 
+				offsets[totalCountFragments + i + 1] << " (frag size: " << diff << ")" << endl;
+		}
+		totalCountFragments += numFragsInVersion;
+		os << endl;
+	}
+
+	// os << "Number of fragment boundaries: " << starts.size() << endl;
+	// os << "Number of fragments: " << (starts.size() - 1) << endl << endl;
+
+	os << "*** Fragments ***" << endl;
+	this->setFragmentInfo(versions, os, printFragments);
+
+	// Assign fragment IDs and stick them in a hashmap
+	unordered_map<string, FragInfo> uniqueFrags;
+	this->updateUniqueFragmentHashMap();
+
+	// Now decide on the score for this partitioning
+	double score = this->getScore(os);
+	os << "Score: " << score << endl;
+	
+	// if (printAssociations)
+	// {
+	// 	os << "*** Associations (symbol -> pair) ***" << endl;
+	// 	writeAssociations(associations, os);
+	// }
+}
+
+// void RepairDocumentPartition::printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& os)
+// {
+// 	for (unordered_map<unsigned, string>::iterator it = IDsToWords.begin(); it != IDsToWords.end(); it++)
+// 	{
+// 		os << it->first << ": " << it->second << endl;
+// 	}
+// }

@@ -8,11 +8,9 @@
 #include <unordered_map>
 #include <set>
 #include "md5/md5.h"
-#include "../random-heap/RandomHeap.h"
 #include "../repair-algorithm/MetaClasses.h"
 #include "../repair-algorithm/RepairTree.h"
 
-class RandomHeap;
 struct VersionDataItem;
 struct FragInfo;
 
@@ -30,9 +28,13 @@ typedef std::multiset<RepairTreeNode*, SortedNodeSetComparator> SortedNodeSet;
 
 class RepairDocumentPartition
 {
+	unsigned numLevelsDown;
+
+	unsigned minFragSize;
+
 	// Contains information about each version
 	// More importantly, holds a pointer to the root node of each version (See class RepairTree and class RepairTreeNode)
-	vector<VersionDataItem>& versionData;
+	std::vector<VersionDataItem>& versionData;
 
 	// The entry at i is the number of fragments for version i
 	unsigned* versionSizes;
@@ -45,14 +47,14 @@ class RepairDocumentPartition
 
 	// The outer vector represents all versions
 	// The vector at position i contains fragment objects for version i
-	vector<vector<FragInfo > > fragments;
+	std::vector<std::vector<FragInfo > > fragments;
 
 	// Unique Fragments in all the versions
-	unordered_map<string, FragInfo>& uniqueFrags;
+	std::unordered_map<std::string, FragInfo> uniqueFrags;
 
 	// One implementation of get partitioning for one version
 	// All implementations can return a list of nodes
-	SortedNodeSet getPartitioningOneVersionRecursive(RepairTreeNode* root, unsigned numLevelsDown, SortedNodeSet& nodes);
+	SortedNodeSet getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedNodeSet& nodes);
 
 	// Cuts one version
 	unsigned getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, unsigned* bounds, unsigned minFragSize, unsigned versionSize);
@@ -60,35 +62,46 @@ class RepairDocumentPartition
 	// Calls getPartitioningOneVersion and stores the results in offsets
 	void setPartitioningsAllVersions(unsigned numLevelsDown, unsigned minFragSize);
 
+	// Populates unique frags using the boundaries found by the partitioning algorithm
+	void updateUniqueFragmentHashMap();
+
+	// Populates this->fragments
+	void setFragmentInfo(const std::vector<std::vector<unsigned> >& versions, std::ostream& os, bool print);
 public:
 	// For extensibility, RepairTree should implement an interface like PartitioningAlgorithm or something
-	// In the future, others would also implement that interface, and this code would work with them right away
+	// In the future, others would also implement that interface, and these param types could stay the same
 	// So it would be const PartitioningAlgorithm& alg
-	RepairDocumentPartition(const RepairTree& repairTree, vector<VersionDataItem>& versionData, numLevelsDown = 5, minFragSize = 2)
+	RepairDocumentPartition(const RepairTree& repairTree, std::vector<VersionDataItem>& versionData, unsigned numLevelsDown = 3, unsigned minFragSize = 2)
 		: repairTree(repairTree), versionData(versionData), offsets(NULL), numLevelsDown(numLevelsDown), minFragSize(minFragSize)
 	{
-		fragments = vector<vector<FragInfo > >();
+		fragments = std::vector<std::vector<FragInfo > >();
 
 	 	unsigned maxArraySize = versionData.size() * MAX_NUM_FRAGMENTS_PER_VERSION;
 
-		this->fragmentList = new unsigned[maxArraySize];
+		this->offsets = new unsigned[maxArraySize];
+
+		this->versionSizes = new unsigned[versionData.size()];
+
+		uniqueFrags = std::unordered_map<std::string, FragInfo>();
+
+		setPartitioningsAllVersions(numLevelsDown, minFragSize);
 	}
 
-	// Populates this->fragments
-	// TODO where will these params come from?
-	void setFragments(const vector<vector<unsigned> >& versions, ostream& os, bool print);
-
-	// Populates unique frags using the boundaries found by the partitioning algorithm
-	void updateUniqueFragmentHashMap();
-	
 	// The payload of this class
-	unsigned* getOffsets() const
+	unsigned* getOffsets()
 	{
-		if (!offsets)
-			setPartitioningsAllVersions(numLevelsDown, minFragSize);
-
 		return offsets;
 	}
+
+	unsigned* getVersionSizes()
+	{
+		return versionSizes;
+	}
+
+	void writeResults(const std::vector<std::vector<unsigned> >& versions, std::unordered_map<unsigned, std::string>& IDsToWords, 
+	const std::string& outFilename, bool printFragments, bool printAssociations);
+
+	double getScore(std::ostream& os = std::cout);
 };
 
 #endif

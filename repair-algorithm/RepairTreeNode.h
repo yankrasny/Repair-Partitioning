@@ -27,7 +27,7 @@ public:
 		rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0) {}
 
 	RepairTreeNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, 
-		RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor, versionNum = 0) :
+		RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor, unsigned versionNum = 0) :
 			symbol(symbol), leftBound(leftBound), leftChild(leftChild), rightChild(rightChild), 
 			leftNeighbor(leftNeighbor), rightNeighbor(rightNeighbor), parent(NULL), versionNum(versionNum)
 	{

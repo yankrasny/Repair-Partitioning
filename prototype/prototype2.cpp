@@ -1,18 +1,6 @@
 #include "prototype2.h"
 using namespace std;
 
-double Prototype2::getScore(unordered_map<string, FragInfo>& uniqueFrags, unsigned numVersions, ostream& os)
-{
-	double term;
-	double sum(0);
-	for (unordered_map<string, FragInfo>::iterator it = uniqueFrags.begin(); it != uniqueFrags.end(); it++)
-	{
-		term = it->second.count * it->second.fragSize;
-		sum += term;
-	}
-	return sum / (uniqueFrags.size() * numVersions);
-}
-
 void Prototype2::writeAssociations(const vector<Association>& associations, ostream& os)
 {
 	for (size_t i = 0; i < associations.size(); i++)
@@ -21,83 +9,11 @@ void Prototype2::writeAssociations(const vector<Association>& associations, ostr
 	}
 }
 
-void Prototype2::writeResults(const vector<vector<unsigned> >& versions, unsigned* offsetsAllVersions, unsigned* versionPartitionSizes, 
-	const vector<Association>& associations, unordered_map<unsigned, string>& IDsToWords, const string& outFilename, 
-	bool printFragments, bool printAssociations)
-{
-	ofstream os(outFilename.c_str());
-
-	os << "Results of re-pair partitioning..." << endl << endl;
-	os << "*** Fragment boundaries ***" << endl;
-	
-	unsigned totalCountFragments(0);
-	unsigned diff(0);
-	unsigned numVersions = versions.size();
-	for (unsigned v = 0; v < numVersions; v++)
-	{
-		unsigned numFragsInVersion = versionPartitionSizes[v];
-
-		if (numFragsInVersion < 1)
-		{
-			continue;
-		}
-		os << "Version " << v << endl;
-		for (unsigned i = 0; i < numFragsInVersion - 1; i++)
-		{
-			if (i < versionPartitionSizes[v] - 1)
-			{
-				unsigned currOffset = offsetsAllVersions[totalCountFragments + i];
-				unsigned nextOffset = offsetsAllVersions[totalCountFragments + i + 1];
-				diff = nextOffset - currOffset;
-			}
-			else
-			{
-				diff = 0;
-			}
-
-			os << "Fragment " << i << ": " << offsetsAllVersions[totalCountFragments + i] << "-" << 
-				offsetsAllVersions[totalCountFragments + i + 1] << " (frag size: " << diff << ")" << endl;
-		}
-		totalCountFragments += numFragsInVersion;
-		os << endl;
-	}
-
-	// os << "Number of fragment boundaries: " << starts.size() << endl;
-	// os << "Number of fragments: " << (starts.size() - 1) << endl << endl;
-
-	vector<vector<FragInfo > > fragmentHashes;
-	os << "*** Fragments ***" << endl;
-	fragmentHashes = getFragmentHashes(versions, offsetsAllVersions, versionPartitionSizes, IDsToWords, os, printFragments);
-
-	// Assign fragment IDs and stick them in a hashmap
-	unordered_map<string, FragInfo> uniqueFrags;
-	updateFragmentHashMap(fragmentHashes, uniqueFrags);
-
-	// Now decide on the score for this partitioning
-	double score = getScore(uniqueFrags, versions.size(), os);
-	os << "Score: " << score << endl;
-	
-	if (printAssociations)
-	{
-		os << "*** Associations (symbol -> pair) ***" << endl;
-		writeAssociations(associations, os);
-	}
-}
-
-void Prototype2::printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& os)
-{
-	for (unordered_map<unsigned, string>::iterator it = IDsToWords.begin(); it != IDsToWords.end(); it++)
-	{
-		os << it->first << ": " << it->second << endl;
-	}
-}
-
 double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<unsigned, string>& IDsToWords, 
 	unsigned*& offsetsAllVersions, unsigned*& versionPartitionSizes, vector<Association>& associations,
-	unsigned minFragSize, unsigned repairStoppingPoint, bool printFragments)
+	unsigned minFragSize, unsigned repairStoppingPoint, bool printFragments, bool printAssociations)
 {
-	//Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures
-	
+	// Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures	
 	RandomHeap myHeap;
 	
 	unordered_map<unsigned long long, HashTableEntry*> hashTable = unordered_map<unsigned long long, HashTableEntry*> ();
@@ -108,16 +24,38 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 
 	RepairTree repairTree;
 
+	// Run through the string and grab all the initial pairs
+	// Add them to all the structures
 	extractPairs(versions, myHeap, hashTable, versionData, repairTree);
 
+	// Replace pairs with symbols until done (either some early stop condition or one symbol left)
 	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
 
+	// Use the result of repair to get a partitioning of the document
+	// Hopefully this partitioning gives us fragments that occur many times
 	RepairDocumentPartition partition = RepairDocumentPartition(repairTree, versionData);
 
+	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
 	offsetsAllVersions = partition.getOffsets();
 
-	double score = 0.0;
-	return score;
+	// The number of fragments in each version
+	versionPartitionSizes = partition.getVersionSizes();
+
+	// Get the sum of numbers of fragments over all versions
+	unsigned sum = 0;
+	for (unsigned i = 0; i < versions.size(); i++)
+	{
+		sum += versionPartitionSizes[i];
+	}	
+
+	for (unsigned i = 0; i < sum; i++)
+	{
+		cerr << offsetsAllVersions[i] << ",";
+	}
+
+	partition.writeResults(versions, IDsToWords, "./Output/results.txt", printFragments, printAssociations);
+
+	return partition.getScore();	
 }
 
 
@@ -137,7 +75,7 @@ int Prototype2::run(int argc, char* argv[])
 	if (test == "repair")
 	{
 		Profiler::getInstance().start("all");
-		string inputFilepath = "./Input/cover/";
+		string inputFilepath = "./Input/ints/";
 
 		// Default param values
 		/*
@@ -220,7 +158,7 @@ int Prototype2::run(int argc, char* argv[])
 		unsigned* offsetsAllVersions(NULL);
 		unsigned* versionPartitionSizes(NULL);
 
-		double score = runRepairPartitioning(versions, IDsToWords, offsetsAllVersions, versionPartitionSizes, associations, minFragSize, repairStoppingPoint, false);
+		double score = runRepairPartitioning(versions, IDsToWords, offsetsAllVersions, versionPartitionSizes, associations, minFragSize, repairStoppingPoint, false, false);
 
 		return score;
 	}

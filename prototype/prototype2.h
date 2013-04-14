@@ -28,7 +28,7 @@ public:
 
 	double runRepairPartitioning(std::vector<std::vector<unsigned> > versions, std::unordered_map<unsigned, std::string>& IDsToWords, 
 		unsigned*& offsetsAllVersions, unsigned*& versionPartitionSizes, std::vector<Association>& associations,
-		unsigned minFragSize, unsigned repairStoppingPoint, bool printFragments = false);
+		unsigned minFragSize, unsigned repairStoppingPoint, bool printFragments = false, bool printAssociations = false);
 
 	int run(int argc, char* argv[]);
 };

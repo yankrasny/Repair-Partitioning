@@ -1,6 +1,7 @@
 #ifndef META_CLASSES_H
 #define META_CLASSES_H
 
+#include "RepairTreeNode.h"
 #include <ostream>
 
 class VersionDataItem
@@ -14,7 +15,7 @@ public:
 	VersionDataItem(RepairTreeNode* firstNode, unsigned versionNum, unsigned versionSize)
 		: firstNode(firstNode), versionNum(versionNum), versionSize(versionSize), rootNode(NULL) {}
 
-	RepairTreeNode* getRootNode() const
+	RepairTreeNode* getRootNode()
 	{
 		if (rootNode)
 			return rootNode;
