@@ -1,6 +1,14 @@
 #include "prototype2.h"
 using namespace std;
 
+void Prototype2::printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& os)
+{
+	for (unordered_map<unsigned, string>::iterator it = IDsToWords.begin(); it != IDsToWords.end(); it++)
+	{
+		os << it->first << ": " << it->second << endl;
+	}
+}
+
 void Prototype2::writeAssociations(const vector<Association>& associations, ostream& os)
 {
 	for (size_t i = 0; i < associations.size(); i++)
@@ -54,6 +62,12 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 	}
 
 	partition.writeResults(versions, IDsToWords, "./Output/results.txt", printFragments, printAssociations);
+
+	if (printAssociations)
+	{
+		cerr << "*** Associations (symbol -> pair) ***" << endl;
+		writeAssociations(associations, cerr);
+	}
 
 	return partition.getScore();	
 }

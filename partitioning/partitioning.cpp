@@ -221,18 +221,4 @@ void RepairDocumentPartition::writeResults(const vector<vector<unsigned> >& vers
 	// Now decide on the score for this partitioning
 	double score = this->getScore(os);
 	os << "Score: " << score << endl;
-	
-	// if (printAssociations)
-	// {
-	// 	os << "*** Associations (symbol -> pair) ***" << endl;
-	// 	writeAssociations(associations, os);
-	// }
 }
-
-// void RepairDocumentPartition::printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& os)
-// {
-// 	for (unordered_map<unsigned, string>::iterator it = IDsToWords.begin(); it != IDsToWords.end(); it++)
-// 	{
-// 		os << it->first << ": " << it->second << endl;
-// 	}
-// }
