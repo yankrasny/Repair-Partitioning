@@ -19,7 +19,7 @@ void Prototype2::writeAssociations(const vector<Association>& associations, ostr
 
 double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<unsigned, string>& IDsToWords, 
 	unsigned*& offsetsAllVersions, unsigned*& versionPartitionSizes, vector<Association>& associations,
-	unsigned minFragSize, unsigned repairStoppingPoint, bool printFragments, bool printAssociations)
+	unsigned minFragSize, unsigned repairStoppingPoint, unsigned numLevelsDown, bool printFragments, bool printAssociations)
 {
 	// Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures	
 	RandomHeap myHeap;
@@ -41,13 +41,25 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 
 	// Use the result of repair to get a partitioning of the document
 	// Hopefully this partitioning gives us fragments that occur many times
-	RepairDocumentPartition partition = RepairDocumentPartition(repairTree, versionData);
+	RepairDocumentPartition partition = RepairDocumentPartition(repairTree, versionData, numLevelsDown);
 
 	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
 	offsetsAllVersions = partition.getOffsets();
 
 	// The number of fragments in each version
 	versionPartitionSizes = partition.getVersionSizes();
+
+	// unsigned totalFrags(0);
+	// for (unsigned i = 0; i < versions.size(); i++)
+	// {
+	// 	cerr << "Version: " << i << endl;
+	// 	for (unsigned j = 0; j < versionPartitionSizes[i]; j++)
+	// 	{
+	// 		cerr << offsetsAllVersions[totalFrags] << ",";
+	// 		totalFrags++;
+	// 	}
+	// 	cerr << endl;
+	// }
 
 	partition.writeResults(versions, IDsToWords, "./Output/results.txt", printFragments, printAssociations);
 
@@ -57,7 +69,7 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 		writeAssociations(associations, cerr);
 	}
 
-	return partition.getScore();	
+	return partition.getScore();
 }
 
 
@@ -92,17 +104,20 @@ int Prototype2::run(int argc, char* argv[])
 		*/
 		unsigned repairStoppingPoint = 1; //pairs that occur less than this amount of times will not be replaced
 
+		unsigned numLevelsDown = 3;
+
 		if (argc == 2 && (string) argv[1] == "help")
 		{
 			cerr << "Usage:" << endl;
-			cerr << "\t" << argv[0] << " <directory> <minFragSize> <repairStoppingPoint>" << endl;
-			cerr << "\t" << argv[0] << " <directory> <minFragSize>" << endl;
+			cerr << "\t" << argv[0] << " <directory> <numLevelsDown> <minFragSize>" << endl;
+			cerr << "\t" << argv[0] << " <directory> <numLevelsDown>" << endl;
 			cerr << "\t" << argv[0] << " <directory>" << endl;
 			cerr << "\t" << argv[0] << "" << endl << endl;
 			cerr << "Defaults: " << endl;
 			cerr << "\tdirectory: " << inputFilepath << endl;
-			cerr << "\tminFragSize: " << minFragSize << endl;
-			cerr << "\trepairStoppingPoint: " << repairStoppingPoint << endl;
+			cerr << "\tnumLevelsDown: " << numLevelsDown << endl;
+			cerr << "\tminFragSize: " << minFragSize << endl;			
+			// cerr << "\trepairStoppingPoint: " << repairStoppingPoint << endl;
 			exit(0);
 		}
 
@@ -110,10 +125,13 @@ int Prototype2::run(int argc, char* argv[])
 			inputFilepath = (string)argv[1];
 
 		if (argc > 2)
-			minFragSize = atoi(argv[2]);
+			numLevelsDown = atoi(argv[2]);
 
 		if (argc > 3)
-			repairStoppingPoint = atoi(argv[3]);
+			minFragSize = atoi(argv[3]);
+
+		// if (argc > 3)
+		// 	repairStoppingPoint = atoi(argv[3]);
 		
 		vector<string> inputFilenames = vector<string>();
 		if (getFileNames(inputFilepath, inputFilenames))
@@ -160,7 +178,8 @@ int Prototype2::run(int argc, char* argv[])
 		unsigned* offsetsAllVersions(NULL);
 		unsigned* versionPartitionSizes(NULL);
 
-		double score = runRepairPartitioning(versions, IDsToWords, offsetsAllVersions, versionPartitionSizes, associations, minFragSize, repairStoppingPoint, false, false);
+		double score = runRepairPartitioning(versions, IDsToWords, offsetsAllVersions, versionPartitionSizes, 
+			associations, minFragSize, repairStoppingPoint, numLevelsDown, false, false);
 
 		return score;
 	}

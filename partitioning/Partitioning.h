@@ -15,16 +15,16 @@ struct VersionDataItem;
 struct FragInfo;
 
 // TODO research if they'll come out sorted in a begin, end loop (that's what we want in getPartitioning...)
-class SortedNodeSetComparator
+class SortNodesByOffsetComparator
 {
 public:
 	bool operator() (const RepairTreeNode* const lhs, const RepairTreeNode* const rhs) const
 	{
-		return lhs->getLeftBound() < rhs->getLeftBound();
+		return lhs->getOffsetInFile() < rhs->getOffsetInFile();
 	}
 };
 
-typedef std::multiset<RepairTreeNode*, SortedNodeSetComparator> SortedNodeSet;
+typedef std::multiset<RepairTreeNode*, SortNodesByOffsetComparator> SortedByOffsetNodeSet;
 
 class RepairDocumentPartition
 {
@@ -54,7 +54,7 @@ class RepairDocumentPartition
 
 	// One implementation of get partitioning for one version
 	// All implementations can return a list of nodes
-	SortedNodeSet getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedNodeSet& nodes);
+	SortedByOffsetNodeSet getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes);
 
 	// Cuts one version
 	unsigned getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, unsigned* bounds, unsigned minFragSize, unsigned versionSize);
@@ -71,7 +71,7 @@ public:
 	// For extensibility, RepairTree should implement an interface like PartitioningAlgorithm or something
 	// In the future, others would also implement that interface, and these param types could stay the same
 	// So it would be const PartitioningAlgorithm& alg
-	RepairDocumentPartition(const RepairTree& repairTree, std::vector<VersionDataItem>& versionData, unsigned numLevelsDown = 3, unsigned minFragSize = 2)
+	RepairDocumentPartition(const RepairTree& repairTree, std::vector<VersionDataItem>& versionData, unsigned numLevelsDown = 1, unsigned minFragSize = 2)
 		: repairTree(repairTree), versionData(versionData), offsets(NULL), numLevelsDown(numLevelsDown), minFragSize(minFragSize)
 	{
 		fragments = std::vector<std::vector<FragInfo > >();

@@ -7,7 +7,7 @@ class RepairTreeNode
 {
 	unsigned symbol;
 
-	unsigned leftBound;
+	unsigned offsetInFile;
 
 	RepairTreeNode* leftChild;
 	RepairTreeNode* rightChild;
@@ -20,15 +20,15 @@ class RepairTreeNode
 	unsigned versionNum;
 
 public:
-	RepairTreeNode() : symbol(0), leftBound(0), leftChild(NULL), rightChild(NULL), 
+	RepairTreeNode() : symbol(0), offsetInFile(0), leftChild(NULL), rightChild(NULL), 
 		leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0) {}
 
-	RepairTreeNode(unsigned symbol) : symbol(symbol), leftBound(0), leftChild(NULL), 
+	RepairTreeNode(unsigned symbol) : symbol(symbol), offsetInFile(0), leftChild(NULL), 
 		rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0) {}
 
-	RepairTreeNode(unsigned symbol, unsigned leftBound, RepairTreeNode* leftChild, 
+	RepairTreeNode(unsigned symbol, unsigned offsetInFile, RepairTreeNode* leftChild, 
 		RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor, unsigned versionNum = 0) :
-			symbol(symbol), leftBound(leftBound), leftChild(leftChild), rightChild(rightChild), 
+			symbol(symbol), offsetInFile(offsetInFile), leftChild(leftChild), rightChild(rightChild), 
 			leftNeighbor(leftNeighbor), rightNeighbor(rightNeighbor), parent(NULL), versionNum(versionNum)
 	{
 		if (leftNeighbor)
@@ -80,9 +80,9 @@ public:
 		return symbol;
 	}
 
-	unsigned getLeftBound() const
+	unsigned getOffsetInFile() const
 	{
-		return leftBound;
+		return offsetInFile;
 	}
 
 	RepairTreeNode* getLeftNeighbor() const

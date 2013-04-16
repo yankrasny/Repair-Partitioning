@@ -14,7 +14,7 @@ double RepairDocumentPartition::getScore(ostream& os)
 	return sum / (uniqueFrags.size() * versionData.size());
 }
 
-SortedNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedNodeSet& nodes)
+SortedByOffsetNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes)
 {
 	if (numLevelsDown < 1) return nodes;
 	if (numLevelsDown == 1)
@@ -36,16 +36,19 @@ SortedNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNode* root
 
 unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, unsigned* bounds, unsigned minFragSize, unsigned versionSize)
 {
-	SortedNodeSet nodes = SortedNodeSet();
+	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
 	nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
 
+	// cerr << endl;
 	unsigned numFrags = 0;
 	for (auto it = nodes.begin(); it != nodes.end(); ++it)
 	{
 		RepairTreeNode* current = *it;
 
-		// These left bounds are already sorted (see the comparator at the top)
-		bounds[numFrags] = current->getLeftBound();
+		// cerr << current << endl;
+
+		// These offsets are already sorted (see the comparator at the top)
+		bounds[numFrags] = current->getOffsetInFile();
 		numFrags++;
 	}
 	// We're working with left bounds, so we always need to add the last one on the right
