@@ -298,3 +298,69 @@ void cleanup(unordered_map<unsigned long long, HashTableEntry*>& hashTable)
 		it->second = NULL;
 	}
 }
+
+/*************************************************************************************************/
+/*
+New Tree Building Code: takes the resulting vector<Association> from repair 
+and builds a tree for each version. This is currently pseudocode, soon to be real!
+*/
+
+
+int binarySearch(vector<Association>& associations, unsigned startingLoc, unsigned target)
+{
+	// TODO
+}
+
+RepairTreeNode* buildTree(unsigned loc, unsigned versionNum, vector<Association>& associations)
+{
+	RepairTreeNode* root = NULL;
+	associations[loc].getVersions().erase(versionNum); // Make sure getVersions returns by ref, otherwise this does nothing
+	unsigned left = associations[loc].getLeft();
+	unsigned right = associations[loc].getRight();
+
+	lLoc = binarySearch(associations, loc, left);
+	rLoc = binarySearch(associations, loc, right);
+
+	if (lLoc == -1) root->addLeftChild(new RepairTreeNode(left));
+	else root->addLeftChild(buildTree(lLoc, versionNum, associations));
+
+	if (rLoc == -1) root->addRightChild(new RepairTreeNode(right));
+	else root->addRightChild(buildTree(rLoc, versionNum, associations));
+
+	return root;
+}
+
+int getNextRootLoc(unsigned loc, vector<Association>& associations)
+{
+	multiset<unsigned> versions = associations[loc].getVersions();
+	while (versions.size() <= 0)
+	{
+		--loc;
+		if (loc < 0)
+		{
+			return -1;
+		}
+		versions = associations[loc].getVersions();
+	}
+	return (int)loc;
+}
+
+vector<RepairTreeNode*> getTrees(vector<Association>& associations)
+{
+	unsigned loc = associations.size() - 1;
+	RepairTreeNode* root = NULL;
+	unsigned versionNum = 0;
+	vector<RepairTreeNode*> trees = vector<RepairTreeNode*>();
+
+	while (loc = getNextRootLoc(loc, associations))
+	{
+		while (v = associations[loc].getVersions().begin()) // TODO getVersions() returns multiset<unsigned>
+		{
+			trees[v] = buildTree(loc, versionNum);
+			--loc; // pre is more efficient
+		}
+	}
+}
+
+
+/*************************************************************************************************/
