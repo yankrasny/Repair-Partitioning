@@ -16,8 +16,8 @@ public:
 	// VersionDataItem(RepairTreeNode* firstNode, unsigned versionNum, unsigned versionSize)
 	// 	: firstNode(firstNode), versionNum(versionNum), versionSize(versionSize), rootNode(NULL) {}
 
-	VersionDataItem(RepairTreeNode* rootNode, unsigned versionNum, unsigned versionSize)
-		:  rootNode(rootNode), versionNum(versionNum), versionSize(versionSize) {}
+	VersionDataItem(unsigned versionNum, unsigned versionSize)
+		: versionNum(versionNum), versionSize(versionSize) {}
 
 	RepairTreeNode* getRootNode()
 	{
@@ -37,7 +37,7 @@ public:
 				{
 					rootNode = current;
 					return rootNode;
-				}					
+				}
 			}
 		}
 		return NULL;
@@ -46,6 +46,11 @@ public:
 	unsigned getVersionSize() const
 	{
 		return versionSize;
+	}
+
+	void setRootNode(RepairTreeNode* rootNode)
+	{
+		this->rootNode = rootNode; 
 	}
 };
 

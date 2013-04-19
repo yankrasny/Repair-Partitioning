@@ -2,11 +2,11 @@
 #include "Repair.h"
 #include "HashTableEntry.h"
 
-HashTableEntry::HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ, unsigned leftPosition) : heapPointer(hp), size(1)
+HashTableEntry::HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ, unsigned leftPosition, unsigned version) : heapPointer(hp), size(1)
 {
 	unsigned long long key = hp->getKey();
 
-	occurrences = new Occurrence(key, leftPosition); //The head of the linked list (Occurrences have a next pointer)
+	occurrences = new Occurrence(key, leftPosition, version); //The head of the linked list (Occurrences have a next pointer)
 
 	doubleLinkNeighbors(prec, occurrences);
 	doubleLinkNeighbors(occurrences, succ);

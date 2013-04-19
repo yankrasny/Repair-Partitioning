@@ -41,7 +41,7 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashT
 		hp = new HeapEntry(key, 1, &myHeap);
 
 		//Create a hash table entry, and initialize it with its heap entry pointer
-		hashTable[key] = new HashTableEntry(hp, prec, succ, leftPosition); //This creates the first occurrence (see the constructor)
+		hashTable[key] = new HashTableEntry(hp, prec, succ, leftPosition, version); //This creates the first occurrence (see the constructor)
 
 		//The order of these calls matters: do this first and the hash table entry won't know the index
 		myHeap.insert(hp);
@@ -74,7 +74,7 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 			// Save some metadata for each version
 			if (i == 0)
 			{
-				versionData.push_back(VersionDataItem(prevTreeNode, v, wordIDs.size()));
+				versionData.push_back(VersionDataItem(v, wordIDs.size()));
 			}
 
 			// Squeeze the pair of two unsigned numbers together for storage
@@ -323,7 +323,7 @@ int binarySearch(const vector<Association>& associations, unsigned target, int l
 
 	if (leftPos == rightPos)
 	{
-		if (associations[leftPos].symbol == target)
+		if (associations[leftPos].getSymbol() == target)
 		{
 			return leftPos;
 		}
@@ -331,7 +331,7 @@ int binarySearch(const vector<Association>& associations, unsigned target, int l
 	}
 
 	int mid = floor(((float)leftPos + rightPos) / 2);
-	unsigned midVal = associations[mid].symbol;
+	unsigned midVal = associations[mid].getSymbol();
 
 	// cout << "mid: " << mid << ", val: " << midVal << endl;
 	// system("pause");
@@ -359,8 +359,8 @@ RepairTreeNode* buildTree(unsigned loc, unsigned versionNum, vector<Association>
 	unsigned left = associations[loc].getLeft();
 	unsigned right = associations[loc].getRight();
 
-	lLoc = binarySearch(associations, left, 0, loc);
-	rLoc = binarySearch(associations, right, 0, loc);
+	unsigned lLoc = binarySearch(associations, left, 0, loc);
+	unsigned rLoc = binarySearch(associations, right, 0, loc);
 
 	if (lLoc == -1) root->setLeftChild(new RepairTreeNode(left));
 	else root->setLeftChild(buildTree(lLoc, versionNum, associations));
@@ -405,13 +405,15 @@ vector<RepairTreeNode*> getTrees(vector<Association>& associations, vector<Versi
 			if (versionNum == -1) break;
 
 			trees[versionNum] = buildTree(loc, versionNum, associations);
-			versionData[versionNum] = VersionDataItem(trees[versionNum], versionNum); 
+			
+			// TODO are we putting it in the correct place? Who said the version numbers will be in order?
+			// Just verify this, it seems to both make sense and not make sense at the same time. 
+			versionData[versionNum].setRootNode(trees[versionNum]);
 		}
 		--loc;
 	}
 
 	return trees;
 }
-
 
 /*************************************************************************************************/

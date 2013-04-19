@@ -39,6 +39,9 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, uno
 	// Replace pairs with symbols until done (either some early stop condition or one symbol left)
 	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
 
+	// Use the output of repair to build a set of repair trees (one per version)
+	getTrees(associations, versionData);
+
 	// Use the result of repair to get a partitioning of the document
 	// Hopefully this partitioning gives us fragments that occur many times
 	RepairDocumentPartition partition = RepairDocumentPartition(repairTree, versionData, numLevelsDown);

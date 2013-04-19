@@ -53,4 +53,12 @@ void doRepair(RandomHeap& myHeap, std::unordered_map<unsigned long long, HashTab
 
 void cleanup(std::unordered_map<unsigned long long, HashTableEntry*>& hashTable);
 
+int binarySearch(const std::vector<Association>& associations, unsigned target, int leftPos, int rightPos);
+
+RepairTreeNode* buildTree(unsigned loc, unsigned versionNum, std::vector<Association>& associations);
+
+int getNextRootLoc(unsigned loc, std::vector<Association>& associations);
+
+std::vector<RepairTreeNode*> getTrees(std::vector<Association>& associations, std::vector<VersionDataItem>& versionData);
+
 #endif
