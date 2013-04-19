@@ -17,12 +17,17 @@ private:
 	unsigned left;
 	unsigned right;
 	unsigned leftPositionInSequence;
+
+	unsigned version;
 public:
 	Occurrence() : prec(NULL), succ(NULL), next(NULL), prev(NULL) {}
 
-	Occurrence(unsigned long long key) : prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), next(NULL), prev(NULL) {}
+	Occurrence(unsigned long long key)
+		: prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), next(NULL), prev(NULL) {}
 
-	Occurrence(unsigned long long key, unsigned leftPositionInSequence) : prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), leftPositionInSequence(leftPositionInSequence), next(NULL), prev(NULL) {}
+	Occurrence(unsigned long long key, unsigned leftPositionInSequence, unsigned version)
+		: prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), 
+		leftPositionInSequence(leftPositionInSequence), version(version), next(NULL), prev(NULL) {}
 
 	Occurrence* getNext() { return next; }
 	Occurrence* getPrev() { return prev; }
@@ -42,6 +47,11 @@ public:
 	unsigned long long getPair()
 	{
 		return combineToUInt64(left, right);
+	}
+
+	unsigned getVersion() const
+	{
+		return version;
 	}
 };
 

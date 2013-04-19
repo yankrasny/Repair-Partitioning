@@ -24,7 +24,7 @@ void doubleLinkNeighbors(Occurrence* prec, Occurrence* curr)
 }
 
 void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
-	unsigned long long key, unsigned leftPosition, Occurrence* prec, Occurrence* succ)
+	unsigned long long key, unsigned leftPosition, unsigned version, Occurrence* prec, Occurrence* succ)
 {
 	if (key == 0)
 		return;
@@ -33,7 +33,7 @@ void addOrUpdatePair(RandomHeap& myHeap, unordered_map<unsigned long long, HashT
 
 	if (hashTable.count(key))
 	{
-		hashTable[key]->addOccurrence(new Occurrence(key, leftPosition));
+		hashTable[key]->addOccurrence(new Occurrence(key, leftPosition, version));
 	}
 	else //First time we've seen this pair
 	{
@@ -69,7 +69,7 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 		{
 			// Building level 1 of the repair tree
 			// prevTreeNode is to maintain neighbor associations
-			prevTreeNode = repairTree.addNodes(wordIDs[i], NULL, prevTreeNode, v, i);
+			// prevTreeNode = repairTree.addNodes(wordIDs[i], NULL, prevTreeNode, v, i);
 
 			// Save some metadata for each version
 			if (i == 0)
@@ -81,7 +81,7 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 			currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
 
 			// Add the pair to our structures
-			addOrUpdatePair(myHeap, hashTable, currPair, i);
+			addOrUpdatePair(myHeap, hashTable, currPair, i, v);
 
 			// The first occurrence was the last one added because we add to the head
 			Occurrence* lastAddedOccurrence = hashTable[currPair]->getHeadOccurrence();
@@ -93,7 +93,7 @@ void extractPairs(const vector<vector<unsigned> >& versions, RandomHeap& myHeap,
 			prevOccurrence = lastAddedOccurrence;
 		}
 		// The loop goes to size - 1, so we need to take care of the last wordID
-		prevTreeNode = repairTree.addNodes(wordIDs.back(), NULL, prevTreeNode, versions.size() - 1, wordIDs.size() - 1);
+		// prevTreeNode = repairTree.addNodes(wordIDs.back(), NULL, prevTreeNode, versions.size() - 1, wordIDs.size() - 1);
 	}
 }
 
@@ -192,7 +192,7 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 
 		// Build up the Repair tree
 		// Add all the nodes for this symbol -> left, right
-		repairTree.addNodes(symbol, curr, NULL);
+		// repairTree.addNodes(symbol, curr, NULL);
 
 		// For all occurrences of this entry, do the replacement and modify the corresponding entries
 		for (size_t i = 0; i < numOccurrences; i++)
@@ -210,9 +210,12 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			prec = curr->getPrec();
 			succ = curr->getSucc();
 
-			// Store the association before you do anything else
+			// Store the association and which version it occurs in
 			if (i == 0)
-				associations.push_back(Association(symbol, curr->getLeft(), curr->getRight(), numOccurrences));
+				associations.push_back(Association(symbol, curr->getLeft(), curr->getRight(), numOccurrences, curr->getVersion()));
+			else
+				associations.back().addVersion(curr->getVersion());
+
 			
 			// Now go through all the edge cases (because of the links we have to make, there are a lot)
 			bool onLeftEdge(false);
@@ -250,8 +253,8 @@ void doRepair(RandomHeap& myHeap, unordered_map<unsigned long long, HashTableEnt
 			// Just creates the occurrence in the hash table and heap, doesn't link it to its neighbors
 			// Passing along the index from the pair we're replacing
 			// You get holes eventually (which you want) because 3 pairs get replaced by 2 every time
-			addOrUpdatePair(myHeap, hashTable, newLeftKey, oldLeftIndex);
-			addOrUpdatePair(myHeap, hashTable, newRightKey, oldRightIndex);
+			addOrUpdatePair(myHeap, hashTable, newLeftKey, oldLeftIndex, curr->getVersion());
+			addOrUpdatePair(myHeap, hashTable, newRightKey, oldRightIndex, curr->getVersion());
 
 			if (!nearLeftEdge && !onLeftEdge)
 			{
@@ -303,29 +306,67 @@ void cleanup(unordered_map<unsigned long long, HashTableEntry*>& hashTable)
 /*
 New Tree Building Code: takes the resulting vector<Association> from repair 
 and builds a tree for each version. This is currently pseudocode, soon to be real!
+
+Ok this might be very close to real code right now. 10:16pm 4/18/13 -YK
 */
 
-
-int binarySearch(vector<Association>& associations, unsigned startingLoc, unsigned target)
+int binarySearch(const vector<Association>& associations, unsigned target, int leftPos, int rightPos)
 {
-	// TODO
+	// cout << endl;
+	// cout << "Target: " << target << endl;
+	// cout << "Searching between: " << leftPos << " and " << rightPos << endl;
+	// system("pause");
+
+	// indexes that don't make sense, means we haven't found the target
+	if (leftPos > rightPos)
+		return -1;
+
+	if (leftPos == rightPos)
+	{
+		if (associations[leftPos].symbol == target)
+		{
+			return leftPos;
+		}
+		return -1;
+	}
+
+	int mid = floor(((float)leftPos + rightPos) / 2);
+	unsigned midVal = associations[mid].symbol;
+
+	// cout << "mid: " << mid << ", val: " << midVal << endl;
+	// system("pause");
+
+	// found it
+	if (target == midVal)
+		return mid;
+
+	// target is on the left
+	if (target < midVal)
+		return binarySearch(associations, target, leftPos, mid);
+	
+	// target is on the right
+	if (target > midVal)
+		return binarySearch(associations, target, mid+1, rightPos);
 }
 
 RepairTreeNode* buildTree(unsigned loc, unsigned versionNum, vector<Association>& associations)
 {
-	RepairTreeNode* root = NULL;
-	associations[loc].getVersions().erase(versionNum); // Make sure getVersions returns by ref, otherwise this does nothing
+	// This will be repeatedly called, could be a source of mem leaks, careful
+	RepairTreeNode* root = new RepairTreeNode(associations[loc].getSymbol());
+
+	associations[loc].removeFromVersions(versionNum);
+	
 	unsigned left = associations[loc].getLeft();
 	unsigned right = associations[loc].getRight();
 
-	lLoc = binarySearch(associations, loc, left);
-	rLoc = binarySearch(associations, loc, right);
+	lLoc = binarySearch(associations, left, 0, loc);
+	rLoc = binarySearch(associations, right, 0, loc);
 
-	if (lLoc == -1) root->addLeftChild(new RepairTreeNode(left));
-	else root->addLeftChild(buildTree(lLoc, versionNum, associations));
+	if (lLoc == -1) root->setLeftChild(new RepairTreeNode(left));
+	else root->setLeftChild(buildTree(lLoc, versionNum, associations));
 
-	if (rLoc == -1) root->addRightChild(new RepairTreeNode(right));
-	else root->addRightChild(buildTree(rLoc, versionNum, associations));
+	if (rLoc == -1) root->setRightChild(new RepairTreeNode(right));
+	else root->setRightChild(buildTree(rLoc, versionNum, associations));
 
 	return root;
 }
@@ -345,21 +386,31 @@ int getNextRootLoc(unsigned loc, vector<Association>& associations)
 	return (int)loc;
 }
 
-vector<RepairTreeNode*> getTrees(vector<Association>& associations)
+vector<RepairTreeNode*> getTrees(vector<Association>& associations, vector<VersionDataItem>& versionData)
 {
 	unsigned loc = associations.size() - 1;
 	RepairTreeNode* root = NULL;
 	unsigned versionNum = 0;
 	vector<RepairTreeNode*> trees = vector<RepairTreeNode*>();
 
-	while (loc = getNextRootLoc(loc, associations))
+	// TODO maybe there's a better way than while true and break...
+	while (true)
 	{
-		while (v = associations[loc].getVersions().begin()) // TODO getVersions() returns multiset<unsigned>
+		loc = getNextRootLoc(loc, associations);
+		if (loc == -1) break;
+
+		while (true)
 		{
-			trees[v] = buildTree(loc, versionNum);
-			--loc; // pre is more efficient
+			versionNum = associations[loc].getVersionAtBegin();
+			if (versionNum == -1) break;
+
+			trees[versionNum] = buildTree(loc, versionNum, associations);
+			versionData[versionNum] = VersionDataItem(trees[versionNum], versionNum); 
 		}
+		--loc;
 	}
+
+	return trees;
 }
 
 

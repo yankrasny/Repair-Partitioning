@@ -3,6 +3,7 @@
 
 #include "RepairTreeNode.h"
 #include <ostream>
+#include <set>
 
 class VersionDataItem
 {
@@ -12,8 +13,11 @@ private:
 	unsigned versionNum; // aka versionID
 	unsigned versionSize; // aka number of words
 public:
-	VersionDataItem(RepairTreeNode* firstNode, unsigned versionNum, unsigned versionSize)
-		: firstNode(firstNode), versionNum(versionNum), versionSize(versionSize), rootNode(NULL) {}
+	// VersionDataItem(RepairTreeNode* firstNode, unsigned versionNum, unsigned versionSize)
+	// 	: firstNode(firstNode), versionNum(versionNum), versionSize(versionSize), rootNode(NULL) {}
+
+	VersionDataItem(RepairTreeNode* rootNode, unsigned versionNum, unsigned versionSize)
+		:  rootNode(rootNode), versionNum(versionNum), versionSize(versionSize) {}
 
 	RepairTreeNode* getRootNode()
 	{
@@ -36,6 +40,7 @@ public:
 				}					
 			}
 		}
+		return NULL;
 	}
 
 	unsigned getVersionSize() const
@@ -63,19 +68,70 @@ struct FragInfo
 
 
 //Used to store associations from one symbol to two others
-struct Association
+class Association
 {
 	friend std::ostream& operator<<(std::ostream& os, const Association& a)
 	{
 		return os << a.symbol << " -> " << "(" << a.left << ", " << a.right << "), " << "freq: " << a.freq << std::endl;
 	}
 
+private:
 	unsigned symbol;
 	unsigned left;
 	unsigned right;
 	unsigned freq;
 
-	Association(unsigned symbol, unsigned left, unsigned right, unsigned freq) : symbol(symbol), left(left), right(right), freq(freq) {}
+	std::multiset<unsigned> versions;
+public:
+	Association(unsigned symbol, unsigned left, unsigned right, unsigned freq, unsigned firstVersion) :
+		symbol(symbol), left(left), right(right), freq(freq)
+	{
+		versions = std::multiset<unsigned>();
+		versions.insert(firstVersion);
+	}
+
+	unsigned getSymbol() const
+	{
+		return symbol;
+	}
+	unsigned getLeft() const
+	{
+		return left;
+	}
+	unsigned getRight() const
+	{
+		return right;
+	}
+
+	void addVersion(unsigned v)
+	{
+		versions.insert(v);
+	}
+
+	std::multiset<unsigned> getVersions() const
+	{
+		return versions;
+	}
+
+	void removeFromVersions(unsigned versionNum)
+	{
+		versions.erase(versionNum);
+	}
+
+	// return begin or false
+	int getVersionAtBegin()
+	{
+		if (versions.begin() == versions.end())
+		{
+			return -1;
+		}
+		else
+		{
+			std::multiset<unsigned>::iterator it = versions.begin();
+			return (int)(*it);
+		}
+	}
+
 };
 
 #endif

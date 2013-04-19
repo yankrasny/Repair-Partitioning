@@ -114,6 +114,17 @@ public:
 	{
 		return rightChild;
 	}
+
+	void setRightChild(RepairTreeNode* newRightChild)
+	{
+		this->rightChild = newRightChild;
+	}
+
+	void setLeftChild(RepairTreeNode* newLeftChild)
+	{
+		this->leftChild = newLeftChild;
+	}
+
 };
 
 #endif

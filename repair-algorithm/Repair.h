@@ -28,8 +28,9 @@ void doubleLinkOccurrences(Occurrence* prev, Occurrence* curr);
 
 void doubleLinkNeighbors(Occurrence* prec, Occurrence* curr);
 
-void addOrUpdatePair(RandomHeap& myHeap, std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
-	unsigned long long key, unsigned leftPosition, Occurrence* prec = NULL, Occurrence* succ = NULL);
+void addOrUpdatePair(RandomHeap& myHeap, std::unordered_map<unsigned long long, 
+	HashTableEntry*>& hashTable, unsigned long long key, unsigned leftPosition,
+	unsigned version, Occurrence* prec = NULL, Occurrence* succ = NULL);
 
 void extractPairs(const std::vector<std::vector<unsigned> >& versions, RandomHeap& myHeap, 
 	std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
@@ -37,7 +38,8 @@ void extractPairs(const std::vector<std::vector<unsigned> >& versions, RandomHea
 
 void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp);
 
-void removeOccurrence(RandomHeap& myHeap, std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, Occurrence* oc);
+void removeOccurrence(RandomHeap& myHeap, 
+	std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, Occurrence* oc);
 
 unsigned long long getNewRightKey(unsigned symbol, Occurrence* succ);
 

@@ -74,7 +74,8 @@ void RepairDocumentPartition::setPartitioningsAllVersions(unsigned numLevelsDown
 	// Iterate over all versions
 	for (unsigned i = 0; i < this->versionData.size(); i++)
 	{
-		rootForThisVersion = this->versionData[i].getRootNode();
+		// rootForThisVersion = this->versionData[i].getRootNode();
+		rootForThisVersion = ; // TODO
 
 		// Do the partitioning for one version, and store the number of fragments
 		numFragments = getPartitioningOneVersion(rootForThisVersion, numLevelsDown, &(this->offsets[versionOffset]), minFragSize, versionData[i].getVersionSize());
