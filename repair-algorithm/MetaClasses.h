@@ -77,7 +77,14 @@ class Association
 {
 	friend std::ostream& operator<<(std::ostream& os, const Association& a)
 	{
-		return os << a.symbol << " -> " << "(" << a.left << ", " << a.right << "), " << "freq: " << a.freq << std::endl;
+		os << a.symbol << " -> " << "(" << a.left << ", " << a.right << "), " << "freq: " << a.freq << std::endl;
+		os << "Versions: {";
+		for (std::multiset<unsigned>::iterator it = a.versions.begin(); it != a.versions.end(); it++)
+		{
+			os << (*it) << ", ";
+		}
+		os << "}" << std::endl << std::endl;
+		return os;
 	}
 
 private:

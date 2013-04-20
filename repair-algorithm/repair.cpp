@@ -346,7 +346,7 @@ int binarySearch(const vector<Association>& associations, unsigned target, int l
 	
 	// target is on the right
 	if (target > midVal)
-		return binarySearch(associations, target, mid+1, rightPos);
+		return binarySearch(associations, target, mid + 1, rightPos);
 }
 
 RepairTreeNode* buildTree(unsigned loc, unsigned versionNum, vector<Association>& associations)
@@ -359,8 +359,8 @@ RepairTreeNode* buildTree(unsigned loc, unsigned versionNum, vector<Association>
 	unsigned left = associations[loc].getLeft();
 	unsigned right = associations[loc].getRight();
 
-	unsigned lLoc = binarySearch(associations, left, 0, loc);
-	unsigned rLoc = binarySearch(associations, right, 0, loc);
+	int lLoc = binarySearch(associations, left, 0, loc);
+	int rLoc = binarySearch(associations, right, 0, loc);
 
 	if (lLoc == -1) root->setLeftChild(new RepairTreeNode(left));
 	else root->setLeftChild(buildTree(lLoc, versionNum, associations));
@@ -371,7 +371,7 @@ RepairTreeNode* buildTree(unsigned loc, unsigned versionNum, vector<Association>
 	return root;
 }
 
-int getNextRootLoc(unsigned loc, vector<Association>& associations)
+int getNextRootLoc(int loc, vector<Association>& associations)
 {
 	multiset<unsigned> versions = associations[loc].getVersions();
 	while (versions.size() <= 0)
@@ -386,12 +386,11 @@ int getNextRootLoc(unsigned loc, vector<Association>& associations)
 	return (int)loc;
 }
 
-vector<RepairTreeNode*> getTrees(vector<Association>& associations, vector<VersionDataItem>& versionData)
+void getTrees(vector<Association>& associations, vector<VersionDataItem>& versionData)
 {
-	unsigned loc = associations.size() - 1;
+	int loc = associations.size() - 1;
 	RepairTreeNode* root = NULL;
 	unsigned versionNum = 0;
-	vector<RepairTreeNode*> trees = vector<RepairTreeNode*>();
 
 	// TODO maybe there's a better way than while true and break...
 	while (true)
@@ -403,17 +402,13 @@ vector<RepairTreeNode*> getTrees(vector<Association>& associations, vector<Versi
 		{
 			versionNum = associations[loc].getVersionAtBegin();
 			if (versionNum == -1) break;
-
-			trees[versionNum] = buildTree(loc, versionNum, associations);
-			
+		
 			// TODO are we putting it in the correct place? Who said the version numbers will be in order?
-			// Just verify this, it seems to both make sense and not make sense at the same time. 
-			versionData[versionNum].setRootNode(trees[versionNum]);
+			// Just verify this, it seems to both make sense and not make sense at the same time.
+			versionData[versionNum].setRootNode(buildTree(loc, versionNum, associations));
 		}
 		--loc;
 	}
-
-	return trees;
 }
 
 /*************************************************************************************************/

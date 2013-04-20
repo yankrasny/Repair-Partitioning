@@ -59,6 +59,6 @@ RepairTreeNode* buildTree(unsigned loc, unsigned versionNum, std::vector<Associa
 
 int getNextRootLoc(unsigned loc, std::vector<Association>& associations);
 
-std::vector<RepairTreeNode*> getTrees(std::vector<Association>& associations, std::vector<VersionDataItem>& versionData);
+void getTrees(std::vector<Association>& associations, std::vector<VersionDataItem>& versionData);
 
 #endif

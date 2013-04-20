@@ -24,7 +24,10 @@ public:
 		leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0) {}
 
 	RepairTreeNode(unsigned symbol) : symbol(symbol), offsetInFile(0), leftChild(NULL), 
-		rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0) {}
+		rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0)
+	{
+		// TODO offset in file, versionNum, parent
+	}
 
 	RepairTreeNode(unsigned symbol, unsigned offsetInFile, RepairTreeNode* leftChild, 
 		RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor, unsigned versionNum = 0) :
