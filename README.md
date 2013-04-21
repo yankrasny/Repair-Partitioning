@@ -1,9 +1,11 @@
 ## Repair Partitioning
 
 ### Example Usage
-* make
-* repair help (to see the args)
-* repair [args]
+```
+make
+repair help (to see the args)
+repair [args]
+```
 
 #### Included in this repo are some example inputs, so for example, you can run the following:
 * repair ./Input/ints/
