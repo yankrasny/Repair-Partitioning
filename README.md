@@ -1,40 +1,25 @@
-Re-pair-gnu
+Repair Partitioning
 ===========
 
-This is an implementation of the string re-pairing algorithm, intended for use in detecting text redundancy. Compiled with g++ on windows using mingw.
+A library for partitioning documents into fragments. The more a fragment occurs, the more likely it is to be chosen.
 
-The input is several text files (the versions of a document). The output is a partitioning of each version such as many redundant fragments as possible show up in the partitions of each version. So for example, here are three versions of a (very) small document:
+In RePair, pairs of symbols are continuously replaced until there is one symbol left. 
 
-Version 1 -> Alice was beginning to get very tired of sitting by her sister on the bank, and of having nothing to do:
+For example: [1 2 3 1 2 4]
 
-Version 2 -> Alice was starting to get very tired of sitting by her sister on the bank, and of having nothing to do:
+The pair (1,2) occurs most often, so it is replaced by the next available symbol, 5.
+5 -> (1,2)
+[5 3 5 4]
 
-Version 3 -> Alice was beginning to get very tired of sitting by her sister by the lake, and of having nothing to do:
+We have a tie now, so we might replace the pairs as follows:
+6 -> (5,3)
+[6 5 4]
 
-Ignoring punctuation and spacing, we want to identify the common sequences of words, so first we convert the words to word IDs:
+7 -> (6,5)
+[7 4]
 
-Version 1 -> [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 8 17 18 4 19]
+8 -> (7,4)
+[8]
 
-Version 2 -> [1 2 20 4 5 6 7 8 9 10 11 12 13 14 15 16 8 17 18 4 19]
-
-Version 3 -> [1 2 3 4 5 6 7 8 9 10 11 12 10 14 21 16 8 17 18 4 19]
-
-A good paritioning will find repeating fragments across versions, so first we identify those fragments:
-
-A -> [1 2 3 4 5 6 7 8 9 10 11 12]
-
-B -> [13 14 15 16 8 17 18 4 19]
-
-C -> [1 2 20 4 5 6 7 8 9 10 11 12]
-
-D -> [10 14 21 16 8 17 18 4 19]
-
-Applying this back to the versions gives us:
-
-Version 1 -> [A, B]
-
-Version 2 -> [C, B]
-
-Version 3 -> [A, D]
-
-Note that fragments A and B occur more than once, so this is a good partitioning. 
+Applying the same algorithm to several versions of a document, we expect to find many similar fragments across versions.
+This can aid in versioned indexing or other applications where it is useful to identify redundant text fragments. 
