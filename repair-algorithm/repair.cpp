@@ -385,7 +385,7 @@ unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
 		return leftOffset;
 	}
 	
-	// node is a terminal with no parent, the whole thing is one node big
+	// node is a terminal with no parent, the whole thing is just one node
 	if (!node->getParent())
 	{
 		node->setOffset(0);

@@ -21,7 +21,7 @@ public:
 
 	void writeResults(const std::vector<std::vector<unsigned> >& versions, unsigned* offsetsAllVersions, 
 		unsigned* versionPartitionSizes, const std::vector<Association>& associations, 
-		std::unordered_map<unsigned, std::string>& IDsToWords, const std::string& outFilename, bool printFragments = false, bool printAssociations = false);
+		std::unordered_map<unsigned, std::string>& IDsToWords, const std::string& outFilename, bool printFragments = true, bool printAssociations = false);
 
 	void printIDtoWordMapping(std::unordered_map<unsigned, std::string>& IDsToWords, std::ostream& os = std::cerr);
 

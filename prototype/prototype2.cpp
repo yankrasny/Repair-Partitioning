@@ -168,7 +168,7 @@ int Prototype2::run(int argc, char* argv[])
 		unsigned* versionPartitionSizes(NULL);
 
 		double score = runRepairPartitioning(versions, IDsToWords, offsetsAllVersions, versionPartitionSizes, 
-			associations, minFragSize, repairStoppingPoint, numLevelsDown, false, false);
+			associations, minFragSize, repairStoppingPoint, numLevelsDown, true, false);
 
 		return score;
 	}

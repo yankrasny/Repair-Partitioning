@@ -85,6 +85,8 @@ void RepairDocumentPartition::setPartitioningsAllVersions(unsigned numLevelsDown
 
 void RepairDocumentPartition::setFragmentInfo(const vector<vector<unsigned> >& versions, ostream& os, bool print)
 {
+	os << "*** Fragments ***" << endl;
+
 	unsigned start, end, theID, fragSize;
 	string word;
 	vector<unsigned> wordIDs;
@@ -212,7 +214,6 @@ void RepairDocumentPartition::writeResults(const vector<vector<unsigned> >& vers
 	// os << "Number of fragment boundaries: " << starts.size() << endl;
 	// os << "Number of fragments: " << (starts.size() - 1) << endl << endl;
 
-	os << "*** Fragments ***" << endl;
 	this->setFragmentInfo(versions, os, printFragments);
 
 	// Assign fragment IDs and stick them in a hashmap
