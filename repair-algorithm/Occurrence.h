@@ -55,4 +55,26 @@ public:
 	}
 };
 
+inline void doubleLinkOccurrences(Occurrence* prev, Occurrence* curr)
+{
+	//Set the preceding pointer of the current element
+	if (curr)
+		curr->setPrev(prev);
+
+	//Set the succeeding pointer of the previous element
+	if (prev)
+		prev->setNext(curr);
+}
+
+inline void doubleLinkNeighbors(Occurrence* prec, Occurrence* curr)
+{
+	//Set the preceding pointer of the current element
+	if (curr)
+		curr->setPrec(prec);
+
+	//Set the succeeding pointer of the previous element
+	if (prec)
+		prec->setSucc(curr);
+}
+
 #endif

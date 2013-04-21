@@ -12,6 +12,17 @@
 const unsigned MAX_NUM_FRAGMENTS_PER_VERSION(100);
 const unsigned MAX_FRAG_LENGTH(1000000);
 
+extern unsigned currentOffset;
+inline unsigned nextOffset()
+{
+	return currentOffset++;
+}
+
+inline void resetOffset()
+{
+	currentOffset = 0;	
+}
+
 extern unsigned currentFragID;
 inline unsigned nextFragID()
 {

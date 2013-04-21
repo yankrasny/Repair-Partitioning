@@ -8,39 +8,16 @@
 class VersionDataItem
 {
 private:
-	RepairTreeNode* firstNode;
 	RepairTreeNode* rootNode;
 	unsigned versionNum; // aka versionID
 	unsigned versionSize; // aka number of words
 public:
-	// VersionDataItem(RepairTreeNode* firstNode, unsigned versionNum, unsigned versionSize)
-	// 	: firstNode(firstNode), versionNum(versionNum), versionSize(versionSize), rootNode(NULL) {}
-
 	VersionDataItem(unsigned versionNum, unsigned versionSize)
 		: versionNum(versionNum), versionSize(versionSize) {}
 
 	RepairTreeNode* getRootNode()
 	{
-		if (rootNode)
-			return rootNode;
-
-		RepairTreeNode* current = firstNode;
-		if (current)
-		{
-			while (true)
-			{
-				if (current->getParent()) // current has a parent, so current is not our root
-				{
-					current = current->getParent();
-				}
-				else // current does not have a parent, it must be our root, set it and don't loop through again
-				{
-					rootNode = current;
-					return rootNode;
-				}
-			}
-		}
-		return NULL;
+		return rootNode;
 	}
 
 	unsigned getVersionSize() const
@@ -143,7 +120,6 @@ public:
 			return (int)(*it);
 		}
 	}
-
 };
 
 #endif

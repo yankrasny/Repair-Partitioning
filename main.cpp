@@ -5,6 +5,7 @@ using namespace std;
 
 unsigned currentFragID = 0;
 unsigned currentID = 0;
+unsigned currentOffset = 0;
 
 int main(int argc, char* argv[])
 {

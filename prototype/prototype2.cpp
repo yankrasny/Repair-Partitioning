@@ -17,52 +17,32 @@ void Prototype2::writeAssociations(const vector<Association>& associations, ostr
 	}
 }
 
-double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, unordered_map<unsigned, string>& IDsToWords, 
-	unsigned*& offsetsAllVersions, unsigned*& versionPartitionSizes, vector<Association>& associations,
-	unsigned minFragSize, unsigned repairStoppingPoint, unsigned numLevelsDown, bool printFragments, bool printAssociations)
+double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions, 
+	unordered_map<unsigned, string>& IDsToWords, 
+	unsigned*& offsetsAllVersions, 
+	unsigned*& versionPartitionSizes, 
+	vector<Association>& associations,
+	unsigned minFragSize, 
+	unsigned repairStoppingPoint, 
+	unsigned numLevelsDown, 
+	bool printFragments, 
+	bool printAssociations)
 {
-	// Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures	
-	RandomHeap myHeap;
-	
-	unordered_map<unsigned long long, HashTableEntry*> hashTable = unordered_map<unsigned long long, HashTableEntry*> ();
-	
-	associations = vector<Association>();
-	
-	vector<VersionDataItem> versionData = vector<VersionDataItem>();
+	RepairAlgorithm repairAlg(versions);
 
-	RepairTree repairTree;
+	repairAlg.run();
 
-	// Run through the string and grab all the initial pairs
-	// Add them to all the structures
-	extractPairs(versions, myHeap, hashTable, versionData, repairTree);
-
-	// Replace pairs with symbols until done (either some early stop condition or one symbol left)
-	doRepair(myHeap, hashTable, associations, repairStoppingPoint, versionData, repairTree);
-
-	// Use the output of repair to build a set of repair trees (one per version)
-	getTrees(associations, versionData);
+	vector<VersionDataItem> versionData = repairAlg.getVersionData();
 
 	// Use the result of repair to get a partitioning of the document
 	// Hopefully this partitioning gives us fragments that occur many times
-	RepairDocumentPartition partition = RepairDocumentPartition(repairTree, versionData, numLevelsDown);
+	RepairDocumentPartition partition = RepairDocumentPartition(versionData, numLevelsDown);
 
 	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
 	offsetsAllVersions = partition.getOffsets();
 
 	// The number of fragments in each version
 	versionPartitionSizes = partition.getVersionSizes();
-
-	// unsigned totalFrags(0);
-	// for (unsigned i = 0; i < versions.size(); i++)
-	// {
-	// 	cerr << "Version: " << i << endl;
-	// 	for (unsigned j = 0; j < versionPartitionSizes[i]; j++)
-	// 	{
-	// 		cerr << offsetsAllVersions[totalFrags] << ",";
-	// 		totalFrags++;
-	// 	}
-	// 	cerr << endl;
-	// }
 
 	partition.writeResults(versions, IDsToWords, "./Output/results.txt", printFragments, printAssociations);
 

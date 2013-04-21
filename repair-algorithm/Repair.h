@@ -17,48 +17,93 @@
 #include "../random-heap/RandomHeap.h"
 #include "../util/Profiler.h"
 #include "../util/FileUtils.h"
-#include "RepairTree.h"
-// #include "UndoRepair.h"
+#include "RepairTreeNode.h"
 #include "Util.h"
 
-// TODO make this a class
-// members can include the heap, vector<VersionData>
+class RepairAlgorithm
+{
+private:
 
-void doubleLinkOccurrences(Occurrence* prev, Occurrence* curr);
+	std::vector<std::vector<unsigned> > versions;
 
-void doubleLinkNeighbors(Occurrence* prec, Occurrence* curr);
+	RandomHeap myHeap;
+	
+	std::unordered_map<unsigned long long, HashTableEntry*> hashTable;
+	
+	std::vector<Association> associations;
+	
+	std::vector<VersionDataItem> versionData;
 
-void addOrUpdatePair(RandomHeap& myHeap, std::unordered_map<unsigned long long, 
-	HashTableEntry*>& hashTable, unsigned long long key, unsigned leftPosition,
-	unsigned version, Occurrence* prec = NULL, Occurrence* succ = NULL);
+	void addOrUpdatePair(unsigned long long key, unsigned leftPosition,
+		unsigned version, Occurrence* prec = NULL, Occurrence* succ = NULL);
 
-void extractPairs(const std::vector<std::vector<unsigned> >& versions, RandomHeap& myHeap, 
-	std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
-	std::vector<VersionDataItem>& versionData, RepairTree& repairTree);
+	void extractPairs();
 
-void removeFromHeap(RandomHeap& myHeap, HeapEntry* hp);
+	void removeFromHeap(HeapEntry* hp);
 
-void removeOccurrence(RandomHeap& myHeap, 
-	std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, Occurrence* oc);
+	void removeOccurrence(Occurrence* oc);
 
-unsigned long long getNewRightKey(unsigned symbol, Occurrence* succ);
+	unsigned long long getNewRightKey(unsigned symbol, Occurrence* succ);
 
-unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec);
+	unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec);
 
-bool updateLeftmostOccurrence(std::vector<VersionDataItem>& versionData, Occurrence* oldOcc, Occurrence* newOcc);
+	bool updateLeftmostOccurrence(Occurrence* oldOcc, Occurrence* newOcc);
 
-void doRepair(RandomHeap& myHeap, std::unordered_map<unsigned long long, HashTableEntry*>& hashTable, 
-	std::vector<Association>& associations, unsigned repairStoppingPoint, 
-	std::vector<VersionDataItem>& versionData, RepairTree& repairTree);
+	void doRepair(unsigned repairStoppingPoint);
 
-void cleanup(std::unordered_map<unsigned long long, HashTableEntry*>& hashTable);
+	void cleanup();
 
-int binarySearch(const std::vector<Association>& associations, unsigned target, int leftPos, int rightPos);
+	int binarySearch(unsigned target, int leftPos, int rightPos);
 
-RepairTreeNode* buildTree(unsigned loc, unsigned versionNum, std::vector<Association>& associations);
+	RepairTreeNode* buildTree(int loc, unsigned versionNum);
 
-int getNextRootLoc(unsigned loc, std::vector<Association>& associations);
+	int getNextRootLoc(int loc);
 
-void getTrees(std::vector<Association>& associations, std::vector<VersionDataItem>& versionData);
+	void getTrees();
+
+	unsigned calcOffsets(RepairTreeNode* node);
+
+public:
+
+	RepairAlgorithm(std::vector<std::vector<unsigned> > versions) : versions(versions)
+	{
+		// Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures	
+		myHeap = RandomHeap();
+		
+		hashTable = std::unordered_map<unsigned long long, HashTableEntry*> ();
+		
+		associations = std::vector<Association>();
+		
+		versionData = std::vector<VersionDataItem>();
+	}
+
+	std::vector<VersionDataItem> getVersionData() const
+	{
+		return versionData;
+	}
+
+	void run(unsigned repairStoppingPoint = 0)
+	{
+		// Run through the string and grab all the initial pairs
+		// Add them to all the structures
+		extractPairs();
+
+		// Replace pairs with symbols until done (either some early stop condition or one symbol left)
+		doRepair(repairStoppingPoint);
+
+		// Use the output of repair to build a set of repair trees (one per version)
+		getTrees();
+
+		// Set the file offsets for all the nodes in each tree
+		for (unsigned i = 0; i < versionData.size(); i++)
+		{
+			// Set file offsets for all the nodes in this version
+			calcOffsets(versionData[i].getRootNode());
+
+			// Reset the offset counter for the next version
+			resetOffset();
+		}
+	}
+};
 
 #endif

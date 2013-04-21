@@ -1,8 +1,8 @@
-#include <iostream>
-#include "Repair.h"
 #include "HashTableEntry.h"
+using namespace std;
 
-HashTableEntry::HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ, unsigned leftPosition, unsigned version) : heapPointer(hp), size(1)
+HashTableEntry::HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ, 
+	unsigned leftPosition, unsigned version) : heapPointer(hp), size(1)
 {
 	unsigned long long key = hp->getKey();
 
@@ -11,6 +11,7 @@ HashTableEntry::HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ
 	doubleLinkNeighbors(prec, occurrences);
 	doubleLinkNeighbors(occurrences, succ);
 }
+
 HashTableEntry::HashTableEntry(HeapEntry* hp, Occurrence* oc) : heapPointer(hp), size(1)
 {
 	occurrences = oc;
@@ -45,7 +46,7 @@ void HashTableEntry::removeOccurrence(Occurrence* target)
 			occurrences = NULL;
 			return;
 		}
-		std::cerr << "we didn't find the target, wtf?" << std::endl;
+		cerr << "we didn't find the target, wtf?" << endl;
 		return;
 	}
 

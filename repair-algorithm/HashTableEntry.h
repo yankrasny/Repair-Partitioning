@@ -1,8 +1,9 @@
 #ifndef HASH_TABLE_ENTRY_H
 #define HASH_TABLE_ENTRY_H
 
-class HeapEntry;
-class Occurrence;
+#include "../random-heap/HeapEntry.h"
+#include "Occurrence.h"
+#include <iostream>
 
 class HashTableEntry
 {

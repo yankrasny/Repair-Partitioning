@@ -9,7 +9,7 @@
 #include <set>
 #include "md5/md5.h"
 #include "../repair-algorithm/MetaClasses.h"
-#include "../repair-algorithm/RepairTree.h"
+#include "../repair-algorithm/RepairTreeNode.h"
 
 struct VersionDataItem;
 struct FragInfo;
@@ -20,7 +20,7 @@ class SortNodesByOffsetComparator
 public:
 	bool operator() (const RepairTreeNode* const lhs, const RepairTreeNode* const rhs) const
 	{
-		return lhs->getOffsetInFile() < rhs->getOffsetInFile();
+		return lhs->getOffset() < rhs->getOffset();
 	}
 };
 
@@ -33,7 +33,7 @@ class RepairDocumentPartition
 	unsigned minFragSize;
 
 	// Contains information about each version
-	// More importantly, holds a pointer to the root node of each version (See class RepairTree and class RepairTreeNode)
+	// More importantly, holds a pointer to the root node of each version (See class RepairTreeNode)
 	std::vector<VersionDataItem>& versionData;
 
 	// The entry at i is the number of fragments for version i
@@ -41,9 +41,6 @@ class RepairDocumentPartition
 	
 	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
 	unsigned* offsets;
-
-	// The tree to partition (see class RepairTree for details)
-	RepairTree repairTree;
 
 	// The outer vector represents all versions
 	// The vector at position i contains fragment objects for version i
@@ -71,8 +68,9 @@ public:
 	// For extensibility, RepairTree should implement an interface like PartitioningAlgorithm or something
 	// In the future, others would also implement that interface, and these param types could stay the same
 	// So it would be const PartitioningAlgorithm& alg
-	RepairDocumentPartition(const RepairTree& repairTree, std::vector<VersionDataItem>& versionData, unsigned numLevelsDown = 1, unsigned minFragSize = 2)
-		: repairTree(repairTree), versionData(versionData), offsets(NULL), numLevelsDown(numLevelsDown), minFragSize(minFragSize)
+	RepairDocumentPartition(std::vector<VersionDataItem>& versionData,
+		unsigned numLevelsDown = 1, unsigned minFragSize = 2): 
+		versionData(versionData), offsets(NULL), numLevelsDown(numLevelsDown), minFragSize(minFragSize)
 	{
 		fragments = std::vector<std::vector<FragInfo > >();
 

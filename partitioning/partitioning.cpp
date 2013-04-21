@@ -48,7 +48,7 @@ unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root
 		// cerr << current << endl;
 
 		// These offsets are already sorted (see the comparator at the top)
-		bounds[numFrags] = current->getOffsetInFile();
+		bounds[numFrags] = current->getOffset();
 		numFrags++;
 	}
 	// We're working with left bounds, so we always need to add the last one on the right

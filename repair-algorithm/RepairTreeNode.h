@@ -83,14 +83,20 @@ public:
 		return symbol;
 	}
 
-	unsigned getOffsetInFile() const
+	unsigned getOffset() const
 	{
 		return offsetInFile;
 	}
 
+	void setOffset(unsigned offset)
+	{
+		offsetInFile = offset;
+	}
+
 	RepairTreeNode* getLeftNeighbor() const
 	{
-		return leftNeighbor;
+		if (!parent) return NULL;
+		return parent->getLeftChild();
 	}
 	
 	RepairTreeNode* getRightNeighbor() const
@@ -108,26 +114,39 @@ public:
 		this->leftNeighbor = newLeftNeighbor;
 	}
 
-	RepairTreeNode* getLeftChild()
+	RepairTreeNode* getLeftChild() const
 	{
 		return leftChild;
 	}
 	
-	RepairTreeNode* getRightChild()
+	RepairTreeNode* getRightChild() const
 	{
 		return rightChild;
 	}
 
 	void setRightChild(RepairTreeNode* newRightChild)
 	{
+		newRightChild->setParent(this);
 		this->rightChild = newRightChild;
 	}
 
 	void setLeftChild(RepairTreeNode* newLeftChild)
 	{
+		newLeftChild->setParent(this);
 		this->leftChild = newLeftChild;
 	}
 
+	bool isLeftChild() const
+	{
+		if (!parent) return false;
+
+		// if my parent's left child is me, then I am a left child
+		if (parent->getLeftChild() == this)
+		{
+			return true;
+		}
+		return false;
+	}
 };
 
 #endif
