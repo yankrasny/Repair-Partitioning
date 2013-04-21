@@ -1,5 +1,11 @@
-Repair Partitioning
-===========
+## Repair Partitioning
+
+### Usage
+* make
+* repair help (to see the args)
+* repair [args]
+
+### Description
 
 A library for partitioning documents into fragments. The more a fragment occurs, the more likely it is to be chosen.
 
