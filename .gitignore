@@ -22,3 +22,6 @@ Output/*
 nbproject/
 
 test.cpp
+
+# Inputs I'd rather not make public
+Input/cover

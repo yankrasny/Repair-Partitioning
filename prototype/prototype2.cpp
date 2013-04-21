@@ -44,13 +44,19 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions,
 	// The number of fragments in each version
 	versionPartitionSizes = partition.getVersionSizes();
 
-	partition.writeResults(versions, IDsToWords, "./Output/results.txt", printFragments, printAssociations);
+	string outputFilename = "./Output/results.txt";
+
+	partition.writeResults(versions, IDsToWords, outputFilename, printFragments, printAssociations);
 
 	if (printAssociations)
 	{
 		cerr << "*** Associations (symbol -> pair) ***" << endl;
 		writeAssociations(associations, cerr);
 	}
+
+	stringstream command;
+	command << "start " << outputFilename.c_str();
+	system(command.str().c_str());
 
 	return partition.getScore();
 }

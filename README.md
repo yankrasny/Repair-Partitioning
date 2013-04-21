@@ -1,9 +1,16 @@
 ## Repair Partitioning
 
-### Usage
+### Example Usage
 * make
 * repair help (to see the args)
 * repair [args]
+
+#### Included in this repo are some example inputs, so for example, you can run the following:
+* repair ./Input/ints/
+
+Or for a larger example:
+
+* repair ./Input/alice/
 
 ### Description
 

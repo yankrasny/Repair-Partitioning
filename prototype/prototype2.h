@@ -5,6 +5,7 @@
 #include "../partitioning/Partitioning.h"
 #include "../repair-algorithm/Util.h"
 #include <ostream>
+#include <sstream>
 #include <vector>
 #include <unordered_map>
 #include <string>
