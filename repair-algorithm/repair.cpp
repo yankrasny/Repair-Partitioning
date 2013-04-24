@@ -270,45 +270,6 @@ and builds a tree for each version
 */
 /*************************************************************************************************/
 
-int RepairAlgorithm::binarySearch(unsigned target, int leftPos, int rightPos)
-{
-	// cout << endl;
-	// cout << "Target: " << target << endl;
-	// cout << "Searching between: " << leftPos << " and " << rightPos << endl;
-	// system("pause");
-
-	// indexes that don't make sense, means we haven't found the target
-	if (leftPos > rightPos)
-		return -1;
-
-	if (leftPos == rightPos)
-	{
-		if (associations[leftPos].getSymbol() == target)
-		{
-			return leftPos;
-		}
-		return -1;
-	}
-
-	int mid = floor(((float)leftPos + rightPos) / 2);
-	unsigned midVal = associations[mid].getSymbol();
-
-	// cout << "mid: " << mid << ", val: " << midVal << endl;
-	// system("pause");
-
-	// found it
-	if (target == midVal)
-		return mid;
-
-	// target is on the left
-	if (target < midVal)
-		return binarySearch(target, leftPos, mid);
-	
-	// target is on the right
-	if (target > midVal)
-		return binarySearch(target, mid + 1, rightPos);
-}
-
 RepairTreeNode* RepairAlgorithm::buildTree(int loc, unsigned versionNum)
 {
 	// Allocate the current node and set its symbol
@@ -320,8 +281,8 @@ RepairTreeNode* RepairAlgorithm::buildTree(int loc, unsigned versionNum)
 	unsigned left = associations[loc].getLeft();
 	unsigned right = associations[loc].getRight();
 
-	int lLoc = binarySearch(left, 0, loc);
-	int rLoc = binarySearch(right, 0, loc);
+	int lLoc = binarySearch(left, associations, 0, loc);
+	int rLoc = binarySearch(right, associations, 0, loc);
 
 	if (lLoc == -1) root->setLeftChild(new RepairTreeNode(left));
 	else root->setLeftChild(buildTree(lLoc, versionNum));
@@ -378,21 +339,35 @@ unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
 	// node is not a terminal
 	if (node->getLeftChild())
 	{
+		RepairTreeNode* leftChild = node->getLeftChild();
+		RepairTreeNode* rightChild = node->getRightChild();
+		
 		// The left ones must be set first, because the right ones depend on them
-		unsigned leftOffset = calcOffsets(node->getLeftChild());
-		calcOffsets(node->getRightChild());
+		unsigned leftOffset = calcOffsets(leftChild);
+		calcOffsets(rightChild);
+		
 		node->setOffset(leftOffset);
+		
+		// By calling the recursive function first, we guarantee that these sizes are set
+		unsigned leftSize = leftChild->getSize();
+		unsigned rightSize = rightChild->getSize();
+		node->setSize(leftSize + rightSize);
+		
 		return leftOffset;
 	}
 	
 	// node is a terminal with no parent, the whole thing is just one node
 	if (!node->getParent())
 	{
+		node->setSize(1);
 		node->setOffset(0);
 		return 0;
 	}
 
-	// node is a terminal, and it can be a left or right child
+	// node is a terminal, so its size is 1 by definition
+	node->setSize(1);
+
+	// it can be a left or right child, and that affects the offset
 	if (node->isLeftChild())
 	{
 		unsigned offset = nextOffset();

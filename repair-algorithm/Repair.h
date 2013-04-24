@@ -53,8 +53,6 @@ private:
 
 	void cleanup();
 
-	int binarySearch(unsigned target, int leftPos, int rightPos);
-
 	RepairTreeNode* buildTree(int loc, unsigned versionNum);
 
 	int getNextRootLoc(int loc);
@@ -80,6 +78,11 @@ public:
 	std::vector<VersionDataItem> getVersionData() const
 	{
 		return versionData;
+	}
+
+	std::vector<Association> getAssociations() const
+	{
+		return associations;
 	}
 
 	void run(unsigned repairStoppingPoint = 0)

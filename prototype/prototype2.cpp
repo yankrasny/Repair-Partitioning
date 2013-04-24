@@ -34,9 +34,11 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions,
 
 	vector<VersionDataItem> versionData = repairAlg.getVersionData();
 
+	associations = repairAlg.getAssociations();
+
 	// Use the result of repair to get a partitioning of the document
 	// Hopefully this partitioning gives us fragments that occur many times
-	RepairDocumentPartition partition = RepairDocumentPartition(versionData, numLevelsDown);
+	RepairDocumentPartition partition = RepairDocumentPartition(versionData, associations, numLevelsDown);
 
 	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
 	offsetsAllVersions = partition.getOffsets();

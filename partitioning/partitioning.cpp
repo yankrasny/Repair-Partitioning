@@ -16,6 +16,7 @@ double RepairDocumentPartition::getScore(ostream& os)
 
 SortedByOffsetNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes)
 {
+	if (!root) return nodes;
 	if (numLevelsDown < 1) return nodes;
 	if (numLevelsDown == 1)
 	{
@@ -34,10 +35,77 @@ SortedByOffsetNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNo
 	return nodes;
 }
 
-unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, unsigned* bounds, unsigned minFragSize, unsigned versionSize)
+int RepairDocumentPartition::getAssociationLocation(unsigned symbol)
+{
+	if (memoizedAssociationLocations.count(symbol))
+		return memoizedAssociationLocations[symbol];
+
+	// Didn't find it, so let's do that now
+	int loc = binarySearch(symbol, associations, 0, associations.size());
+	memoizedAssociationLocations[symbol] = loc;
+
+	return loc;
+}
+
+double RepairDocumentPartition::getSubsetScore(SortedByOffsetNodeSet subset)
+{
+	unsigned sum(0);
+	for (SortedByOffsetNodeSet::iterator it = subset.begin(); it != subset.end(); it++)
+	{
+		RepairTreeNode* currNode = *it;
+		sum += currNode->getSize();
+	}
+	if (subset.size() == 0 || sum == 0) return 0.0;
+	return ((double) sum) / ((double)subset.size());
+}
+
+SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* node)
 {
 	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
-	nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
+
+	if (!node)
+		return nodes;
+	
+	double myScore = 1.0;
+	int loc = getAssociationLocation(node->getSymbol());
+	if (loc != -1)
+	{
+		Association a = associations[loc];
+		myScore = node->getSize() * a.getFreq();
+	}
+	
+	if (!node->getLeftChild())
+	{
+		nodes.insert(node);
+		return nodes;
+	}
+
+	RepairTreeNode* leftChild = node->getLeftChild();
+	RepairTreeNode* rightChild = node->getRightChild();
+
+	SortedByOffsetNodeSet leftSubset = getBestSubset(leftChild);
+	SortedByOffsetNodeSet rightSubset = getBestSubset(rightChild);
+	
+	double leftScore = getSubsetScore(leftSubset);
+	double rightScore = getSubsetScore(rightSubset);
+	double childrenScore = leftScore + rightScore;
+
+	if (myScore > childrenScore)
+	{
+		nodes.insert(node);
+		return nodes;
+	}
+
+	nodes.insert(leftSubset.begin(), leftSubset.end());
+	nodes.insert(rightSubset.begin(), rightSubset.end());
+	return nodes;
+}
+
+unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, unsigned* bounds, unsigned minFragSize, unsigned versionSize)
+{
+	// SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
+	// nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
+	SortedByOffsetNodeSet nodes = getBestSubset(root);
 
 	// cerr << endl;
 	unsigned numFrags = 0;

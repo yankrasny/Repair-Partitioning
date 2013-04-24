@@ -8,6 +8,7 @@ class RepairTreeNode
 	unsigned symbol;
 
 	unsigned offsetInFile;
+	unsigned size;
 
 	RepairTreeNode* leftChild;
 	RepairTreeNode* rightChild;
@@ -21,10 +22,10 @@ class RepairTreeNode
 
 public:
 	RepairTreeNode() : symbol(0), offsetInFile(0), leftChild(NULL), rightChild(NULL), 
-		leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0) {}
+		leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0), size(0) {}
 
 	RepairTreeNode(unsigned symbol) : symbol(symbol), offsetInFile(0), leftChild(NULL), 
-		rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0)
+		rightChild(NULL), leftNeighbor(NULL), rightNeighbor(NULL), parent(NULL), versionNum(0), size(0)
 	{
 		// TODO offset in file, versionNum, parent
 	}
@@ -32,7 +33,7 @@ public:
 	RepairTreeNode(unsigned symbol, unsigned offsetInFile, RepairTreeNode* leftChild, 
 		RepairTreeNode* rightChild, RepairTreeNode* leftNeighbor, RepairTreeNode* rightNeighbor, unsigned versionNum = 0) :
 			symbol(symbol), offsetInFile(offsetInFile), leftChild(leftChild), rightChild(rightChild), 
-			leftNeighbor(leftNeighbor), rightNeighbor(rightNeighbor), parent(NULL), versionNum(versionNum)
+			leftNeighbor(leftNeighbor), rightNeighbor(rightNeighbor), parent(NULL), versionNum(versionNum), size(0)
 	{
 		if (leftNeighbor)
 		{
@@ -91,6 +92,16 @@ public:
 	void setOffset(unsigned offset)
 	{
 		offsetInFile = offset;
+	}
+
+	unsigned getSize() const
+	{
+		return size;
+	}
+
+	void setSize(unsigned size)
+	{
+		this->size = size;
 	}
 
 	RepairTreeNode* getLeftNeighbor() const

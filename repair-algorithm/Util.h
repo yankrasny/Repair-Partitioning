@@ -8,6 +8,7 @@
 #include <unordered_map>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 
 const unsigned MAX_NUM_FRAGMENTS_PER_VERSION(100);
 const unsigned MAX_FRAG_LENGTH(1000000);
