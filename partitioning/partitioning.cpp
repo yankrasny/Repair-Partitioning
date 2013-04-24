@@ -62,7 +62,6 @@ double RepairDocumentPartition::getSubsetScore(SortedByOffsetNodeSet subset)
 SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* node)
 {
 	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
-
 	if (!node)
 		return nodes;
 	
@@ -73,7 +72,8 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 		Association a = associations[loc];
 		myScore = node->getSize() * a.getFreq();
 	}
-	
+
+	// node is a terminal 
 	if (!node->getLeftChild())
 	{
 		nodes.insert(node);
@@ -88,7 +88,7 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 	
 	double leftScore = getSubsetScore(leftSubset);
 	double rightScore = getSubsetScore(rightSubset);
-	double childrenScore = leftScore + rightScore;
+	double childrenScore = 1.0 * (leftScore + rightScore); // Coefficient for fragmenting
 
 	if (myScore > childrenScore)
 	{
