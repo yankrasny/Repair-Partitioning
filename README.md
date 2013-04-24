@@ -9,6 +9,7 @@ Repair is an algorithm traditionally used for text compression. In most implemen
 
 You can then recreate the original string from the last symbol by recursively expanding it. Here's the full example:
 
+```
 [1 2 3 1 2]
 5 -> (1,2)
 
@@ -19,9 +20,10 @@ You can then recreate the original string from the last symbol by recursively ex
 7 -> (6,5)
 
 [7]
+```
 
 Applying all the rules gives us a tree:
-
+```
 			 7
 			/ \
 		   6    5
@@ -29,7 +31,7 @@ Applying all the rules gives us a tree:
 		 5	3  1  2
 		/ \
 	   1   2
-
+```
 Read off the leaves (aka terminals) from left to right: [1 2 3 1 2] -> the original string!
 
 In this implementation, I consider versions of a text document. By running Repair on all these versions, I expect that repeating fragments will get the same symbol. If two versions of a document are similar, then their Repair Trees will be similar as well. This can be used to help build a more efficient text index for versioned systems.
