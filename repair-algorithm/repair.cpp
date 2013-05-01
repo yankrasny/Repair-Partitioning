@@ -367,19 +367,8 @@ unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
 	// node is a terminal, so its size is 1 by definition
 	node->setSize(1);
 
-	// it can be a left or right child, and that affects the offset
-	if (node->isLeftChild())
-	{
-		unsigned offset = nextOffset();
-		node->setOffset(offset);
-		return offset;
-	}
-	else // node is a right child
-	{
-		RepairTreeNode* leftNeighbor = node->getLeftNeighbor();
-		unsigned leftOffset = leftNeighbor->getOffset();
-		unsigned myOffset = leftOffset + 1;
-		node->setOffset(myOffset);
-		return myOffset;
-	}
+	// We're going in pre-order (right, that's what it's called?)
+	unsigned offset = nextOffset();
+	node->setOffset(offset);
+	return offset;
 }

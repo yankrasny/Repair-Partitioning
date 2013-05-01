@@ -11,7 +11,7 @@ double RepairDocumentPartition::getScore(ostream& os)
 		term = it->second.count * it->second.fragSize;
 		sum += term;
 	}
-	return sum / (uniqueFrags.size() * versionData.size());
+	return sum / (uniqueFrags.size());
 }
 
 SortedByOffsetNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes)
@@ -40,7 +40,7 @@ int RepairDocumentPartition::getAssociationLocation(unsigned symbol)
 	if (memoizedAssociationLocations.count(symbol))
 		return memoizedAssociationLocations[symbol];
 
-	// Didn't find it, so let's do that now
+	// It wasn't saved, so search for it, and save it for next time
 	int loc = binarySearch(symbol, associations, 0, associations.size());
 	memoizedAssociationLocations[symbol] = loc;
 
@@ -49,14 +49,43 @@ int RepairDocumentPartition::getAssociationLocation(unsigned symbol)
 
 double RepairDocumentPartition::getSubsetScore(SortedByOffsetNodeSet subset)
 {
-	unsigned sum(0);
+	/* AVG */
+	// unsigned sum(0);
+	// for (SortedByOffsetNodeSet::iterator it = subset.begin(); it != subset.end(); it++)
+	// {
+	// 	RepairTreeNode* currNode = *it;
+	// 	unsigned currScore = 1;
+	// 	int loc = getAssociationLocation(currNode->getSymbol());
+	// 	if (loc != -1)
+	// 	{
+	// 		Association a = associations[loc];
+	// 		currScore = currNode->getSize() * a.getFreq();
+	// 	}
+	// 	sum += currScore;
+	// }
+	// if (subset.size() == 0 || sum == 0) return 0.0;
+	// return ((double) sum) / ((double)subset.size());
+
+
+	/* MAX */
+	double currMax(0);
 	for (SortedByOffsetNodeSet::iterator it = subset.begin(); it != subset.end(); it++)
 	{
 		RepairTreeNode* currNode = *it;
-		sum += currNode->getSize();
+		double currScore = 1.0;
+		int loc = getAssociationLocation(currNode->getSymbol());
+		if (loc != -1)
+		{
+			Association a = associations[loc];
+			currScore = currNode->getSize() * a.getFreq();
+		}
+		if (currScore > currMax)
+		{
+			currMax = currScore;
+		}
 	}
-	if (subset.size() == 0 || sum == 0) return 0.0;
-	return ((double) sum) / ((double)subset.size());
+	if (subset.size() == 0 || currMax == 0) return 0.0;
+	return currMax;
 }
 
 SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* node)
@@ -88,7 +117,7 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 	
 	double leftScore = getSubsetScore(leftSubset);
 	double rightScore = getSubsetScore(rightSubset);
-	double childrenScore = 1.0 * (leftScore + rightScore); // Coefficient for fragmenting
+	double childrenScore = fragmentationCoefficient * (leftScore + rightScore); // Coefficient for fragmenting
 
 	if (myScore > childrenScore)
 	{
@@ -107,18 +136,22 @@ unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root
 	// nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
 	SortedByOffsetNodeSet nodes = getBestSubset(root);
 
-	// cerr << endl;
 	unsigned numFrags = 0;
+	cerr << "Version Start" << endl;	
 	for (auto it = nodes.begin(); it != nodes.end(); ++it)
 	{
 		RepairTreeNode* current = *it;
 
-		// cerr << current << endl;
+		// cerr << "Symbol: " << current->getSymbol() << endl;
+		cerr << current->getOffset() << ",";
 
 		// These offsets are already sorted (see the comparator at the top)
 		bounds[numFrags] = current->getOffset();
 		numFrags++;
 	}
+	cerr << "Version End" << endl << endl;
+	system("pause");
+
 	// We're working with left bounds, so we always need to add the last one on the right
 	bounds[numFrags] = versionSize;
 	numFrags++;

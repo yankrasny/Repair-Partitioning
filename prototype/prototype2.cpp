@@ -23,6 +23,7 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions,
 	unsigned*& versionPartitionSizes, 
 	vector<Association>& associations,
 	unsigned minFragSize, 
+	float fragmentationCoefficient, 
 	unsigned repairStoppingPoint, 
 	unsigned numLevelsDown, 
 	bool printFragments, 
@@ -38,7 +39,7 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions,
 
 	// Use the result of repair to get a partitioning of the document
 	// Hopefully this partitioning gives us fragments that occur many times
-	RepairDocumentPartition partition = RepairDocumentPartition(versionData, associations, numLevelsDown);
+	RepairDocumentPartition partition = RepairDocumentPartition(versionData, associations, numLevelsDown, minFragSize, fragmentationCoefficient);
 
 	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
 	offsetsAllVersions = partition.getOffsets();
@@ -82,7 +83,6 @@ int Prototype2::run(int argc, char* argv[])
 		Profiler::getInstance().start("all");
 		string inputFilepath = "./Input/ints/";
 
-		// Default param values
 		/*
 		Initial test show that minFragSize should be proportional to document size
 		*/
@@ -95,19 +95,23 @@ int Prototype2::run(int argc, char* argv[])
 		*/
 		unsigned repairStoppingPoint = 1; //pairs that occur less than this amount of times will not be replaced
 
+
+		/* To what extent are we willing to fragment? See the partitioning algorithm for how this is used */
+		float fragmentationCoefficient = 1.0;
+
+		/* A primitive way to partition the tree: just go n levels down */
 		unsigned numLevelsDown = 3;
 
 		if (argc == 2 && (string) argv[1] == "help")
 		{
 			cerr << "Usage:" << endl;
-			cerr << "\t" << argv[0] << " <directory> <numLevelsDown> <minFragSize>" << endl;
-			cerr << "\t" << argv[0] << " <directory> <numLevelsDown>" << endl;
+			cerr << "\t" << argv[0] << " <directory> <fragmentationCoefficient>" << endl;
 			cerr << "\t" << argv[0] << " <directory>" << endl;
 			cerr << "\t" << argv[0] << "" << endl << endl;
 			cerr << "Defaults: " << endl;
 			cerr << "\tdirectory: " << inputFilepath << endl;
-			cerr << "\tnumLevelsDown: " << numLevelsDown << endl;
-			cerr << "\tminFragSize: " << minFragSize << endl;			
+			cerr << "\tfragmentationCoefficient: " << fragmentationCoefficient << endl;
+			// cerr << "\tminFragSize: " << minFragSize << endl;			
 			// cerr << "\trepairStoppingPoint: " << repairStoppingPoint << endl;
 			exit(0);
 		}
@@ -116,10 +120,10 @@ int Prototype2::run(int argc, char* argv[])
 			inputFilepath = (string)argv[1];
 
 		if (argc > 2)
-			numLevelsDown = atoi(argv[2]);
+			fragmentationCoefficient = atof(argv[2]);
 
-		if (argc > 3)
-			minFragSize = atoi(argv[3]);
+		// if (argc > 3)
+		// 	minFragSize = atoi(argv[3]);
 
 		// if (argc > 3)
 		// 	repairStoppingPoint = atoi(argv[3]);
@@ -149,12 +153,17 @@ int Prototype2::run(int argc, char* argv[])
 			if (!text)
 				continue;
 			wordIDs = stringToWordIDs(text, IDsToWords, uniqueWordIDs);
-			// cerr << "Version " << i << endl;
-			// for (unsigned j = 0; j < wordIDs.size(); j++)
-			// {
-			// 	cerr << wordIDs[j] << ",";
-			// }
-			// cerr << endl << endl;
+
+			if (false)
+			{
+				cerr << "Version " << i << endl;
+				for (unsigned j = 0; j < wordIDs.size(); j++)
+				{
+					cerr << wordIDs[j] << ",";
+				}
+				cerr << endl << endl;
+			}
+			
 			versions.push_back(wordIDs);
 			delete text;
 			text = NULL;
@@ -170,7 +179,7 @@ int Prototype2::run(int argc, char* argv[])
 		unsigned* versionPartitionSizes(NULL);
 
 		double score = runRepairPartitioning(versions, IDsToWords, offsetsAllVersions, versionPartitionSizes, 
-			associations, minFragSize, repairStoppingPoint, numLevelsDown, true, false);
+			associations, minFragSize, fragmentationCoefficient, repairStoppingPoint, numLevelsDown, true, false);
 
 		return score;
 	}
