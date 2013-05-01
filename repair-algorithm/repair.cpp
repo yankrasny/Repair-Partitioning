@@ -325,7 +325,7 @@ void RepairAlgorithm::getTrees()
 			if (versionNum == -1) break;
 		
 			// TODO are we putting it in the correct place? Who said the version numbers will be in order?
-			// Just verify this, it seems to both make sense and not make sense at the same time.
+			// This seems to both make sense and not make sense at the same time.
 			versionData[versionNum].setRootNode(buildTree(loc, versionNum));
 		}
 		--loc;

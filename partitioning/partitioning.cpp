@@ -6,12 +6,17 @@ double RepairDocumentPartition::getScore(ostream& os)
 {
 	double term;
 	double sum(0);
+	double totalFragSize(0);
 	for (unordered_map<string, FragInfo>::iterator it = uniqueFrags.begin(); it != uniqueFrags.end(); it++)
 	{
 		term = it->second.count * it->second.fragSize;
 		sum += term;
+		totalFragSize += it->second.fragSize;
 	}
-	return sum / (uniqueFrags.size());
+	if (uniqueFrags.size() == 0) return 0.0;
+	
+	double avgFragSize = totalFragSize / uniqueFrags.size();
+	return sum / (uniqueFrags.size() * avgFragSize);
 }
 
 SortedByOffsetNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes)
@@ -117,6 +122,8 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 	
 	double leftScore = getSubsetScore(leftSubset);
 	double rightScore = getSubsetScore(rightSubset);
+
+	// TODO try changing to max(leftScore, rightScore)
 	double childrenScore = fragmentationCoefficient * (leftScore + rightScore); // Coefficient for fragmenting
 
 	if (myScore > childrenScore)
@@ -132,25 +139,25 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 
 unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, unsigned* bounds, unsigned minFragSize, unsigned versionSize)
 {
-	// SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
-	// nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
-	SortedByOffsetNodeSet nodes = getBestSubset(root);
+	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
+	nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
+	// SortedByOffsetNodeSet nodes = getBestSubset(root);
 
 	unsigned numFrags = 0;
-	cerr << "Version Start" << endl;	
+	// cerr << "Version Start" << endl;	
 	for (auto it = nodes.begin(); it != nodes.end(); ++it)
 	{
 		RepairTreeNode* current = *it;
 
 		// cerr << "Symbol: " << current->getSymbol() << endl;
-		cerr << current->getOffset() << ",";
+		// cerr << current->getOffset() << ",";
 
 		// These offsets are already sorted (see the comparator at the top)
 		bounds[numFrags] = current->getOffset();
 		numFrags++;
 	}
-	cerr << "Version End" << endl << endl;
-	system("pause");
+	// cerr << "Version End" << endl << endl;
+	// system("pause");
 
 	// We're working with left bounds, so we always need to add the last one on the right
 	bounds[numFrags] = versionSize;
