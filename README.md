@@ -77,5 +77,8 @@ Or for a larger example:
 
 Here are some more examples from the command line:
 
-``` repair ./Input/alice/ 2.0 10 1 ```
+``` repair ./Input/alice/ 2.0 10 1 (fragmentationCoefficient = 2.0, minFragSize = 10, and using the greedy algorithm) ```
 
+``` repair ./Input/alice/ 1.0 100 0 (fragmentationCoefficient = 2.0, minFragSize = 10, and using the naive algorithm) ```
+
+``` repair ./Input/alice/ (use the default values specified in the code) ```
