@@ -26,6 +26,7 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions,
 	float fragmentationCoefficient, 
 	unsigned repairStoppingPoint, 
 	unsigned numLevelsDown, 
+	unsigned method,
 	bool printFragments, 
 	bool printAssociations)
 {
@@ -39,7 +40,7 @@ double Prototype2::runRepairPartitioning(vector<vector<unsigned> > versions,
 
 	// Use the result of repair to get a partitioning of the document
 	// Hopefully this partitioning gives us fragments that occur many times
-	RepairDocumentPartition partition = RepairDocumentPartition(versionData, associations, numLevelsDown, minFragSize, fragmentationCoefficient);
+	RepairDocumentPartition partition = RepairDocumentPartition(versionData, associations, numLevelsDown, minFragSize, fragmentationCoefficient, method);
 
 	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
 	offsetsAllVersions = partition.getOffsets();
@@ -84,9 +85,9 @@ int Prototype2::run(int argc, char* argv[])
 		string inputFilepath = "./Input/ints/";
 
 		/*
-		Initial test show that minFragSize should be proportional to document size
+		Initial tests show that minFragSize should be proportional to document size
 		*/
-		unsigned minFragSize = 2; //in words
+		unsigned minFragSize = 10; //in words
 
 		/*
 		Initial tests show that repairStoppingPoint shouldn't be too small (repair goes too far for our purposes in this case)
@@ -95,24 +96,29 @@ int Prototype2::run(int argc, char* argv[])
 		*/
 		unsigned repairStoppingPoint = 1; //pairs that occur less than this amount of times will not be replaced
 
-
 		/* To what extent are we willing to fragment? See the partitioning algorithm for how this is used */
 		float fragmentationCoefficient = 1.0;
 
-		/* A primitive way to partition the tree: just go n levels down */
+		/* A variable used in the primitive way to partition the tree: just go n levels down */
 		unsigned numLevelsDown = 3;
+
+		/* The partitioning alg to use. See Partitioning.h for the enum */
+		unsigned method = 0;
 
 		if (argc == 2 && (string) argv[1] == "help")
 		{
 			cerr << "Usage:" << endl;
+			cerr << "\t" << argv[0] << " <directory> <fragmentationCoefficient> <minFragSize> <method>" << endl;
+			cerr << "\t" << argv[0] << " <directory> <fragmentationCoefficient> <minFragSize>" << endl;
 			cerr << "\t" << argv[0] << " <directory> <fragmentationCoefficient>" << endl;
 			cerr << "\t" << argv[0] << " <directory>" << endl;
 			cerr << "\t" << argv[0] << "" << endl << endl;
+			
 			cerr << "Defaults: " << endl;
 			cerr << "\tdirectory: " << inputFilepath << endl;
 			cerr << "\tfragmentationCoefficient: " << fragmentationCoefficient << endl;
-			// cerr << "\tminFragSize: " << minFragSize << endl;			
-			// cerr << "\trepairStoppingPoint: " << repairStoppingPoint << endl;
+			cerr << "\tminFragSize: " << minFragSize << endl;			
+			cerr << "\tmethod: " << method << endl;
 			exit(0);
 		}
 
@@ -122,8 +128,11 @@ int Prototype2::run(int argc, char* argv[])
 		if (argc > 2)
 			fragmentationCoefficient = atof(argv[2]);
 
-		// if (argc > 3)
-		// 	minFragSize = atoi(argv[3]);
+		if (argc > 3)
+			minFragSize = atoi(argv[3]);
+		
+		if (argc > 4)
+			method = atoi(argv[4]);
 
 		// if (argc > 3)
 		// 	repairStoppingPoint = atoi(argv[3]);
@@ -179,7 +188,7 @@ int Prototype2::run(int argc, char* argv[])
 		unsigned* versionPartitionSizes(NULL);
 
 		double score = runRepairPartitioning(versions, IDsToWords, offsetsAllVersions, versionPartitionSizes, 
-			associations, minFragSize, fragmentationCoefficient, repairStoppingPoint, numLevelsDown, true, false);
+			associations, minFragSize, fragmentationCoefficient, repairStoppingPoint, numLevelsDown, method, true, false);
 
 		return score;
 	}

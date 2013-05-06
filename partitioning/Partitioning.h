@@ -27,6 +27,8 @@ typedef std::multiset<RepairTreeNode*, SortNodesByOffsetComparator> SortedByOffs
 
 class RepairDocumentPartition
 {
+	unsigned method;
+
 	float fragmentationCoefficient;
 
 	unsigned numLevelsDown;
@@ -59,6 +61,12 @@ class RepairDocumentPartition
 	// All implementations can return a list of nodes
 	SortedByOffsetNodeSet getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes);
 
+	int getAssociationLocation(unsigned symbol);
+
+	double getSubsetScore(SortedByOffsetNodeSet subset);
+
+	SortedByOffsetNodeSet getBestSubset(RepairTreeNode* node);
+
 	// Cuts one version
 	unsigned getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, unsigned* bounds, unsigned minFragSize, unsigned versionSize);
 
@@ -71,13 +79,15 @@ class RepairDocumentPartition
 	// Populates this->fragments
 	void setFragmentInfo(const std::vector<std::vector<unsigned> >& versions, std::ostream& os, bool print);
 public:
+	enum Method { NAIVE, GREEDY };
+
 	// For extensibility, RepairTree should implement an interface like PartitioningAlgorithm or something
 	// In the future, others would also implement that interface, and these param types could stay the same
 	// So it would be const PartitioningAlgorithm& alg
 	RepairDocumentPartition(std::vector<VersionDataItem>& versionData, std::vector<Association>& associations,
-		unsigned numLevelsDown = 1, unsigned minFragSize = 2, float fragmentationCoefficient = 1.0)
+		unsigned numLevelsDown = 1, unsigned minFragSize = 2, float fragmentationCoefficient = 1.0, unsigned method = 0)
 		 :	versionData(versionData), associations(associations), offsets(NULL), numLevelsDown(numLevelsDown), 
-		 	minFragSize(minFragSize), fragmentationCoefficient(fragmentationCoefficient)
+		 	minFragSize(minFragSize), fragmentationCoefficient(fragmentationCoefficient), method(method)
 	{
 		memoizedAssociationLocations = std::unordered_map<unsigned, int>();
 
@@ -109,13 +119,6 @@ public:
 	const std::string& outFilename, bool printFragments, bool printAssociations);
 
 	double getScore(std::ostream& os = std::cout);
-
-	int getAssociationLocation(unsigned symbol);
-
-	double getSubsetScore(SortedByOffsetNodeSet subset);
-
-	SortedByOffsetNodeSet getBestSubset(RepairTreeNode* node);
-
 };
 
 #endif

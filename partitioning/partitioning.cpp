@@ -14,7 +14,7 @@ double RepairDocumentPartition::getScore(ostream& os)
 		totalFragSize += it->second.fragSize;
 	}
 	if (uniqueFrags.size() == 0) return 0.0;
-	
+
 	double avgFragSize = totalFragSize / uniqueFrags.size();
 	return sum / (uniqueFrags.size() * avgFragSize);
 }
@@ -126,7 +126,7 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 	// TODO try changing to max(leftScore, rightScore)
 	double childrenScore = fragmentationCoefficient * (leftScore + rightScore); // Coefficient for fragmenting
 
-	if (myScore > childrenScore)
+	if (myScore >= childrenScore)
 	{
 		nodes.insert(node);
 		return nodes;
@@ -140,11 +140,28 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, unsigned* bounds, unsigned minFragSize, unsigned versionSize)
 {
 	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
-	nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
-	// SortedByOffsetNodeSet nodes = getBestSubset(root);
+	switch (this->method)
+	{
+		case RepairDocumentPartition::NAIVE: nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
+		    break;
+		case RepairDocumentPartition::GREEDY: nodes = getBestSubset(root);
+		    break;
+		// default is naive
+		default: nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
+		    break;
+	}
 
-	unsigned numFrags = 0;
-	// cerr << "Version Start" << endl;	
+	unsigned prevVal(0); // the previous node's index in the file 
+	unsigned currVal(0); // the current node's index in the file	
+	unsigned diff(0); // the difference between consecutive indexes (a large value signifies a good fragment)
+	unsigned numFrags(0); // the number of fragments (gets incremented in the following loop)
+	RepairTreeNode* previous(NULL);
+
+	// We know the first fragment is always at the beginning of the file, and we'll skip the first node in the loop below
+	bounds[0] = 0;
+	++numFrags;
+
+	// cerr << "Version Start" << endl;
 	for (auto it = nodes.begin(); it != nodes.end(); ++it)
 	{
 		RepairTreeNode* current = *it;
@@ -152,16 +169,45 @@ unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root
 		// cerr << "Symbol: " << current->getSymbol() << endl;
 		// cerr << current->getOffset() << ",";
 
-		// These offsets are already sorted (see the comparator at the top)
-		bounds[numFrags] = current->getOffset();
-		numFrags++;
+		if (!previous) {
+			previous = current;
+			continue;
+		}
+
+		prevVal = previous->getOffset();
+		currVal = current->getOffset();
+
+		diff = currVal - prevVal;
+		if (diff >= minFragSize)
+		{
+			// These offsets are already sorted (see the comparator at the top)
+			bounds[numFrags] = current->getOffset();
+			numFrags++;
+		}
+
+		// Update previous to point to this node now that we're done with it
+		previous = current;
 	}
-	// cerr << "Version End" << endl << endl;
+	// cerr << endl << endl;
 	// system("pause");
 
-	// We're working with left bounds, so we always need to add the last one on the right
-	bounds[numFrags] = versionSize;
-	numFrags++;
+	// Calculate the last diff so that the last fragment obeys the minFragSize rule
+	if (nodes.size() >= 1)
+	{
+		unsigned lastDiff = versionSize - bounds[numFrags - 1];
+		if (lastDiff >= minFragSize)
+		{
+			// Our last fragment is ok, just add the position at the end of the file
+			bounds[numFrags] = versionSize;
+			numFrags++;	
+		}
+		else
+		{
+			// Our last fragment is too small, replace the last offset we had with the position at the end of the file
+			bounds[numFrags - 1] = versionSize;
+		}
+	}
+
 
 	// TODO Handle this
 	if (numFrags > MAX_NUM_FRAGMENTS_PER_VERSION)
