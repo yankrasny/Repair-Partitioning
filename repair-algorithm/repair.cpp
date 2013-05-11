@@ -83,6 +83,7 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 	if (hashTable.count(key))
 	{
 		HeapEntry* hp = hashTable[key]->getHeapPointer();
+		// Handles relinking the nodes around this one in the linked list
 		hashTable[key]->removeOccurrence(oc);
 		if (hashTable[key]->getSize() < 1)
 		{

@@ -2,8 +2,6 @@
 
 Re-Pair is an algorithm traditionally used for text compression. Here, it's used to partition documents into similar fragments. The main application of this is indexing a versioned collection of documents for search. 
 
-I couldn't find an existing implementation of Re-Pair that was easy to use or modify, so I built my own, and added the partitioning logic to it.
-
 ## Repair Algorithm and Example
 The logic behind Re-Pair is wonderfully simple
 
@@ -67,15 +65,11 @@ repair [args]
 
 ```
 
-Included in this repo are some example inputs, so for example, you can run the following:
+Included in this repo are some example inputs, so you can run the following:
 
 ``` repair ./Input/ints/ ```
 
-Or for a larger example:
-
 ``` repair ./Input/alice/ ```
-
-Here are some more examples from the command line:
 
 ``` repair ./Input/alice/ 2.0 10 1 (fragmentationCoefficient = 2.0, minFragSize = 10, and using the greedy algorithm) ```
 
