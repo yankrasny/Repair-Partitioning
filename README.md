@@ -67,12 +67,14 @@ repair [args]
 
 Included in this repo are some example inputs, so you can run the following:
 
-``` repair ./Input/ints/ ```
+```
+repair ./Input/ints/
 
-``` repair ./Input/alice/ ```
+repair ./Input/alice/
 
-``` repair ./Input/alice/ 2.0 10 1 (fragmentationCoefficient = 2.0, minFragSize = 10, and using the greedy algorithm) ```
+repair ./Input/alice/ 2.0 10 1 (fragmentationCoefficient = 2.0, minFragSize = 10, and using the greedy algorithm)
 
-``` repair ./Input/alice/ 1.0 100 0 (fragmentationCoefficient = 2.0, minFragSize = 10, and using the naive algorithm) ```
+repair ./Input/alice/ 1.0 100 0 (fragmentationCoefficient = 2.0, minFragSize = 10, and using the naive algorithm)
 
-``` repair ./Input/alice/ (use the default values specified in the code) ```
+repair ./Input/alice/ (use the default values specified in the code)
+```
