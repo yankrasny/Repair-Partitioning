@@ -1,4 +1,4 @@
-#include "prototype/prototype.h"
+#include "prototype/RepairPartitioningPrototype.h"
 #include <assert.h>
 using namespace std;
 
@@ -8,6 +8,6 @@ unsigned currentOffset = 0;
 
 int main(int argc, char* argv[])
 {
-	Prototype prototype;
+	RepairPartitioningPrototype prototype;
 	return prototype.run(argc, argv);
 }

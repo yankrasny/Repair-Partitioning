@@ -1,7 +1,7 @@
-#include "prototype.h"
+#include "RepairPartitioningPrototype.h"
 using namespace std;
 
-void Prototype::printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& os)
+void RepairPartitioningPrototype::printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& os)
 {
 	for (unordered_map<unsigned, string>::iterator it = IDsToWords.begin(); it != IDsToWords.end(); it++)
 	{
@@ -9,7 +9,7 @@ void Prototype::printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords
 	}
 }
 
-void Prototype::writeAssociations(const vector<Association>& associations, ostream& os)
+void RepairPartitioningPrototype::writeAssociations(const vector<Association>& associations, ostream& os)
 {
 	for (size_t i = 0; i < associations.size(); i++)
 	{
@@ -17,7 +17,7 @@ void Prototype::writeAssociations(const vector<Association>& associations, ostre
 	}
 }
 
-double Prototype::runRepairPartitioning(vector<vector<unsigned> > versions, 
+double RepairPartitioningPrototype::runRepairPartitioning(vector<vector<unsigned> > versions, 
 	unordered_map<unsigned, string>& IDsToWords, 
 	unsigned*& offsetsAllVersions, 
 	unsigned*& versionPartitionSizes, 
@@ -66,7 +66,53 @@ double Prototype::runRepairPartitioning(vector<vector<unsigned> > versions,
 }
 
 
-int Prototype::run(int argc, char* argv[])
+double RepairPartitioningPrototype::runRepairPartitioning(vector<vector<unsigned> > versions, 
+	unsigned*& offsetsAllVersions, 
+	unsigned*& versionPartitionSizes, 
+	vector<Association>& associations,
+	unsigned minFragSize, 
+	float fragmentationCoefficient, 
+	unsigned method)
+{
+	RepairAlgorithm repairAlg(versions);
+
+	repairAlg.run();
+
+	vector<VersionDataItem> versionData = repairAlg.getVersionData();
+
+	associations = repairAlg.getAssociations();
+
+	// Use the result of repair to get a partitioning of the document
+	// Hopefully this partitioning gives us fragments that occur many times
+	RepairDocumentPartition partition = RepairDocumentPartition(versionData, associations, 
+		1, minFragSize, fragmentationCoefficient, method);
+
+	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
+	offsetsAllVersions = partition.getOffsets();
+
+	// The number of fragments in each version
+	versionPartitionSizes = partition.getVersionSizes();
+
+	// string outputFilename = "./Output/results.txt";
+
+	// partition.writeResults(versions, IDsToWords, outputFilename, false, false);
+
+	// if (printAssociations)
+	// {
+	// 	cerr << "*** Associations (symbol -> pair) ***" << endl;
+	// 	writeAssociations(associations, cerr);
+	// }
+
+	// stringstream command;
+	// command << "start " << outputFilename.c_str();
+	// system(command.str().c_str());
+
+	return partition.getScore();
+}
+
+
+
+int RepairPartitioningPrototype::run(int argc, char* argv[])
 {
 	//createOutputDir();
 
