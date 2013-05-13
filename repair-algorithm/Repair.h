@@ -9,10 +9,10 @@
 #include <sstream>
 #include <locale>
 #include <string>
-#include "util/md5.h" // TODO Not cross platform...
 #include "Occurrence.h"
 #include "HashTableEntry.h"
 #include "MetaClasses.h"
+#include "../util/md5.h"
 #include "../random-heap/HeapEntry.h"
 #include "../random-heap/RandomHeap.h"
 #include "../util/Profiler.h"
