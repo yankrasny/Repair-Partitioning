@@ -7,7 +7,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <set>
-#include "md5/md5.h"
+#include "util/md5.h"
 #include "../repair-algorithm/MetaClasses.h"
 #include "../repair-algorithm/RepairTreeNode.h"
 

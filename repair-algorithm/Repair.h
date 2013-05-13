@@ -9,7 +9,7 @@
 #include <sstream>
 #include <locale>
 #include <string>
-#include "md5.h" // TODO Not cross platform...
+#include "util/md5.h" // TODO Not cross platform...
 #include "Occurrence.h"
 #include "HashTableEntry.h"
 #include "MetaClasses.h"
