@@ -146,8 +146,8 @@ unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root
 		    break;
 		case RepairDocumentPartition::GREEDY: nodes = getBestSubset(root);
 		    break;
-		// default is naive
-		default: nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
+		// default is greedy
+		default: nodes = getBestSubset(root);
 		    break;
 	}
 
