@@ -85,7 +85,7 @@ public:
 	// In the future, others would also implement that interface, and these param types could stay the same
 	// So it would be const PartitioningAlgorithm& alg
 	RepairDocumentPartition(std::vector<VersionDataItem>& versionData, std::vector<Association>& associations,
-		unsigned numLevelsDown = 1, unsigned minFragSize = 2, float fragmentationCoefficient = 1.0, unsigned method = 0)
+		unsigned numLevelsDown = 1, unsigned minFragSize = 2, float fragmentationCoefficient = 1.0, unsigned method = 1)
 		 :	versionData(versionData), associations(associations), offsets(NULL), numLevelsDown(numLevelsDown), 
 		 	minFragSize(minFragSize), fragmentationCoefficient(fragmentationCoefficient), method(method)
 	{
