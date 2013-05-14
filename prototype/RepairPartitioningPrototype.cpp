@@ -17,7 +17,8 @@ void RepairPartitioningPrototype::writeAssociations(const vector<Association>& a
 	}
 }
 
-double RepairPartitioningPrototype::runRepairPartitioning(vector<vector<unsigned> > versions, 
+double RepairPartitioningPrototype::runRepairPartitioning(
+	vector<vector<unsigned> > versions,
 	unordered_map<unsigned, string>& IDsToWords, 
 	unsigned*& offsetsAllVersions, 
 	unsigned*& versionPartitionSizes, 
@@ -66,7 +67,8 @@ double RepairPartitioningPrototype::runRepairPartitioning(vector<vector<unsigned
 }
 
 
-double RepairPartitioningPrototype::runRepairPartitioning(vector<vector<unsigned> > versions, 
+double RepairPartitioningPrototype::runRepairPartitioning(
+	vector<vector<unsigned> > versions, 
 	unsigned*& offsetsAllVersions, 
 	unsigned*& versionPartitionSizes, 
 	vector<Association>& associations,
@@ -233,8 +235,25 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		unsigned* offsetsAllVersions(NULL);
 		unsigned* versionPartitionSizes(NULL);
 
-		double score = runRepairPartitioning(versions, IDsToWords, offsetsAllVersions, versionPartitionSizes, 
-			associations, minFragSize, fragmentationCoefficient, repairStoppingPoint, numLevelsDown, method, true, false);
+		/* Both overloads are shown below for testing. Just change the bool to switch. */
+		if (false)
+		{
+			double score = runRepairPartitioning(versions, IDsToWords, 
+				offsetsAllVersions, versionPartitionSizes, 
+				associations, minFragSize, 
+				fragmentationCoefficient, 
+				repairStoppingPoint, numLevelsDown,
+				method, true, false);
+		}
+		else
+		{
+			double score = runRepairPartitioning(versions, offsetsAllVersions,
+				versionPartitionSizes, 
+				associations,
+				minFragSize,
+				fragmentationCoefficient, 
+				method);
+		}
 
 		return score;
 	}
