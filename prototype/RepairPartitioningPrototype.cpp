@@ -235,10 +235,11 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		unsigned* offsetsAllVersions(NULL);
 		unsigned* versionPartitionSizes(NULL);
 
+		double score;
 		/* Both overloads are shown below for testing. Just change the bool to switch. */
 		if (false)
 		{
-			double score = runRepairPartitioning(versions, IDsToWords, 
+			score = runRepairPartitioning(versions, IDsToWords, 
 				offsetsAllVersions, versionPartitionSizes, 
 				associations, minFragSize, 
 				fragmentationCoefficient, 
@@ -247,7 +248,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		}
 		else
 		{
-			double score = runRepairPartitioning(versions, offsetsAllVersions,
+			score = runRepairPartitioning(versions, offsetsAllVersions,
 				versionPartitionSizes, 
 				associations,
 				minFragSize,
