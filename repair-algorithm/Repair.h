@@ -106,6 +106,8 @@ public:
 			// Reset the offset counter for the next version
 			resetOffset();
 		}
+
+		cleanup();
 	}
 };
 

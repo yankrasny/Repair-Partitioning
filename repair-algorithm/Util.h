@@ -30,6 +30,11 @@ inline unsigned nextFragID()
 	return ++currentFragID;
 }
 
+inline void resetFragID()
+{
+	currentFragID = 0;	
+}
+
 extern unsigned currentID;
 inline unsigned nextID()
 {

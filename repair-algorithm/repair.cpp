@@ -262,6 +262,13 @@ void RepairAlgorithm::cleanup()
 		delete it->second;
 		it->second = NULL;
 	}
+
+	associations.clear();
+	
+	versionData.clear();
+
+	resetCurrentID();
+	resetFragID();
 }
 
 /*************************************************************************************************/
