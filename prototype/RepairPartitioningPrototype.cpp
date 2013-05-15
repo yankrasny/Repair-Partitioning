@@ -108,7 +108,9 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	// stringstream command;
 	// command << "start " << outputFilename.c_str();
 	// system(command.str().c_str());
-
+	
+	resetCurrentID();
+	
 	return partition.getScore();
 }
 

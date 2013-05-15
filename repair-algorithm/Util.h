@@ -36,6 +36,11 @@ inline unsigned nextID()
 	return ++currentID;
 }
 
+inline void resetCurrentID()
+{
+	currentID = 0;	
+}
+
 inline unsigned long long combineToUInt64(unsigned long long left, unsigned long long right)
 {
 	return (left << 32) | right;
