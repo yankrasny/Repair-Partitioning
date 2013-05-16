@@ -107,7 +107,7 @@ public:
 			resetOffset();
 		}
 
-		cleanup();
+		// cleanup();
 	}
 };
 
