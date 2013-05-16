@@ -63,7 +63,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	command << "start " << outputFilename.c_str();
 	system(command.str().c_str());
 
-	repairAlg.cleanup();
+	// repairAlg.cleanup();
 
 	return partition.getScore();
 }
@@ -111,7 +111,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	// command << "start " << outputFilename.c_str();
 	// system(command.str().c_str());
 	
-	// repairAlg.cleanup();
+	repairAlg.cleanup();
 
 	return partition.getScore();
 }
