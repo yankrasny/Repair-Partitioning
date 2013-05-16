@@ -63,6 +63,8 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	command << "start " << outputFilename.c_str();
 	system(command.str().c_str());
 
+	repairAlg.cleanup();
+
 	return partition.getScore();
 }
 

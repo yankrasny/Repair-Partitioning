@@ -51,7 +51,7 @@ private:
 
 	void doRepair(unsigned repairStoppingPoint);
 
-	void cleanup();
+	
 
 	RepairTreeNode* buildTree(int loc, unsigned versionNum);
 
@@ -109,6 +109,8 @@ public:
 
 		// cleanup();
 	}
+
+	void cleanup();
 };
 
 #endif
