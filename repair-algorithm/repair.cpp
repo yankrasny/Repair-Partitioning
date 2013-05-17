@@ -6,7 +6,9 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned leftPosit
 {
 	if (key == 0) {
 		// cerr << "KEY IS 0" << endl;
-		// return;
+		// cerr << "Left: " <<  getLeft(key) << endl;
+		// cerr << "Right: " <<  getRight(key) << endl;
+		return;
 	}
 
 	HeapEntry* hp;
@@ -47,6 +49,11 @@ void RepairAlgorithm::extractPairs()
 			if (i == 0)
 			{
 				versionData.push_back(VersionDataItem(v, wordIDs.size()));
+			}
+
+			if (wordIDs[i] == 0 && wordIDs[i+1] == 0)
+			{
+				cerr << "wordIDs[i] and wordID[i+1] are both 0, i: " << i << endl;
 			}
 
 			// Squeeze the pair of two unsigned numbers together for storage
