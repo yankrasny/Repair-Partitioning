@@ -1,12 +1,13 @@
 #include "Repair.h"
 using namespace std;
 
+int x(0);
 void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned leftPosition,
 	unsigned version, Occurrence* prec, Occurrence* succ)
 {
 	if (key == 0) {
-		int x;
-		// cerr << "KEY IS 0" << endl;
+		x++;
+		cerr << "kei is 0 " << x << " times!" << endl;
 		// cerr << "Left: " <<  getLeft(key) << endl;
 		// cerr << "Right: " <<  getRight(key) << endl;
 		// return;
