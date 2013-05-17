@@ -8,7 +8,7 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned leftPosit
 		// cerr << "KEY IS 0" << endl;
 		// cerr << "Left: " <<  getLeft(key) << endl;
 		// cerr << "Right: " <<  getRight(key) << endl;
-		return;
+		// return;
 	}
 
 	HeapEntry* hp;
