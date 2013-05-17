@@ -378,4 +378,5 @@ void RepairDocumentPartition::writeResults(const vector<vector<unsigned> >& vers
 	// Now decide on the score for this partitioning
 	double score = this->getScore(os);
 	os << "Score: " << score << endl;
+	os.close();
 }
