@@ -6,7 +6,7 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned leftPosit
 {
 	if (key == 0) {
 		cerr << "KEY IS 0" << endl;
-		return;
+		// return;
 	}
 
 	HeapEntry* hp;
