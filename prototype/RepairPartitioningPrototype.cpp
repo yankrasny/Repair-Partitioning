@@ -97,9 +97,9 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	// The number of fragments in each version
 	versionPartitionSizes = partition.getVersionSizes();
 
-	// string outputFilename = "./Output/results.txt";
+	string outputFilename = "./Output/results.txt";
 
-	// partition.writeResults(versions, IDsToWords, outputFilename, false, false);
+	partition.writeResults(versions, IDsToWords, outputFilename, false, false);
 
 	// if (printAssociations)
 	// {
