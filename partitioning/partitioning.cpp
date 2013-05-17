@@ -331,8 +331,8 @@ void RepairDocumentPartition::writeResults(const vector<vector<unsigned> >& vers
 {
 	ofstream os(outFilename.c_str());
 
-	os << "Results of re-pair partitioning..." << endl << endl;
-	os << "*** Fragment boundaries ***" << endl;
+	cerr << "Results of re-pair partitioning..." << endl << endl;
+	cerr << "*** Fragment boundaries ***" << endl;
 	
 	unsigned totalCountFragments(0);
 	unsigned diff(0);
@@ -345,7 +345,7 @@ void RepairDocumentPartition::writeResults(const vector<vector<unsigned> >& vers
 		{
 			continue;
 		}
-		os << "Version " << v << endl;
+		cerr << "Version " << v << endl;
 		for (unsigned i = 0; i < numFragsInVersion - 1; i++)
 		{
 			if (i < numFragsInVersion - 1)
@@ -359,24 +359,24 @@ void RepairDocumentPartition::writeResults(const vector<vector<unsigned> >& vers
 				diff = 0;
 			}
 
-			os << "Fragment " << i << ": " << offsets[totalCountFragments + i] << "-" << 
+			cerr << "Fragment " << i << ": " << offsets[totalCountFragments + i] << "-" << 
 				offsets[totalCountFragments + i + 1] << " (frag size: " << diff << ")" << endl;
 		}
 		totalCountFragments += numFragsInVersion;
-		os << endl;
+		cerr << endl;
 	}
 
-	// os << "Number of fragment boundaries: " << starts.size() << endl;
-	// os << "Number of fragments: " << (starts.size() - 1) << endl << endl;
+	// cerr << "Number of fragment boundaries: " << starts.size() << endl;
+	// cerr << "Number of fragments: " << (starts.size() - 1) << endl << endl;
 
-	this->setFragmentInfo(versions, os, printFragments);
+	this->setFragmentInfo(versions, cerr, printFragments);
 
 	// Assign fragment IDs and stick them in a hashmap
 	unordered_map<string, FragInfo> uniqueFrags;
 	this->updateUniqueFragmentHashMap();
 
 	// Now decide on the score for this partitioning
-	double score = this->getScore(os);
-	os << "Score: " << score << endl;
+	double score = this->getScore(cerr);
+	cerr << "Score: " << score << endl;
 	os.close();
 }
