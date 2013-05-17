@@ -5,13 +5,13 @@ int x(0);
 void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned leftPosition,
 	unsigned version, Occurrence* prec, Occurrence* succ)
 {
-	if (key == 0) {
-		x++;
-		cerr << "key is 0 " << x << " times!" << endl;
-		// cerr << "Left: " <<  getLeft(key) << endl;
-		// cerr << "Right: " <<  getRight(key) << endl;
-		// return;
-	}
+	// if (key == 0) {
+	// 	x++;
+	// 	cerr << "key is 0 " << x << " times!" << endl;
+	// 	// cerr << "Left: " <<  getLeft(key) << endl;
+	// 	// cerr << "Right: " <<  getRight(key) << endl;
+	// 	// return;
+	// }
 
 	HeapEntry* hp;
 
@@ -53,10 +53,10 @@ void RepairAlgorithm::extractPairs()
 				versionData.push_back(VersionDataItem(v, wordIDs.size()));
 			}
 
-			if (wordIDs[i] == 0 && wordIDs[i+1] == 0)
-			{
-				cerr << "wordIDs[i] and wordID[i+1] are both 0, i: " << i << endl;
-			}
+			// if (wordIDs[i] == 0 && wordIDs[i+1] == 0)
+			// {
+			// 	cerr << "wordIDs[i] and wordID[i+1] are both 0, i: " << i << endl;
+			// }
 
 			// Squeeze the pair of two unsigned numbers together for storage
 			currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
