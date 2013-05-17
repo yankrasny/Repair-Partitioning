@@ -7,7 +7,7 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned leftPosit
 {
 	if (key == 0) {
 		x++;
-		cerr << "kei is 0 " << x << " times!" << endl;
+		cerr << "key is 0 " << x << " times!" << endl;
 		// cerr << "Left: " <<  getLeft(key) << endl;
 		// cerr << "Right: " <<  getRight(key) << endl;
 		// return;
@@ -278,7 +278,7 @@ void RepairAlgorithm::cleanup()
 	
 	versionData.clear();
 
-	resetCurrentID();
+	resetcurrentWordID();
 	resetFragID();
 }
 

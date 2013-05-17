@@ -35,15 +35,15 @@ inline void resetFragID()
 	currentFragID = 0;	
 }
 
-extern unsigned currentID;
+extern unsigned currentWordID;
 inline unsigned nextID()
 {
-	return ++currentID;
+	return ++currentWordID;
 }
 
-inline void resetCurrentID()
+inline void resetcurrentWordID()
 {
-	currentID = 0;	
+	currentWordID = 0;	
 }
 
 inline unsigned long long combineToUInt64(unsigned long long left, unsigned long long right)
