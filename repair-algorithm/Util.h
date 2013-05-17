@@ -36,7 +36,7 @@ inline void resetFragID()
 }
 
 extern unsigned currentWordID;
-inline unsigned nextID()
+inline unsigned nextWordID()
 {
 	return ++currentWordID;
 }
@@ -97,11 +97,11 @@ inline std::vector<unsigned> stringToWordIDs(const std::string& text, std::unord
 		else
 		{
 			//Didn't find it, give it an ID
-			theID = nextID();
+			theID = nextWordID();
 			uniqueWordIDs[myHash] = theID;
 			IDsToWords[theID] = tokens[i];
 			// cerr << tokens[i] << endl;
-			//it->second = nextID();
+			//it->second = nextWordID();
 		}
 		ret.push_back(theID);
 	}

@@ -163,7 +163,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		Occurrence* succ;
 
 		// Will use this as the new symbol (say we're replacing abcd with axd, this is x)
-		symbol = nextID();
+		symbol = nextWordID();
 
 		curr = max->getHeadOccurrence();
 
@@ -226,8 +226,11 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 			// Just creates the occurrence in the hash table and heap, doesn't link it to its neighbors
 			// Passing along the index from the pair we're replacing
 			// You get holes eventually (which you want) because 3 pairs get replaced by 2 every time
-			addOrUpdatePair(newLeftKey, oldLeftIndex, curr->getVersion());
-			addOrUpdatePair(newRightKey, oldRightIndex, curr->getVersion());
+			if (!onLeftEdge)
+				addOrUpdatePair(newLeftKey, oldLeftIndex, curr->getVersion());
+			
+			if (!onRightEdge)
+				addOrUpdatePair(newRightKey, oldRightIndex, curr->getVersion());
 
 			if (!nearLeftEdge && !onLeftEdge)
 			{
