@@ -5,7 +5,7 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned leftPosit
 	unsigned version, Occurrence* prec, Occurrence* succ)
 {
 	if (key == 0) {
-		cerr << "KEY IS 0" << endl;
+		// cerr << "KEY IS 0" << endl;
 		// return;
 	}
 
