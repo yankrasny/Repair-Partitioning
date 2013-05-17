@@ -4,8 +4,10 @@ using namespace std;
 void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned leftPosition,
 	unsigned version, Occurrence* prec, Occurrence* succ)
 {
-	if (key == 0)
+	if (key == 0) {
+		cerr << "KEY IS 0" << endl;
 		return;
+	}
 
 	HeapEntry* hp;
 
