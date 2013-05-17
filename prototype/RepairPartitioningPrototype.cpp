@@ -99,6 +99,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 
 	string outputFilename = "./Output/results.txt";
 
+	unordered_map<unsigned, string> IDsToWords = unordered_map<unsigned, string>();
 	partition.writeResults(versions, IDsToWords, outputFilename, false, false);
 
 	// if (printAssociations)
