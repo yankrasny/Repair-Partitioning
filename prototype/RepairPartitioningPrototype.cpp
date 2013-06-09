@@ -51,21 +51,23 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 
 	string outputFilename = "./Output/results.txt";
 
-	partition.writeResults(versions, IDsToWords, outputFilename, printFragments, printAssociations);
-
-	if (printAssociations)
-	{
-		cerr << "*** Associations (symbol -> pair) ***" << endl;
-		writeAssociations(associations, cerr);
-	}
-
-	stringstream command;
-	command << "start " << outputFilename.c_str();
-	system(command.str().c_str());
-
-	// repairAlg.cleanup();
-
 	return partition.getScore();
+
+	// partition.writeResults(versions, IDsToWords, outputFilename, printFragments, printAssociations);
+
+	// if (printAssociations)
+	// {
+	// 	cerr << "*** Associations (symbol -> pair) ***" << endl;
+	// 	writeAssociations(associations, cerr);
+	// }
+
+	// stringstream command;
+	// command << "start " << outputFilename.c_str();
+	// system(command.str().c_str());
+
+	// // repairAlg.cleanup();
+
+	// return partition.getScore();
 }
 
 
@@ -97,10 +99,10 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	// The number of fragments in each version
 	versionPartitionSizes = partition.getVersionSizes();
 
-	string outputFilename = "./Output/results.txt";
+	// string outputFilename = "./Output/results.txt";
 
-	unordered_map<unsigned, string> IDsToWords = unordered_map<unsigned, string>();
-	partition.writeResults(versions, IDsToWords, outputFilename, false, false);
+	// unordered_map<unsigned, string> IDsToWords = unordered_map<unsigned, string>();
+	// partition.writeResults(versions, IDsToWords, outputFilename, false, false);
 
 	// if (printAssociations)
 	// {
