@@ -369,7 +369,7 @@ void RepairDocumentPartition::writeResults(const vector<vector<unsigned> >& vers
 	// os << "Number of fragment boundaries: " << starts.size() << endl;
 	// os << "Number of fragments: " << (starts.size() - 1) << endl << endl;
 
-	this->setFragmentInfo(versions, os, printFragments);
+	// this->setFragmentInfo(versions, os, printFragments);
 
 	// Assign fragment IDs and stick them in a hashmap
 	unordered_map<string, FragInfo> uniqueFrags;

@@ -51,23 +51,23 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 
 	string outputFilename = "./Output/results.txt";
 
-	return partition.getScore();
-
-	// partition.writeResults(versions, IDsToWords, outputFilename, printFragments, printAssociations);
-
-	// if (printAssociations)
-	// {
-	// 	cerr << "*** Associations (symbol -> pair) ***" << endl;
-	// 	writeAssociations(associations, cerr);
-	// }
-
-	// stringstream command;
-	// command << "start " << outputFilename.c_str();
-	// system(command.str().c_str());
-
-	// // repairAlg.cleanup();
-
 	// return partition.getScore();
+
+	partition.writeResults(versions, IDsToWords, outputFilename, printFragments, printAssociations);
+
+	if (printAssociations)
+	{
+		cerr << "*** Associations (symbol -> pair) ***" << endl;
+		writeAssociations(associations, cerr);
+	}
+
+	stringstream command;
+	command << "start " << outputFilename.c_str();
+	system(command.str().c_str());
+
+	repairAlg.cleanup();
+
+	return partition.getScore();
 }
 
 
@@ -137,7 +137,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 	if (test == "repair")
 	{
 		Profiler::getInstance().start("all");
-		string inputFilepath = "./Input/ints/";
+		string inputFilepath = "./Input/alice/";
 
 		/*
 		Initial tests show that minFragSize should be proportional to document size
@@ -244,7 +244,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 
 		double score;
 		/* Both overloads are shown below for testing. Just change the bool to switch. */
-		if (false)
+		if (true)
 		{
 			score = runRepairPartitioning(versions, IDsToWords, 
 				offsetsAllVersions, versionPartitionSizes, 
