@@ -164,6 +164,11 @@ unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root
 	// cerr << "Version Start" << endl;
 	for (auto it = nodes.begin(); it != nodes.end(); ++it)
 	{
+
+		if (numFrags > MAX_NUM_FRAGMENTS_PER_VERSION - 1) {
+			break;
+		}
+
 		RepairTreeNode* current = *it;
 
 		// cerr << "Symbol: " << current->getSymbol() << endl;
