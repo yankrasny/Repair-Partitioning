@@ -343,6 +343,8 @@ void RepairAlgorithm::getTrees()
 
 		while (true)
 		{
+			// TODO verify that this is the lowest version number in the list
+			// Also, why do we care about that?
 			versionNum = associations[loc].getVersionAtBegin();
 			if (versionNum == -1) break;
 		
@@ -376,14 +378,6 @@ unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
 		node->setSize(leftSize + rightSize);
 		
 		return leftOffset;
-	}
-	
-	// node is a terminal with no parent, the whole thing is just one node
-	if (!node->getParent())
-	{
-		node->setSize(1);
-		node->setOffset(0);
-		return 0;
 	}
 
 	// node is a terminal, so its size is 1 by definition

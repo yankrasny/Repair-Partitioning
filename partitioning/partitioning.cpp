@@ -164,7 +164,8 @@ unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root
 	// cerr << "Version Start" << endl;
 	for (auto it = nodes.begin(); it != nodes.end(); ++it)
 	{
-
+		// We've decided that this is too many, the last one is gonna be huge and stupid 
+		// Leave room for the last one
 		if (numFrags > MAX_NUM_FRAGMENTS_PER_VERSION - 1) {
 			break;
 		}

@@ -110,6 +110,7 @@ public:
 
 	void removeFromVersions(unsigned versionNum)
 	{
+		// Erases all elements with value versionNum
 		versions.erase(versionNum);
 	}
 
