@@ -35,6 +35,8 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 
 	repairAlg.run();
 
+	// New way: This all changes as well, because most of it will happen in run() called above
+
 	vector<VersionDataItem> versionData = repairAlg.getVersionData();
 
 	associations = repairAlg.getAssociations();

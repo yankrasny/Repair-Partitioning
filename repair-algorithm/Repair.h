@@ -92,9 +92,29 @@ public:
 		extractPairs();
 
 		// Replace pairs with symbols until done (either some early stop condition or one symbol left)
+		// New way: call this getAssociations
 		doRepair(repairStoppingPoint);
 
 		// Use the output of repair to build a set of repair trees (one per version)
+		/* TODO new way: use the same type of loop as we currently have in getTrees()
+			Get the current tree, calculate the offsets, and get the partitioning (this requires some refactoring at the class level)
+			Instead of getTrees(), it should be: 
+
+			RepairTreeNode* currRoot = NULL;
+			versionOffset = 0;
+			Partitioning p = Partitioning(); // probably need to change class Partitioning to support all of this
+			while (currRoot = getTree()) {
+				calcOffsets(currRoot);
+				resetOffset();
+				numFrags = p.getPartitioningOneVersion(currRoot, &(p->offsets[versionOffset]), numLevelsDown, ...);
+				versionOffset += numFrags;
+				p->versionSizes[i] = numFragments;
+				deleteTree(currRoot);
+			}
+
+			// And now offsets is ready to pass along
+		*/
+
 		getTrees();
 
 		// Set the file offsets for all the nodes in each tree

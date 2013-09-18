@@ -269,6 +269,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 	}
 }
 
+// New way: realize that this was bullshit to begin with. What about all the nodes in the repair trees, how about clearing those?
 void RepairAlgorithm::cleanup()
 {
 	for (unordered_map<unsigned long long, HashTableEntry*>::iterator it = hashTable.begin(); it != hashTable.end(); it++)
@@ -348,9 +349,22 @@ void RepairAlgorithm::getTrees()
 			versionNum = associations[loc].getVersionAtBegin();
 			if (versionNum == -1) break;
 		
-			// TODO are we putting it in the correct place? Who said the version numbers will be in order?
-			// This seems to both make sense and not make sense at the same time.
+
+			// The old way
 			versionData[versionNum].setRootNode(buildTree(loc, versionNum));
+
+
+			// The new way
+			/*
+				RepairTreeNode* currRoot = buildTree(loc, versionNum);
+				calcOffsets(currRoot);
+				resetOffset();
+				numFrags = p.getPartitioningOneVersion(currRoot, &(p->offsets[versionOffset]), numLevelsDown, ...);
+				versionOffset += numFrags;
+				p->versionSizes[i] = numFragments;
+				deleteTree(currRoot);			
+			*/
+
 		}
 		--loc;
 	}
