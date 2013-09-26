@@ -270,6 +270,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 }
 
 // New way: realize that this was bullshit to begin with. What about all the nodes in the repair trees, how about clearing those?
+// So still need this, but obviously we didn't clean up enough
 void RepairAlgorithm::cleanup()
 {
 	for (unordered_map<unsigned long long, HashTableEntry*>::iterator it = hashTable.begin(); it != hashTable.end(); it++)
@@ -331,11 +332,21 @@ int RepairAlgorithm::getNextRootLoc(int loc)
 	return loc;
 }
 
-void RepairAlgorithm::getTrees()
+unsigned* RepairAlgorithm::getVersionPartitionSizes() {
+	return this->versionPartitionSizes;
+}
+
+unsigned* RepairAlgorithm::getOffsetsAllVersions()
 {
 	int loc = associations.size() - 1;
 	RepairTreeNode* root = NULL;
-	unsigned versionNum = 0;
+	int versionNum = 0;
+
+	RepairDocumentPartition partitionAlg = RepairDocumentPartition(this->associations,
+		this->numLevelsDown, this->minFragSize);
+
+	unsigned versionOffset(0); // after the loop, is set to the total number of fragments (also the size of the starts array)
+	unsigned numFragments(0); // will be reused in the loop for the number of fragments in each version
 
 	while (true)
 	{
@@ -345,29 +356,55 @@ void RepairAlgorithm::getTrees()
 		while (true)
 		{
 			// TODO verify that this is the lowest version number in the list
-			// Also, why do we care about that?
+			// Wait, why? I don't remember the logic...
+			// Ok, versionNum is one of the versions in which this association occurred
+			// We don't go in order of versionNum, which is worrying because we use it an an array index
+			// It is the lowest because we return begin() and the set is sorted by symbol
 			versionNum = associations[loc].getVersionAtBegin();
 			if (versionNum == -1) break;
-		
 
-			// The old way
-			versionData[versionNum].setRootNode(buildTree(loc, versionNum));
+			if (versionNum > versions.size() - 1) {
+				throw 3;
+			}
+	
+			RepairTreeNode* currRoot = buildTree(loc, versionNum);
 
+			calcOffsets(currRoot);
 
-			// The new way
-			/*
-				RepairTreeNode* currRoot = buildTree(loc, versionNum);
-				calcOffsets(currRoot);
-				resetOffset();
-				numFrags = p.getPartitioningOneVersion(currRoot, &(p->offsets[versionOffset]), numLevelsDown, ...);
-				versionOffset += numFrags;
-				p->versionSizes[i] = numFragments;
-				deleteTree(currRoot);			
-			*/
+			resetOffset();
 
+			// Let's explain why versionNum is the correct index to use here
+			numFragments = partitionAlg.getPartitioningOneVersion(currRoot, 
+				this->numLevelsDown, &this->offsets[versionOffset], this->minFragSize, 
+				versions[versionNum].size());
+
+			// why +1? because number of fragments is one less than number of offsets.
+			versionOffset += numFragments + 1;
+
+			// Let's explain why versionNum is the correct index to use here as well 
+			this->versionPartitionSizes[versionNum] = numFragments + 1;
+
+			// Hopefully this solves our memory woes
+			this->deleteTree(currRoot);
 		}
 		--loc;
 	}
+
+	return this->offsets;
+}
+
+// Not tested
+void RepairAlgorithm::deleteTree(RepairTreeNode* node) {
+	RepairTreeNode* leftChild = node->getLeftChild();
+	RepairTreeNode* rightChild = node->getRightChild();
+	if (leftChild) {
+		deleteTree(leftChild);
+	}
+	if (rightChild) {
+		deleteTree(rightChild);
+	}
+	delete node;
+	node = NULL;
 }
 
 unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)

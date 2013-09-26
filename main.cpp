@@ -1,5 +1,5 @@
 #include "prototype/RepairPartitioningPrototype.h"
-#include <assert.h>
+// #include <assert.h>
 using namespace std;
 
 unsigned currentFragID = 0;

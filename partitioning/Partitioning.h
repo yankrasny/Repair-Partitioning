@@ -58,20 +58,14 @@ class RepairDocumentPartition
 	std::unordered_map<std::string, FragInfo> uniqueFrags;
 
 	// One implementation of get partitioning for one version
-	// All implementations can return a list of nodes
 	SortedByOffsetNodeSet getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes);
+
+	// Another one, greedy approach
+	SortedByOffsetNodeSet getBestSubset(RepairTreeNode* node);
 
 	int getAssociationLocation(unsigned symbol);
 
 	double getSubsetScore(SortedByOffsetNodeSet subset);
-
-	SortedByOffsetNodeSet getBestSubset(RepairTreeNode* node);
-
-	// Cuts one version
-	unsigned getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, unsigned* bounds, unsigned minFragSize, unsigned versionSize);
-
-	// Calls getPartitioningOneVersion and stores the results in offsets
-	void setPartitioningsAllVersions(unsigned numLevelsDown, unsigned minFragSize);
 
 	// Populates unique frags using the boundaries found by the partitioning algorithm
 	void updateUniqueFragmentHashMap();
@@ -81,13 +75,11 @@ class RepairDocumentPartition
 public:
 	enum Method { NAIVE, GREEDY };
 
-	// For extensibility, RepairTree should implement an interface like PartitioningAlgorithm or something
-	// In the future, others would also implement that interface, and these param types could stay the same
-	// So it would be const PartitioningAlgorithm& alg
-	RepairDocumentPartition(std::vector<VersionDataItem>& versionData, std::vector<Association>& associations,
-		unsigned numLevelsDown = 1, unsigned minFragSize = 2, float fragmentationCoefficient = 1.0, unsigned method = 1)
-		 :	versionData(versionData), associations(associations), offsets(NULL), numLevelsDown(numLevelsDown), 
-		 	minFragSize(minFragSize), fragmentationCoefficient(fragmentationCoefficient), method(method)
+	RepairDocumentPartition(std::vector<Association>& associations, unsigned numLevelsDown = 1, 
+		unsigned minFragSize = 2, float fragmentationCoefficient = 1.0, unsigned method = 1)
+		 :	associations(associations), offsets(NULL), numLevelsDown(numLevelsDown), 
+		 	minFragSize(minFragSize), fragmentationCoefficient(fragmentationCoefficient), 
+		 	method(method)
 	{
 		memoizedAssociationLocations = std::unordered_map<unsigned, int>();
 
@@ -100,9 +92,11 @@ public:
 		this->versionSizes = new unsigned[versionData.size()];
 
 		uniqueFrags = std::unordered_map<std::string, FragInfo>();
-
-		setPartitioningsAllVersions(numLevelsDown, minFragSize);
 	}
+
+	// Cuts one version
+	unsigned getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, 
+		unsigned* bounds, unsigned minFragSize, unsigned versionSize);
 
 	// The payload of this class
 	unsigned* getOffsets()

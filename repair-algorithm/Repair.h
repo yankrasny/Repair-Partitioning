@@ -15,6 +15,7 @@
 #include "../util/md5.h"
 #include "../random-heap/HeapEntry.h"
 #include "../random-heap/RandomHeap.h"
+#include "../partitioning/Partitioning.h"
 #include "../util/Profiler.h"
 #include "../util/FileUtils.h"
 #include "RepairTreeNode.h"
@@ -23,6 +24,16 @@
 class RepairAlgorithm
 {
 private:
+
+	// The entry at i is the number of fragments for version i
+	unsigned* versionPartitionSizes;
+	
+	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
+	unsigned* offsets;
+
+	unsigned numLevelsDown;
+	
+	unsigned minFragSize;
 
 	std::vector<std::vector<unsigned> > versions;
 
@@ -51,19 +62,20 @@ private:
 
 	void doRepair(unsigned repairStoppingPoint);
 
-	
+	// Tree building, offsets, and partitioning
+	void deleteTree(RepairTreeNode* node);
 
 	RepairTreeNode* buildTree(int loc, unsigned versionNum);
 
 	int getNextRootLoc(int loc);
 
-	void getTrees();
-
 	unsigned calcOffsets(RepairTreeNode* node);
 
 public:
 
-	RepairAlgorithm(std::vector<std::vector<unsigned> > versions) : versions(versions)
+	RepairAlgorithm(std::vector<std::vector<unsigned> > versions,
+		unsigned numLevelsDown = 1, unsigned minFragSize = 2) : 
+	versions(versions), numLevelsDown(numLevelsDown), minFragSize(minFragSize)
 	{
 		// Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures	
 		myHeap = RandomHeap();
@@ -73,6 +85,12 @@ public:
 		associations = std::vector<Association>();
 		
 		versionData = std::vector<VersionDataItem>();
+
+	 	unsigned maxArraySize = versionData.size() * MAX_NUM_FRAGMENTS_PER_VERSION;
+
+		this->offsets = new unsigned[maxArraySize];
+
+		this->versionPartitionSizes = new unsigned[versionData.size()];
 	}
 
 	std::vector<VersionDataItem> getVersionData() const
@@ -80,54 +98,20 @@ public:
 		return versionData;
 	}
 
-	std::vector<Association> getAssociations() const
-	{
-		return associations;
-	}
+	unsigned* getVersionPartitionSizes();
 
-	void run(unsigned repairStoppingPoint = 0)
+	unsigned* getOffsetsAllVersions();
+
+	std::vector<Association> getAssociations(unsigned repairStoppingPoint = 0)
 	{
 		// Run through the string and grab all the initial pairs
 		// Add them to all the structures
 		extractPairs();
 
 		// Replace pairs with symbols until done (either some early stop condition or one symbol left)
-		// New way: call this getAssociations
 		doRepair(repairStoppingPoint);
 
-		// Use the output of repair to build a set of repair trees (one per version)
-		/* TODO new way: use the same type of loop as we currently have in getTrees()
-			Get the current tree, calculate the offsets, and get the partitioning (this requires some refactoring at the class level)
-			Instead of getTrees(), it should be: 
-
-			RepairTreeNode* currRoot = NULL;
-			versionOffset = 0;
-			Partitioning p = Partitioning(); // probably need to change class Partitioning to support all of this
-			while (currRoot = getTree()) {
-				calcOffsets(currRoot);
-				resetOffset();
-				numFrags = p.getPartitioningOneVersion(currRoot, &(p->offsets[versionOffset]), numLevelsDown, ...);
-				versionOffset += numFrags;
-				p->versionSizes[i] = numFragments;
-				deleteTree(currRoot);
-			}
-
-			// And now offsets is ready to pass along
-		*/
-
-		getTrees();
-
-		// Set the file offsets for all the nodes in each tree
-		for (unsigned i = 0; i < versionData.size(); i++)
-		{
-			// Set file offsets for all the nodes in this version
-			calcOffsets(versionData[i].getRootNode());
-
-			// Reset the offset counter for the next version
-			resetOffset();
-		}
-
-		// cleanup();
+		return this->associations;		
 	}
 
 	void cleanup();

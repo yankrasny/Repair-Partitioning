@@ -12,8 +12,42 @@
 
 class RepairPartitioningPrototype
 {
+private:
+
+	// The outer vector represents all versions
+	// The vector at position i contains fragment objects for version i
+	std::vector<std::vector<FragInfo > > fragments;
+
+	// Unique Fragments in all the versions
+	std::unordered_map<std::string, FragInfo> uniqueFrags;
+
+	unsigned* offsetsAllVersions;
+
+	unsigned* versionPartitionSizes;
+
+	
+
 public:
-	RepairPartitioningPrototype() {}
+	RepairPartitioningPrototype() 
+	{
+		fragments = std::vector<std::vector<FragInfo > >();
+
+		uniqueFrags = std::unordered_map<std::string, FragInfo>();
+	}
+
+	double getScore(std::ostream& os);
+
+	void setFragmentInfo(
+		const std::vector<std::vector<unsigned> >& versions, 
+		std::ostream& os, 
+		bool print);
+
+	void updateUniqueFragmentHashMap();
+
+	void writeResults(
+		const std::vector<std::vector<unsigned> >& versions, 
+		std::unordered_map<unsigned, std::string>& IDsToWords, 
+		const std::string& outFilename);
 
 	double getScore(std::unordered_map<std::string, FragInfo>& uniqueFrags, 
 		unsigned numVersions, 
@@ -51,6 +85,7 @@ public:
 
 	// Overloaded for integration with versioned indexing system by Jinru He
 	double runRepairPartitioning(std::vector<std::vector<unsigned> > versions, 
+		std::unordered_map<unsigned, std::string>& IDsToWords, 
 		unsigned*& offsetsAllVersions, 
 		unsigned*& versionPartitionSizes, 
 		std::vector<Association>& associations,

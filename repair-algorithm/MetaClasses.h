@@ -114,6 +114,14 @@ public:
 		versions.erase(versionNum);
 	}
 
+	const std::string getVersionString() {
+		std::stringstream ss;
+		for (std::multiset<unsigned>::iterator it = versions.begin(); it != versions.end(); it++) {
+			ss << (*it) << ",";
+		}
+		return ss.str();
+	}
+
 	// return begin or false
 	int getVersionAtBegin()
 	{
