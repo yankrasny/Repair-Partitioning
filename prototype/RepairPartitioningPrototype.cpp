@@ -192,7 +192,9 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 {
 	bool debug = true;
 
-	RepairAlgorithm repairAlg(versions);
+	// don't really need numLevelsDown for now
+	unsigned numLevelsDown = 5;
+	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize, fragmentationCoefficient);
 
 	associations = repairAlg.getAssociations();
 
@@ -211,7 +213,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 				unsigned vNum = *it;
 				// cerr << "vNum: " << vNum << endl;
 				if (vNum > versions.size()) {
-					throw 4;
+					throw 2;
 				}
 			}
 		}
@@ -229,11 +231,13 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	if (debug) {
 		for (size_t i = 0; i < versions.size(); i++) {
 			for (size_t j = 0; j < versionPartitionSizes[i] - 1; j++) {
+				// cerr << offsetsAllVersions[totalOffsets] << ",";
 				if (offsetsAllVersions[totalOffsets] > offsetsAllVersions[totalOffsets+1]) {
-					throw 2;
+					throw 3;
 				}
 				totalOffsets++;
 			}
+			// cerr << endl;
 			totalOffsets++;
 		}
 	}
@@ -371,7 +375,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		unsigned* offsetsAllVersions(NULL);
 		unsigned* versionPartitionSizes(NULL);
 
-		double score;
+		double score = 0.0;
 		/* Both overloads are shown below for testing. Just change the bool to switch. */
 		if (false)
 		{

@@ -70,6 +70,35 @@ public:
 		// newLeftChild->setParent(this);
 		this->leftChild = newLeftChild;
 	}
+
+	int getDepth() {
+		int leftDepth = 0;
+		if (this->getLeftChild()) {
+			RepairTreeNode* leftChild = this->getLeftChild();
+			leftDepth = leftChild->getDepth();	
+		}
+
+		int rightDepth = 0;
+		if (this->getRightChild()) {
+			RepairTreeNode* rightChild = this->getRightChild();
+			rightDepth = rightChild->getDepth();	
+		}
+
+		return std::max(leftDepth, rightDepth) + 1;
+	}
+
+	/*
+		Includes the current node
+	*/
+	int getCountNodes() {
+		if (!this->getLeftChild()) {
+			return 1;
+		}
+		RepairTreeNode* leftChild = this->getLeftChild();
+		RepairTreeNode* rightChild = this->getRightChild();
+
+		return leftChild->getCountNodes() + rightChild->getCountNodes() + 1;
+	}
 };
 
 #endif

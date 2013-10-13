@@ -339,15 +339,16 @@ unsigned* RepairAlgorithm::getVersionPartitionSizes() {
 unsigned* RepairAlgorithm::getOffsetsAllVersions()
 {
 	int loc = associations.size() - 1;
-	RepairTreeNode* root = NULL;
+	RepairTreeNode* currRoot = NULL;
 	int versionNum = 0;
 
+	SortedPartitionsByVersionNum offsetMap = SortedPartitionsByVersionNum();
+	PartitionList theList;
+
 	RepairDocumentPartition partitionAlg = RepairDocumentPartition(this->associations,
-		this->numLevelsDown, this->minFragSize);
+		this->numLevelsDown, this->minFragSize, this->fragmentationCoefficient);
 
-	unsigned versionOffset(0); // after the loop, is set to the total number of fragments (also the size of the starts array)
-	unsigned numFragments(0); // will be reused in the loop for the number of fragments in each version
-
+	vector<unsigned> bounds;
 	while (true)
 	{
 		loc = getNextRootLoc(loc);
@@ -358,37 +359,63 @@ unsigned* RepairAlgorithm::getOffsetsAllVersions()
 			// TODO verify that this is the lowest version number in the list
 			// Wait, why? I don't remember the logic...
 			// Ok, versionNum is one of the versions in which this association occurred
-			// We don't go in order of versionNum, which is worrying because we use it an an array index
+			// We don't go in order of versionNum, which is worrying because we use it as an array index below
 			// It is the lowest because we return begin() and the set is sorted by symbol
+			// BULLSHIT: the lowest for that location, but not the lowest overall, IDIOT!
 			versionNum = associations[loc].getVersionAtBegin();
 			if (versionNum == -1) break;
 
+			// Assert that versionNum is valid
 			if (versionNum > versions.size() - 1) {
-				throw 3;
+				throw 5;
 			}
 	
-			RepairTreeNode* currRoot = buildTree(loc, versionNum);
+			currRoot = buildTree(loc, versionNum);
 
-			calcOffsets(currRoot);
+			// Let's see if this tree is reasonable
+			// int countNodes = currRoot->getCountNodes();
 
+			this->calcOffsets(currRoot);
 			resetOffset();
 
-			// Let's explain why versionNum is the correct index to use here
-			numFragments = partitionAlg.getPartitioningOneVersion(currRoot, 
-				this->numLevelsDown, &this->offsets[versionOffset], this->minFragSize, 
-				versions[versionNum].size());
+			theList = PartitionList(versionNum);
+			bounds = vector<unsigned>();
 
-			// why +1? because number of fragments is one less than number of offsets.
-			versionOffset += numFragments + 1;
+			partitionAlg.getPartitioningOneVersion(currRoot, this->numLevelsDown, bounds, this->minFragSize, versions[versionNum].size());
 
-			// Let's explain why versionNum is the correct index to use here as well 
-			this->versionPartitionSizes[versionNum] = numFragments + 1;
+			for (size_t i = 0; i < bounds.size(); i++) {
+				theList.push(bounds[i]);
+			}
 
-			// Hopefully this solves our memory woes
+			// Now theList should be populated, just insert it into the sorted set
+			offsetMap.insert(theList);
+
+			// TODO Do we need to do anything with theList?
+
+			// Deallocate all those tree nodes
 			this->deleteTree(currRoot);
 		}
 		--loc;
 	}
+
+	unsigned totalOffsetInArray = 0;
+	unsigned numVersions = 0;
+
+	// Post processing to get offsetMap into offsets and versionPartitionSizes
+	for (SortedPartitionsByVersionNum::iterator it = offsetMap.begin(); it != offsetMap.end(); it++)
+	{
+		// Reusing the same var from above, should be ok
+		theList = *it;
+		for (size_t j = 0; j < theList.size(); j++)
+		{
+			this->offsets[totalOffsetInArray + j] = theList.get(j);
+		}
+		this->versionPartitionSizes[numVersions++] = theList.size();
+		totalOffsetInArray += theList.size();
+	}
+
+	// Clean up offsetMap
+	offsetMap.clear();
 
 	return this->offsets;
 }
