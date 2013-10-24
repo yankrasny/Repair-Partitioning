@@ -16,18 +16,23 @@ private:
 	Occurrence* succ;
 	unsigned left;
 	unsigned right;
-	unsigned leftPositionInSequence;
 
 	unsigned version;
 public:
 	Occurrence() : prec(NULL), succ(NULL), next(NULL), prev(NULL) {}
 
+	// ~Occurrence()
+	// {
+	// 	// Delete something with pointers in all directions
+	// 	// Well shit
+	// }
+
 	Occurrence(unsigned long long key)
 		: prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), next(NULL), prev(NULL) {}
 
-	Occurrence(unsigned long long key, unsigned leftPositionInSequence, unsigned version)
+	Occurrence(unsigned long long key, unsigned version)
 		: prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), 
-		leftPositionInSequence(leftPositionInSequence), version(version), next(NULL), prev(NULL) {}
+		version(version), next(NULL), prev(NULL) {}
 
 	Occurrence* getNext() { return next; }
 	Occurrence* getPrev() { return prev; }
@@ -36,8 +41,6 @@ public:
 
 	unsigned getLeft()	const { return left; }
 	unsigned getRight()	const { return right; }
-
-	unsigned getLeftPositionInSequence() const { return leftPositionInSequence; }
 
 	void setNext(Occurrence* next) { this->next = next; }
 	void setPrev(Occurrence* prev) { this->prev = prev; }

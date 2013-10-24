@@ -46,4 +46,5 @@ HeapEntry::~HeapEntry()
 {
 	priority = 0;
 	index = -1;
+	key = 0;
 }

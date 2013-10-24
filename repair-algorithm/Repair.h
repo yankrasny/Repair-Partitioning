@@ -11,7 +11,6 @@
 #include <string>
 #include "Occurrence.h"
 #include "HashTableEntry.h"
-#include "MetaClasses.h"
 #include "../util/md5.h"
 #include "../random-heap/HeapEntry.h"
 #include "../random-heap/RandomHeap.h"
@@ -20,6 +19,8 @@
 #include "../util/FileUtils.h"
 #include "RepairTreeNode.h"
 #include "Util.h"
+
+typedef std::unordered_map<unsigned long long, HashTableEntry*> RepairHashTable;
 
 class RepairAlgorithm
 {
@@ -41,14 +42,14 @@ private:
 
 	RandomHeap myHeap;
 	
-	std::unordered_map<unsigned long long, HashTableEntry*> hashTable;
+	RepairHashTable hashTable;
 	
 	std::vector<Association> associations;
 	
 	std::vector<VersionDataItem> versionData;
 
-	void addOrUpdatePair(unsigned long long key, unsigned leftPosition,
-		unsigned version, Occurrence* prec = NULL, Occurrence* succ = NULL);
+	void addOrUpdatePair(unsigned long long key, unsigned version, 
+		Occurrence* prec = NULL, Occurrence* succ = NULL);
 
 	void extractPairs();
 
@@ -112,6 +113,12 @@ public:
 
 		// Replace pairs with symbols until done (either some early stop condition or one symbol left)
 		doRepair(repairStoppingPoint);
+
+		this->associations.clear();
+
+		for (RepairHashTable::iterator it = hashTable.begin(); it != hashTable.end(); it++) { 
+			delete (*it).second;
+		}
 
 		return this->associations;		
 	}

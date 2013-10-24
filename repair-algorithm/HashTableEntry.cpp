@@ -2,11 +2,11 @@
 using namespace std;
 
 HashTableEntry::HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ, 
-	unsigned leftPosition, unsigned version) : heapPointer(hp), size(1)
+	unsigned version) : heapPointer(hp), size(1)
 {
 	unsigned long long key = hp->getKey();
 
-	occurrences = new Occurrence(key, leftPosition, version); //The head of the linked list (Occurrences have a next pointer)
+	occurrences = new Occurrence(key, version); //The head of the linked list (Occurrences have a next pointer)
 
 	doubleLinkNeighbors(prec, occurrences);
 	doubleLinkNeighbors(occurrences, succ);
@@ -62,7 +62,7 @@ void HashTableEntry::addOccurrence(Occurrence* oc)
 	if (!oc || !occurrences)
 		return;
 
-	//Adds an occurrence to the head of the linked list	
+	// Adds an occurrence to the head of the linked list	
 	oc->setNext(occurrences);
 	occurrences->setPrev(oc);
 
@@ -80,4 +80,20 @@ size_t HashTableEntry::getSize() const
 HeapEntry* HashTableEntry::getHeapPointer() const
 {
 	return heapPointer;
+}
+
+HashTableEntry::~HashTableEntry() {
+	// heapPointer, what happens when this object is done?
+	// Who owns the occurrences?
+	if (heapPointer != NULL) {
+		delete heapPointer;
+	}
+
+	// We do this during repair, they should all be gone by now
+	// Occurrence* next(NULL);
+	// while (occurrences != NULL) {
+	// 	next = occurrences->getNext();
+	// 	delete occurrences;
+	// 	occurrences = next;
+	// }
 }

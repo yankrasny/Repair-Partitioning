@@ -11,7 +11,7 @@ class HashTableEntry
 	Occurrence* occurrences;
 	size_t size;
 public:
-	HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ, unsigned leftPosition, unsigned version);
+	HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ, unsigned version);
 
 	HashTableEntry(HeapEntry* hp, Occurrence* oc);
 
@@ -27,7 +27,9 @@ public:
 
 	size_t getSize() const;
 
-	HeapEntry* getHeapPointer() const;	
+	HeapEntry* getHeapPointer() const;
+
+	~HashTableEntry();
 };
 
 #endif

@@ -190,7 +190,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	float fragmentationCoefficient, 
 	unsigned method)
 {
-	bool debug = true;
+	bool debug = false;
 
 	// don't really need numLevelsDown for now
 	unsigned numLevelsDown = 5;
@@ -242,13 +242,15 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 		}
 	}
 
-	string outputFilename = "./Output/results.txt";
+	repairAlg.cleanup();
 
-	this->writeResults(versions, IDsToWords, outputFilename);
+	// string outputFilename = "./Output/results.txt";
 
-	stringstream command;
-	command << "start " << outputFilename.c_str();
-	system(command.str().c_str());
+	// this->writeResults(versions, IDsToWords, outputFilename);
+
+	// stringstream command;
+	// command << "start " << outputFilename.c_str();
+	// system(command.str().c_str());
 
 	double score = 0.0;
 	return score;
@@ -305,7 +307,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 			cerr << "Defaults: " << endl;
 			cerr << "\tdirectory: " << inputFilepath << endl;
 			cerr << "\tfragmentationCoefficient: " << fragmentationCoefficient << endl;
-			cerr << "\tminFragSize: " << minFragSize << endl;			
+			cerr << "\tminFragSize: " << minFragSize << endl;
 			cerr << "\tmethod: " << method << endl;
 			exit(0);
 		}

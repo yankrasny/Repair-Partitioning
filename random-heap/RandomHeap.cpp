@@ -139,6 +139,7 @@ void RandomHeap::deleteRandom(int pos)
 		heap[pos]->setIndex(pos);
 		
 		//Remove the last element
+		// delete heap.back(); // TODO do we need this??
 		heap.pop_back();
 
 		//Heapify from the position we just messed with
@@ -158,6 +159,10 @@ HeapEntry RandomHeap::extractRandom(int pos)
 
 RandomHeap::~RandomHeap()
 {
+	// Idiot... did you think clear() was enough? Seriously?
+	for (size_t i = 0; i < heap.size(); i++) {
+		delete heap[i];
+	}
 	heap.clear();
 }
 

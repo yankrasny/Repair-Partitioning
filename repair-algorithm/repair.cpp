@@ -2,22 +2,12 @@
 using namespace std;
 
 int x(0);
-void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned leftPosition,
-	unsigned version, Occurrence* prec, Occurrence* succ)
+void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version, Occurrence* prec, Occurrence* succ)
 {
-	// if (key == 0) {
-	// 	x++;
-	// 	cerr << "key is 0 " << x << " times!" << endl;
-	// 	// cerr << "Left: " <<  getLeft(key) << endl;
-	// 	// cerr << "Right: " <<  getRight(key) << endl;
-	// 	// return;
-	// }
-
 	HeapEntry* hp;
-
 	if (hashTable.count(key))
 	{
-		hashTable[key]->addOccurrence(new Occurrence(key, leftPosition, version));
+		hashTable[key]->addOccurrence(new Occurrence(key, version));
 	}
 	else //First time we've seen this pair
 	{
@@ -25,7 +15,7 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned leftPosit
 		hp = new HeapEntry(key, 1, &myHeap);
 
 		//Create a hash table entry, and initialize it with its heap entry pointer
-		hashTable[key] = new HashTableEntry(hp, prec, succ, leftPosition, version); //This creates the first occurrence (see the constructor)
+		hashTable[key] = new HashTableEntry(hp, prec, succ, version); //This creates the first occurrence (see the constructor)
 
 		//The order of these calls matters: do this first and the hash table entry won't know the index
 		myHeap.insert(hp);
@@ -62,7 +52,7 @@ void RepairAlgorithm::extractPairs()
 			currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
 
 			// Add the pair to our structures
-			addOrUpdatePair(currPair, i, v);
+			addOrUpdatePair(currPair, v);
 
 			// The first occurrence was the last one added because we add to the head
 			Occurrence* lastAddedOccurrence = hashTable[currPair]->getHeadOccurrence();
@@ -99,6 +89,7 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 		if (hashTable[key]->getSize() < 1)
 		{
 			removeFromHeap(hp);
+			// delete hashTable[key];
 			hashTable.erase(key);
 		}
 	}
@@ -215,22 +206,14 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 			newLeftKey = getNewLeftKey(symbol, prec);
 			newRightKey = getNewRightKey(symbol, succ);
 
-			unsigned oldLeftIndex, oldRightIndex;
-			if (onLeftEdge)
-				oldLeftIndex = 0;
-			else
-				oldLeftIndex = prec->getLeftPositionInSequence();
-
-			oldRightIndex = curr->getLeftPositionInSequence();
-
 			// Just creates the occurrence in the hash table and heap, doesn't link it to its neighbors
 			// Passing along the index from the pair we're replacing
 			// You get holes eventually (which you want) because 3 pairs get replaced by 2 every time
 			if (!onLeftEdge)
-				addOrUpdatePair(newLeftKey, oldLeftIndex, curr->getVersion());
+				addOrUpdatePair(newLeftKey, curr->getVersion());
 			
 			if (!onRightEdge)
-				addOrUpdatePair(newRightKey, oldRightIndex, curr->getVersion());
+				addOrUpdatePair(newRightKey, curr->getVersion());
 
 			if (!nearLeftEdge && !onLeftEdge)
 			{
@@ -278,11 +261,8 @@ void RepairAlgorithm::cleanup()
 		delete it->second;
 		it->second = NULL;
 	}
-
-	associations.clear();
-	
-	versionData.clear();
-
+	this->associations.clear();
+	this->versionData.clear();
 	resetcurrentWordID();
 	resetFragID();
 }
