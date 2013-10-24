@@ -14,14 +14,14 @@ That's why we store the index in HeapEntry
 
 class HeapEntry;
 
-class RandomHeap
+class IndexedHeap
 {
 private:
 	std::vector<HeapEntry*> heap;
 public:
-	RandomHeap() {}
+	IndexedHeap() {}
 
-	RandomHeap(std::vector<HeapEntry*>& origVec);
+	IndexedHeap(std::vector<HeapEntry*>& origVec);
 
 	bool empty() const;
 
@@ -37,21 +37,21 @@ public:
 
 	void heapifyDown(int pos);
 
-	void deleteRandom(int pos);
+	void deleteAtIndex(int pos);
 
-	HeapEntry extractRandom(int pos);
+	HeapEntry extractAtIndex(int pos);
 
 	void cleanup();
 
-	~RandomHeap();
+	~IndexedHeap();
 };
 
-class RandomHeapTest
+class IndexedHeapTest
 {
 private:
 	void runTest(int n);
 public:
-	RandomHeapTest(int numElements);
+	IndexedHeapTest(int numElements);
 };
 
 #endif

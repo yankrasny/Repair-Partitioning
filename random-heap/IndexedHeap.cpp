@@ -1,7 +1,7 @@
-#include "RandomHeap.h"
+#include "IndexedHeap.h"
 #include "HeapEntry.h"
 
-RandomHeap::RandomHeap(std::vector<HeapEntry*>& origVec)
+IndexedHeap::IndexedHeap(std::vector<HeapEntry*>& origVec)
 {
 	for (size_t i = 0; i < origVec.size(); i++)
 	{
@@ -9,13 +9,13 @@ RandomHeap::RandomHeap(std::vector<HeapEntry*>& origVec)
 	}
 }
 
-bool RandomHeap::empty() const
+bool IndexedHeap::empty() const
 {
 	return heap.size() <= 0;
 	//return heap.empty();
 }
 
-HeapEntry& RandomHeap::getAtIndex(int pos)
+HeapEntry& IndexedHeap::getAtIndex(int pos)
 {
 	if (pos >= 0 && pos < heap.size())
 	{
@@ -23,18 +23,18 @@ HeapEntry& RandomHeap::getAtIndex(int pos)
 	}
 }
 
-HeapEntry& RandomHeap::getMax()
+HeapEntry& IndexedHeap::getMax()
 {
 	if (heap.size() > 0)
 		return *heap[0];
 }
 
-HeapEntry RandomHeap::extractMax()
+HeapEntry IndexedHeap::extractMax()
 {
-	return extractRandom(0);
+	return extractAtIndex(0);
 }
 
-int RandomHeap::insert(HeapEntry* item)
+int IndexedHeap::insert(HeapEntry* item)
 {
 	heap.push_back(item);
 	int index = heapifyUp(heap.size() - 1);
@@ -42,7 +42,7 @@ int RandomHeap::insert(HeapEntry* item)
 	return index;
 }
 
-int RandomHeap::heapifyUp(int pos)
+int IndexedHeap::heapifyUp(int pos)
 {
 	bool done = false;
 	while (!done)
@@ -75,7 +75,7 @@ int RandomHeap::heapifyUp(int pos)
 	return pos;
 }
 
-void RandomHeap::heapifyDown(int pos)
+void IndexedHeap::heapifyDown(int pos)
 {
 	bool done = false;
 	while (!done)
@@ -128,7 +128,7 @@ void RandomHeap::heapifyDown(int pos)
 	}
 }
 
-void RandomHeap::deleteRandom(int pos)
+void IndexedHeap::deleteAtIndex(int pos)
 {
 	if (pos >= 0 && pos < heap.size())
 	{
@@ -139,25 +139,27 @@ void RandomHeap::deleteRandom(int pos)
 		heap[pos]->setIndex(pos);
 		
 		//Remove the last element
-		// delete heap.back(); // TODO do we need this??
+		HeapEntry* temp = heap.back();
 		heap.pop_back();
+		delete temp;
+		temp = NULL;
 
 		//Heapify from the position we just messed with
 		heapifyDown(pos);
 	}
 }
 
-HeapEntry RandomHeap::extractRandom(int pos)
+HeapEntry IndexedHeap::extractAtIndex(int pos)
 {
 	if (pos >= 0 && pos < heap.size())
 	{
 		HeapEntry item = *heap[pos];
-		deleteRandom(pos);
+		deleteAtIndex(pos);
 		return item;
 	}
 }
 
-RandomHeap::~RandomHeap()
+IndexedHeap::~IndexedHeap()
 {
 	// Idiot... did you think clear() was enough? Seriously?
 	for (size_t i = 0; i < heap.size(); i++) {
@@ -166,7 +168,7 @@ RandomHeap::~RandomHeap()
 	heap.clear();
 }
 
-void RandomHeapTest::runTest(int n)
+void IndexedHeapTest::runTest(int n)
 {
 	std::vector<unsigned long long> keys = std::vector<unsigned long long>();
 	for (int i = 0; i < n; i++)
@@ -180,10 +182,10 @@ void RandomHeapTest::runTest(int n)
 		vec.push_back(hp);
 	}
 
-	RandomHeap rHeap(vec);
+	IndexedHeap rHeap(vec);
 
-	rHeap.extractRandom(3);
-	rHeap.extractRandom(2);
+	rHeap.extractAtIndex(3);
+	rHeap.extractAtIndex(2);
 
 	HeapEntry max;
 	while (!rHeap.empty())
@@ -192,7 +194,7 @@ void RandomHeapTest::runTest(int n)
 	}
 }
 
-RandomHeapTest::RandomHeapTest(int numElements)
+IndexedHeapTest::IndexedHeapTest(int numElements)
 {
 	runTest(numElements);
 }

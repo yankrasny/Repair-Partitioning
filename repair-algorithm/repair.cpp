@@ -59,7 +59,7 @@ void RepairAlgorithm::removeFromHeap(HeapEntry* hp)
 {
 	if (hp && !myHeap.empty())
 	{
-		myHeap.deleteRandom(hp->getIndex());
+		myHeap.deleteAtIndex(hp->getIndex());
 	}
 }
 
@@ -142,6 +142,9 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		Occurrence* prec;
 		Occurrence* succ;
 
+		Occurrence* newLeftOcc(NULL);
+		Occurrence* newRightOcc(NULL);
+
 		// Will use this as the new symbol (say we're replacing abcd with axd, this is x)
 		symbol = nextWordID();
 
@@ -150,8 +153,8 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		// For all occurrences of this entry, do the replacement and modify the corresponding entries
 		for (size_t i = 0; i < numOccurrences; i++)
 		{
-			Occurrence* newLeftOcc(NULL);
-			Occurrence* newRightOcc(NULL);
+			newLeftOcc = NULL;
+			newRightOcc = NULL;
 			
 			// Get the occurrence and its neighbors
 			curr = max->getHeadOccurrence();

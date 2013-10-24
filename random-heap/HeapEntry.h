@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <vector>
 #include <memory>
-#include "RandomHeap.h"
+#include "IndexedHeap.h"
 
 
 class HeapEntry
@@ -15,13 +15,13 @@ private:
 	int index; //the object must know where it is, so that some other reference can find it in O(1) inside the heap
 	size_t priority;
 	unsigned long long key;
-	// std::shared_ptr<RandomHeap> myHeap;
-	RandomHeap* myHeap;
+	// std::shared_ptr<IndexedHeap> myHeap;
+	IndexedHeap* myHeap;
 public:
-	HeapEntry(unsigned long long key, size_t priority, int index, RandomHeap* myHeap)
+	HeapEntry(unsigned long long key, size_t priority, int index, IndexedHeap* myHeap)
 		: key(key), priority(priority), index(index), myHeap(myHeap) {}
 	
-	HeapEntry(unsigned long long key, size_t priority, RandomHeap* myHeap)
+	HeapEntry(unsigned long long key, size_t priority, IndexedHeap* myHeap)
 		: key(key), priority(priority), index(-1), myHeap(myHeap) {}
 	
 	HeapEntry() : key(0), priority(0), index(-1), myHeap(NULL) {}

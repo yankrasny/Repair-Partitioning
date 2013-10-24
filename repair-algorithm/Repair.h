@@ -13,7 +13,7 @@
 #include "HashTableEntry.h"
 #include "../util/md5.h"
 #include "../random-heap/HeapEntry.h"
-#include "../random-heap/RandomHeap.h"
+#include "../random-heap/IndexedHeap.h"
 #include "../partitioning/Partitioning.h"
 #include "../util/Profiler.h"
 #include "../util/FileUtils.h"
@@ -45,7 +45,7 @@ private:
 	std::vector<std::vector<unsigned> > versions;
 
 	// One of the main structures used in repair, allows us to choose entries by priority, in our case numOccurrences
-	RandomHeap myHeap;
+	IndexedHeap myHeap;
 	
 	// The other main structure used in repair, allows us to access entries by key, which is in our case the pair of symbols
 	RepairHashTable hashTable;
@@ -87,7 +87,7 @@ public:
 	versions(versions), numLevelsDown(numLevelsDown), minFragSize(minFragSize), fragmentationCoefficient(fragmentationCoefficient)
 	{
 		// Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures	
-		myHeap = RandomHeap();
+		myHeap = IndexedHeap();
 		
 		hashTable = std::unordered_map<unsigned long long, HashTableEntry*> ();
 		
