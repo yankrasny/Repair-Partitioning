@@ -32,21 +32,28 @@ private:
 	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
 	unsigned* offsets;
 
+	// Pass this to the partitioning alg, it prevents us from going too far down a repair tree
 	unsigned numLevelsDown;
 	
+	// The minimum allowed size for a fragment, used during partitioning
 	unsigned minFragSize;
 
+	// How much should be favor fragmenting into small fragments. Should we keep them bigger, go for more occurrences, etc.
 	double fragmentationCoefficient;
 
+	// Each inner vector: The wordIDs for that version, outer vector: all the versions
 	std::vector<std::vector<unsigned> > versions;
 
+	// One of the main structures used in repair, allows us to choose entries by priority, in our case numOccurrences
 	RandomHeap myHeap;
 	
+	// The other main structure used in repair, allows us to access entries by key, which is in our case the pair of symbols
 	RepairHashTable hashTable;
 	
+	// The result of repair, a list of associations in the form (roughly) symbol -> (left, right)
 	std::vector<Association> associations;
 	
-	std::vector<VersionDataItem> versionData;
+	// std::vector<VersionDataItem> versionData;
 
 	void addOrUpdatePair(unsigned long long key, unsigned version, 
 		Occurrence* prec = NULL, Occurrence* succ = NULL);
@@ -61,11 +68,10 @@ private:
 
 	unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec);
 
-	bool updateLeftmostOccurrence(Occurrence* oldOcc, Occurrence* newOcc);
-
 	void doRepair(unsigned repairStoppingPoint);
 
-	// Tree building, offsets, and partitioning
+	
+	/***** Tree building, offsets, and partitioning ******/
 	void deleteTree(RepairTreeNode* node);
 
 	RepairTreeNode* buildTree(int loc, unsigned versionNum);
@@ -87,19 +93,19 @@ public:
 		
 		associations = std::vector<Association>();
 		
-		versionData = std::vector<VersionDataItem>();
+		// versionData = std::vector<VersionDataItem>();
 
-	 	unsigned maxArraySize = versionData.size() * MAX_NUM_FRAGMENTS_PER_VERSION;
+	 	unsigned maxArraySize = versions.size() * MAX_NUM_FRAGMENTS_PER_VERSION;
 
 		this->offsets = new unsigned[maxArraySize];
 
-		this->versionPartitionSizes = new unsigned[versionData.size()];
+		this->versionPartitionSizes = new unsigned[versions.size()];
 	}
 
-	std::vector<VersionDataItem> getVersionData() const
-	{
-		return versionData;
-	}
+	// std::vector<VersionDataItem> getVersionData() const
+	// {
+	// 	return versionData;
+	// }
 
 	unsigned* getVersionPartitionSizes();
 

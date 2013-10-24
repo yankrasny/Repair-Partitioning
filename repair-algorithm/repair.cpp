@@ -37,17 +37,6 @@ void RepairAlgorithm::extractPairs()
 		// Go through the string and get all overlapping pairs, and process them
 		for (size_t i = 0; i < wordIDs.size() - 1; i++)
 		{
-			// Save some metadata for each version
-			if (i == 0)
-			{
-				versionData.push_back(VersionDataItem(v, wordIDs.size()));
-			}
-
-			// if (wordIDs[i] == 0 && wordIDs[i+1] == 0)
-			// {
-			// 	cerr << "wordIDs[i] and wordID[i+1] are both 0, i: " << i << endl;
-			// }
-
 			// Squeeze the pair of two unsigned numbers together for storage
 			currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
 
@@ -262,7 +251,7 @@ void RepairAlgorithm::cleanup()
 		it->second = NULL;
 	}
 	this->associations.clear();
-	this->versionData.clear();
+	// this->versionData.clear();
 	resetcurrentWordID();
 	resetFragID();
 }
@@ -325,7 +314,7 @@ unsigned* RepairAlgorithm::getOffsetsAllVersions()
 	SortedPartitionsByVersionNum offsetMap = SortedPartitionsByVersionNum();
 	PartitionList theList;
 
-	RepairDocumentPartition partitionAlg = RepairDocumentPartition(this->associations,
+	RepairDocumentPartition partitionAlg = RepairDocumentPartition(this->associations, this->versions.size(),
 		this->numLevelsDown, this->minFragSize, this->fragmentationCoefficient);
 
 	vector<unsigned> bounds;
@@ -400,7 +389,7 @@ unsigned* RepairAlgorithm::getOffsetsAllVersions()
 	return this->offsets;
 }
 
-// Not tested
+// Not tested, well sorta tested
 void RepairAlgorithm::deleteTree(RepairTreeNode* node) {
 	RepairTreeNode* leftChild = node->getLeftChild();
 	RepairTreeNode* rightChild = node->getRightChild();
