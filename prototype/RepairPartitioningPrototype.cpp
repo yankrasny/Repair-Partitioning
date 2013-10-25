@@ -272,7 +272,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 	if (test == "repair")
 	{
 		Profiler::getInstance().start("all");
-		string inputFilepath = "./Input/ints/";
+		string inputFilepath = "./Input/alice/";
 
 		/*
 		Initial tests show that minFragSize should be proportional to document size

@@ -133,16 +133,14 @@ void IndexedHeap::deleteAtIndex(int pos)
 	if (pos >= 0 && pos < heap.size())
 	{
 		//This messes up the index field
-		heap[pos] = heap.back();
+		*heap[pos] = *heap.back();
 
 		//So reset it
 		heap[pos]->setIndex(pos);
 		
 		//Remove the last element
-		HeapEntry* temp = heap.back();
+		delete heap.back();
 		heap.pop_back();
-		delete temp;
-		temp = NULL;
 
 		//Heapify from the position we just messed with
 		heapifyDown(pos);
@@ -161,8 +159,8 @@ HeapEntry IndexedHeap::extractAtIndex(int pos)
 
 IndexedHeap::~IndexedHeap()
 {
-	// Idiot... did you think clear() was enough? Seriously?
-	for (size_t i = 0; i < heap.size(); i++) {
+	for (size_t i = 0; i < heap.size(); i++)
+	{
 		delete heap[i];
 	}
 	heap.clear();

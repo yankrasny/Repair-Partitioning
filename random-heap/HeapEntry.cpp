@@ -41,10 +41,3 @@ void HeapEntry::setIndex(int index)
 {
 	this->index = index;
 }
-
-HeapEntry::~HeapEntry()
-{
-	priority = 0;
-	index = -1;
-	key = 0;
-}

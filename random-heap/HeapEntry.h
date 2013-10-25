@@ -5,7 +5,7 @@
 
 #include <algorithm>
 #include <vector>
-#include <memory>
+// #include <memory>
 #include "IndexedHeap.h"
 
 
@@ -23,6 +23,20 @@ public:
 	
 	HeapEntry(unsigned long long key, size_t priority, IndexedHeap* myHeap)
 		: key(key), priority(priority), index(-1), myHeap(myHeap) {}
+
+	HeapEntry(const HeapEntry& rhs)
+	{
+		index = rhs.index;
+		priority = rhs.priority;
+		key = rhs.key;
+		myHeap = rhs.myHeap;
+	}
+
+	HeapEntry& operator=(const HeapEntry& rhs)
+	{
+		key = rhs.key;
+		return *this;
+	}
 	
 	HeapEntry() : key(0), priority(0), index(-1), myHeap(NULL) {}
 
@@ -38,8 +52,14 @@ public:
 
 	void decrement();
 
-	~HeapEntry();
-	
+	~HeapEntry()
+	{
+		priority = 0;
+		index = -1;
+		key = 0;
+		myHeap = NULL;
+	}
+
 	int getIndex();
 
 	void setIndex(int index);
