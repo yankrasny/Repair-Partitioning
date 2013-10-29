@@ -35,6 +35,7 @@ public:
 	HeapEntry& operator=(const HeapEntry& rhs)
 	{
 		key = rhs.key;
+		priority = rhs.priority;
 		return *this;
 	}
 	

@@ -19,15 +19,18 @@ class IndexedHeap
 private:
 	std::vector<HeapEntry*> heap;
 public:
-	IndexedHeap() {}
+	IndexedHeap()
+	{
+		heap = std::vector<HeapEntry*>();
+	}
 
-	IndexedHeap(std::vector<HeapEntry*>& origVec);
+	IndexedHeap(const std::vector<HeapEntry*>& origVec);
 
 	bool empty() const;
 
-	HeapEntry& getAtIndex(int pos);
+	HeapEntry& getAtIndex(int pos) const;
 
-	HeapEntry& getMax();
+	HeapEntry& getMax() const;
 
 	HeapEntry extractMax();
 
@@ -42,6 +45,10 @@ public:
 	HeapEntry extractAtIndex(int pos);
 
 	void cleanup();
+
+	IndexedHeap(const IndexedHeap& rhs);
+
+	IndexedHeap& operator=(const IndexedHeap& rhs);
 
 	~IndexedHeap();
 };

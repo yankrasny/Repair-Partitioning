@@ -1,7 +1,7 @@
 #include "IndexedHeap.h"
 #include "HeapEntry.h"
 
-IndexedHeap::IndexedHeap(std::vector<HeapEntry*>& origVec)
+IndexedHeap::IndexedHeap(const std::vector<HeapEntry*>& origVec)
 {
 	for (size_t i = 0; i < origVec.size(); i++)
 	{
@@ -15,7 +15,7 @@ bool IndexedHeap::empty() const
 	//return heap.empty();
 }
 
-HeapEntry& IndexedHeap::getAtIndex(int pos)
+HeapEntry& IndexedHeap::getAtIndex(int pos) const
 {
 	if (pos >= 0 && pos < heap.size())
 	{
@@ -23,7 +23,7 @@ HeapEntry& IndexedHeap::getAtIndex(int pos)
 	}
 }
 
-HeapEntry& IndexedHeap::getMax()
+HeapEntry& IndexedHeap::getMax() const
 {
 	if (heap.size() > 0)
 		return *heap[0];
@@ -136,14 +136,14 @@ void IndexedHeap::deleteAtIndex(int pos)
 		*heap[pos] = *heap.back();
 
 		//So reset it
-		heap[pos]->setIndex(pos);
+		// heap[pos]->setIndex(pos);
 		
 		//Remove the last element
 		delete heap.back();
 		heap.pop_back();
 
 		//Heapify from the position we just messed with
-		heapifyDown(pos);
+		// heapifyDown(pos);
 	}
 }
 
@@ -157,6 +157,31 @@ HeapEntry IndexedHeap::extractAtIndex(int pos)
 	}
 }
 
+/****************************** BIG 3 *********************************/
+IndexedHeap::IndexedHeap(const IndexedHeap& rhs) 
+{
+	std::vector<HeapEntry*> otherHeap = rhs.heap;
+	for (size_t i = 0; i < otherHeap.size(); i++)
+	{
+		this->heap.push_back(otherHeap[i]);
+	}
+}
+
+IndexedHeap& IndexedHeap::operator=(const IndexedHeap& rhs) 
+{
+	for (size_t i = 0; i < heap.size(); i++)
+	{
+		delete heap[i];
+	}
+	heap.clear();
+
+	std::vector<HeapEntry*> otherHeap = rhs.heap;
+	for (size_t i = 0; i < otherHeap.size(); i++)
+	{
+		this->heap.push_back(otherHeap[i]);
+	}
+}
+
 IndexedHeap::~IndexedHeap()
 {
 	for (size_t i = 0; i < heap.size(); i++)
@@ -165,6 +190,9 @@ IndexedHeap::~IndexedHeap()
 	}
 	heap.clear();
 }
+
+/****************************** END BIG 3 *********************************/
+
 
 void IndexedHeapTest::runTest(int n)
 {

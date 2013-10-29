@@ -1,20 +1,10 @@
 #include "HashTableEntry.h"
 using namespace std;
 
-HashTableEntry::HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ, 
-	unsigned version) : heapPointer(hp), size(1)
+HashTableEntry::HashTableEntry(HeapEntry* hp, unsigned version) : heapPointer(hp), size(1)
 {
 	unsigned long long key = hp->getKey();
-
-	occurrences = new Occurrence(key, version); //The head of the linked list (Occurrences have a next pointer)
-
-	doubleLinkNeighbors(prec, occurrences);
-	doubleLinkNeighbors(occurrences, succ);
-}
-
-HashTableEntry::HashTableEntry(HeapEntry* hp, Occurrence* oc) : heapPointer(hp), size(1)
-{
-	occurrences = oc;
+	occurrences = new Occurrence(key, version); // The head of the linked list (Occurrences have a next pointer)
 }
 
 void HashTableEntry::increment()

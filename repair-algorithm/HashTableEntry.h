@@ -11,9 +11,7 @@ class HashTableEntry
 	Occurrence* occurrences;
 	size_t size;
 public:
-	HashTableEntry(HeapEntry* hp, Occurrence* prec, Occurrence* succ, unsigned version);
-
-	HashTableEntry(HeapEntry* hp, Occurrence* oc);
+	HashTableEntry(HeapEntry* hp, unsigned version);
 
 	void increment();
 

@@ -2,7 +2,7 @@
 using namespace std;
 
 int x(0);
-void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version, Occurrence* prec, Occurrence* succ)
+void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 {
 	HeapEntry* hp;
 	if (hashTable.count(key))
@@ -15,7 +15,7 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version, 
 		hp = new HeapEntry(key, 1, &myHeap);
 
 		//Create a hash table entry, and initialize it with its heap entry pointer
-		hashTable[key] = new HashTableEntry(hp, prec, succ, version); //This creates the first occurrence (see the constructor)
+		hashTable[key] = new HashTableEntry(hp, version); //This creates the first occurrence (see the constructor)
 
 		//The order of these calls matters: do this first and the hash table entry won't know the index
 		myHeap.insert(hp);
@@ -125,7 +125,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		// Get the max from the heap
 		HeapEntry hp = myHeap.getMax();
 
-		// The string of 2 chars, used to key into the hashmap
+		// The pair of ints represented as one 64 bit int
 		unsigned long long key = hp.getKey();
 
 		// Get the hash table entry (so all occurrences and so on)
@@ -199,8 +199,6 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 			newRightKey = getNewRightKey(symbol, succ);
 
 			// Just creates the occurrence in the hash table and heap, doesn't link it to its neighbors
-			// Passing along the index from the pair we're replacing
-			// You get holes eventually (which you want) because 3 pairs get replaced by 2 every time
 			if (!onLeftEdge)
 				addOrUpdatePair(newLeftKey, curr->getVersion());
 			
@@ -254,7 +252,6 @@ void RepairAlgorithm::cleanup()
 		it->second = NULL;
 	}
 	this->associations.clear();
-	// this->versionData.clear();
 	resetcurrentWordID();
 	resetFragID();
 }

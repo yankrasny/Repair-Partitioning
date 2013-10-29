@@ -53,10 +53,7 @@ private:
 	// The result of repair, a list of associations in the form (roughly) symbol -> (left, right)
 	std::vector<Association> associations;
 	
-	// std::vector<VersionDataItem> versionData;
-
-	void addOrUpdatePair(unsigned long long key, unsigned version, 
-		Occurrence* prec = NULL, Occurrence* succ = NULL);
+	void addOrUpdatePair(unsigned long long key, unsigned version);
 
 	void extractPairs();
 
@@ -102,11 +99,6 @@ public:
 		this->versionPartitionSizes = new unsigned[versions.size()];
 	}
 
-	// std::vector<VersionDataItem> getVersionData() const
-	// {
-	// 	return versionData;
-	// }
-
 	unsigned* getVersionPartitionSizes();
 
 	unsigned* getOffsetsAllVersions();
@@ -119,8 +111,6 @@ public:
 
 		// Replace pairs with symbols until done (either some early stop condition or one symbol left)
 		doRepair(repairStoppingPoint);
-
-		this->associations.clear();
 
 		for (RepairHashTable::iterator it = hashTable.begin(); it != hashTable.end(); it++) { 
 			delete (*it).second;
@@ -137,7 +127,7 @@ public:
 // After repair, we go through the resulting associations and build trees for each version
 // That iteration doesn't go in order of versionNum
 // Our output must be ordered by version number, so we do the following
-// TODO finish explanation
+// TODO finish this explanation
 class PartitionList
 {
 private:
