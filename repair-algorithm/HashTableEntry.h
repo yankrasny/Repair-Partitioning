@@ -1,7 +1,7 @@
 #ifndef HASH_TABLE_ENTRY_H
 #define HASH_TABLE_ENTRY_H
 
-#include "../random-heap/HeapEntry.h"
+#include "../indexed-heap/HeapEntry.h"
 #include "Occurrence.h"
 #include <iostream>
 

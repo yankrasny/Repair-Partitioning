@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#ifndef RANDOM_HEAP_H
-#define RANDOM_HEAP_H
+#ifndef INDEXED_HEAP_H
+#define INDEXED_HEAP_H
 
 #include <algorithm>
 #include <cmath>
