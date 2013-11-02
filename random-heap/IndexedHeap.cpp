@@ -180,6 +180,7 @@ IndexedHeap& IndexedHeap::operator=(const IndexedHeap& rhs)
 	{
 		this->heap.push_back(otherHeap[i]);
 	}
+	return *this;
 }
 
 IndexedHeap::~IndexedHeap()
@@ -210,8 +211,9 @@ void IndexedHeapTest::runTest(int n)
 
 	IndexedHeap rHeap(vec);
 
-	rHeap.extractAtIndex(3);
-	rHeap.extractAtIndex(2);
+	for (int i = 0; i < n / 2; i++) {
+		rHeap.extractAtIndex(3);
+	}
 
 	HeapEntry max;
 	while (!rHeap.empty())

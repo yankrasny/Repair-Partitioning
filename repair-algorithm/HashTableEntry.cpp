@@ -1,7 +1,7 @@
 #include "HashTableEntry.h"
 using namespace std;
 
-HashTableEntry::HashTableEntry(HeapEntry* hp, unsigned version) : heapPointer(hp), size(1)
+HashTableEntry::HashTableEntry(HeapEntry* hp, unsigned version) : heapEntryPointer(hp), size(1)
 {
 	unsigned long long key = hp->getKey();
 	occurrences = new Occurrence(key, version); // The head of the linked list (Occurrences have a next pointer)
@@ -10,16 +10,16 @@ HashTableEntry::HashTableEntry(HeapEntry* hp, unsigned version) : heapPointer(hp
 void HashTableEntry::increment()
 {
 	size++;
-	heapPointer->increment();
+	heapEntryPointer->increment();
 }
 void HashTableEntry::decrement()
 {
 	size--;
-	heapPointer->decrement();
+	heapEntryPointer->decrement();
 }
 void HashTableEntry::removeOccurrence(Occurrence* target)
 {
-	if (!target || !heapPointer)
+	if (!target || !heapEntryPointer)
 		return;
 
 	Occurrence* next = target->getNext();
@@ -67,16 +67,17 @@ size_t HashTableEntry::getSize() const
 {
 	return size;
 }
-HeapEntry* HashTableEntry::getHeapPointer() const
+HeapEntry* HashTableEntry::getHeapEntryPointer() const
 {
-	return heapPointer;
+	return heapEntryPointer;
 }
 
 HashTableEntry::~HashTableEntry() {
-	// heapPointer, what happens when this object is done?
+	// heapEntryPointer, what happens when this object is done?
 	// Who owns the occurrences?
-	if (heapPointer != NULL) {
-		delete heapPointer;
+	if (heapEntryPointer != NULL) {
+		delete heapEntryPointer;
+		heapEntryPointer = NULL;
 	}
 
 	// We do this during repair, they should all be gone by now

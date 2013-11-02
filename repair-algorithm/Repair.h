@@ -90,8 +90,6 @@ public:
 		
 		associations = std::vector<Association>();
 		
-		// versionData = std::vector<VersionDataItem>();
-
 	 	unsigned maxArraySize = versions.size() * MAX_NUM_FRAGMENTS_PER_VERSION;
 
 		this->offsets = new unsigned[maxArraySize];

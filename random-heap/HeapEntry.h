@@ -5,7 +5,7 @@
 
 #include <algorithm>
 #include <vector>
-// #include <memory>
+#include <memory>
 #include "IndexedHeap.h"
 
 
@@ -15,8 +15,8 @@ private:
 	int index; //the object must know where it is, so that some other reference can find it in O(1) inside the heap
 	size_t priority;
 	unsigned long long key;
-	// std::shared_ptr<IndexedHeap> myHeap;
-	IndexedHeap* myHeap;
+	std::shared_ptr<IndexedHeap> myHeap;
+	// IndexedHeap* myHeap;
 public:
 	HeapEntry(unsigned long long key, size_t priority, int index, IndexedHeap* myHeap)
 		: key(key), priority(priority), index(index), myHeap(myHeap) {}
@@ -36,6 +36,9 @@ public:
 	{
 		key = rhs.key;
 		priority = rhs.priority;
+		// The following line doesn't work, but we don't need it
+		// Never copy a heap entry to a different heap
+		// myHeap.reset(rhs.myHeap.get());
 		return *this;
 	}
 	
@@ -58,7 +61,7 @@ public:
 		priority = 0;
 		index = -1;
 		key = 0;
-		myHeap = NULL;
+		// myHeap deleter is called
 	}
 
 	int getIndex();

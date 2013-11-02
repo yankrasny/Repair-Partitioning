@@ -265,14 +265,14 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
  
 	if (test == "heap")
 	{
-		IndexedHeapTest test = IndexedHeapTest(1000);
+		IndexedHeapTest test = IndexedHeapTest(10000000);
 		exit(0);
 	}
 
 	if (test == "repair")
 	{
 		Profiler::getInstance().start("all");
-		string inputFilepath = "./Input/alice/";
+		string inputFilepath = "./Input/ints/";
 
 		/*
 		Initial tests show that minFragSize should be proportional to document size

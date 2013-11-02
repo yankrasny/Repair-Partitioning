@@ -4,6 +4,8 @@ using namespace std;
 int x(0);
 void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 {
+	x++;
+	// cerr << x << endl;
 	HeapEntry* hp;
 	if (hashTable.count(key))
 	{
@@ -72,7 +74,7 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 	unsigned long long key = oc->getPair();
 	if (hashTable.count(key))
 	{
-		HeapEntry* hp = hashTable[key]->getHeapPointer();
+		HeapEntry* hp = hashTable[key]->getHeapEntryPointer();
 		// Handles relinking the nodes around this one in the linked list
 		hashTable[key]->removeOccurrence(oc);
 		if (hashTable[key]->getSize() < 1)
