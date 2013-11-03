@@ -24,7 +24,7 @@ public:
 		heap = std::vector<HeapEntry*>();
 	}
 
-	IndexedHeap(const std::vector<HeapEntry*>& origVec);
+	IndexedHeap(const std::vector<unsigned long long>& origVec);
 
 	bool empty() const;
 
@@ -34,7 +34,7 @@ public:
 
 	HeapEntry extractMax();
 
-	int insert(HeapEntry* item);
+	HeapEntry* insert(unsigned long long key);
 
 	int heapifyUp(int pos);
 

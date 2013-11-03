@@ -1,7 +1,7 @@
 #include "IndexedHeap.h"
 #include "HeapEntry.h"
 
-IndexedHeap::IndexedHeap(const std::vector<HeapEntry*>& origVec)
+IndexedHeap::IndexedHeap(const std::vector<unsigned long long>& origVec)
 {
 	for (size_t i = 0; i < origVec.size(); i++)
 	{
@@ -34,12 +34,13 @@ HeapEntry IndexedHeap::extractMax()
 	return extractAtIndex(0);
 }
 
-int IndexedHeap::insert(HeapEntry* item)
+HeapEntry* IndexedHeap::insert(unsigned long long key)
 {
-	heap.push_back(item);
+	HeapEntry* entry = new HeapEntry(key, 1, this);
+	heap.push_back(entry);
 	int index = heapifyUp(heap.size() - 1);
 	heap[index]->setIndex(index);
-	return index;
+	return entry;
 }
 
 int IndexedHeap::heapifyUp(int pos)
@@ -191,7 +192,6 @@ IndexedHeap::~IndexedHeap()
 	}
 	heap.clear();
 }
-
 /****************************** END BIG 3 *********************************/
 
 
@@ -202,14 +202,8 @@ void IndexedHeapTest::runTest(int n)
 	{
 		keys.push_back((i << 32) | (i+1));
 	}
-	std::vector<HeapEntry*> vec = std::vector<HeapEntry*>();
-	for (int i = 0; i < n; i++)
-	{
-		HeapEntry* hp = new HeapEntry(keys[i], i, NULL);
-		vec.push_back(hp);
-	}
 
-	IndexedHeap rHeap(vec);
+	IndexedHeap rHeap(keys);
 
 	for (int i = 0; i < n / 2; i++) {
 		rHeap.extractAtIndex(3);

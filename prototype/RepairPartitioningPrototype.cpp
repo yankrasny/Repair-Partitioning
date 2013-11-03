@@ -265,7 +265,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
  
 	if (test == "heap")
 	{
-		IndexedHeapTest test = IndexedHeapTest(10000000);
+		IndexedHeapTest test = IndexedHeapTest(100000);
 		exit(0);
 	}
 

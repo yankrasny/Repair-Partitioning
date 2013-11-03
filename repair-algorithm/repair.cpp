@@ -1,26 +1,22 @@
 #include "Repair.h"
 using namespace std;
 
-int x(0);
+// int x(0);
 void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 {
-	x++;
+	// x++;
 	// cerr << x << endl;
-	HeapEntry* hp;
 	if (hashTable.count(key))
 	{
 		hashTable[key]->addOccurrence(new Occurrence(key, version));
 	}
-	else //First time we've seen this pair
+	else // First time we've seen this pair
 	{
-		//Create a heap entry, and initialize the count to 1
-		hp = new HeapEntry(key, 1, &myHeap);
+		// Create a heap entry with this key
+		HeapEntry* hp = myHeap.insert(key);
 
-		//Create a hash table entry, and initialize it with its heap entry pointer
-		hashTable[key] = new HashTableEntry(hp, version); //This creates the first occurrence (see the constructor)
-
-		//The order of these calls matters: do this first and the hash table entry won't know the index
-		myHeap.insert(hp);
+		// Create a hash table entry, and initialize it with its heap entry pointer
+		hashTable[key] = new HashTableEntry(hp, version); // This creates the first occurrence (see the constructor)
 	}
 }
 
