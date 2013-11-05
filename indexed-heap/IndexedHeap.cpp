@@ -133,18 +133,20 @@ void IndexedHeap::deleteAtIndex(int pos)
 {
 	if (pos >= 0 && pos < heap.size())
 	{
-		//This messes up the index field
+		// Copy back into the position of target
 		*heap[pos] = *heap.back();
 
-		//So reset it
-		// heap[pos]->setIndex(pos);
+		// Fix the index field for the just copied element
+		heap[pos]->setIndex(pos);
 		
-		//Remove the last element
+		// Remove the target, which is now at the last position
+		// Destruct the object, then pop back
 		delete heap.back();
 		heap.pop_back();
 
-		//Heapify from the position we just messed with
-		// heapifyDown(pos);
+		// Heapify from the position we just messed with
+		// use heapifyDown because back() always has a lower priority than the element we are removing
+		heapifyDown(pos);
 	}
 }
 
@@ -208,6 +210,9 @@ void IndexedHeapTest::runTest(int n)
 	for (int i = 0; i < n / 2; i++) {
 		rHeap.extractAtIndex(3);
 	}
+
+	rHeap.insert(1284762);
+	rHeap.extractAtIndex(7);
 
 	HeapEntry max;
 	while (!rHeap.empty())

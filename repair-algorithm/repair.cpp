@@ -1,19 +1,28 @@
 #include "Repair.h"
 using namespace std;
 
-// int x(0);
+int x(0);
 void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 {
-	// x++;
-	// cerr << x << endl;
+	x++;
+	cerr << x << endl;
 	if (hashTable.count(key))
 	{
 		hashTable[key]->addOccurrence(new Occurrence(key, version));
 	}
 	else // First time we've seen this pair
 	{
+		int sizeBefore = myHeap.getSize();
+
 		// Create a heap entry with this key
 		HeapEntry* hp = myHeap.insert(key);
+
+		int sizeAfter = myHeap.getSize();
+
+		// Assertion
+		if (sizeAfter != sizeBefore + 1) {
+			throw 7;
+		}		
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
 		hashTable[key] = new HashTableEntry(hp, version); // This creates the first occurrence (see the constructor)
@@ -57,7 +66,12 @@ void RepairAlgorithm::removeFromHeap(HeapEntry* hp)
 {
 	if (hp && !myHeap.empty())
 	{
+		int sizeBefore = myHeap.getSize();
 		myHeap.deleteAtIndex(hp->getIndex());
+		int sizeAfter = myHeap.getSize();
+		if (sizeAfter != sizeBefore - 1) {
+			throw 8;
+		}
 	}
 }
 
@@ -76,7 +90,7 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 		if (hashTable[key]->getSize() < 1)
 		{
 			removeFromHeap(hp);
-			// delete hashTable[key];
+			delete hashTable[key];
 			hashTable.erase(key);
 		}
 	}

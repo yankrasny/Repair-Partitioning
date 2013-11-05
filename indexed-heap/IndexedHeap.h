@@ -24,6 +24,10 @@ public:
 		heap = std::vector<HeapEntry*>();
 	}
 
+	int getSize() {
+		return heap.size();
+	}
+
 	IndexedHeap(const std::vector<unsigned long long>& origVec);
 
 	bool empty() const;

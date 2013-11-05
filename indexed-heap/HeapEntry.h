@@ -26,31 +26,39 @@ public:
 		}
 
 	/************* BIG 3 *************/
-	// Copy Constructor, nothing is initialized
-	HeapEntry(const HeapEntry& rhs)
-	{
-		index = rhs.index;
-		priority = rhs.priority;
-		key = rhs.key;
-		myHeap = rhs.myHeap;
-	}
+	// This is weird, we're not really managing owned objects here, not the usually kind of big 3
+	// I'm not sure we need it
+	// What happens when we use std::swap?
 
-	// Copy Assignment Operator, data is all initialized
+	// Copy Constructor, nothing is initialized
+	// HeapEntry(const HeapEntry& rhs)
+	// {
+	// 	index = rhs.index;
+	// 	priority = rhs.priority;
+	// 	key = rhs.key;
+	// 	myHeap = rhs.myHeap;
+
+	// }
+
+	// Assignment Operator, data is all initialized
 	// Do we have anything that needs to be cleaned up before copying values from rhs?
-	HeapEntry& operator=(const HeapEntry& rhs)
-	{
-		key = rhs.key;
-		priority = rhs.priority;
-		// myHeap.reset(rhs.myHeap.get());
-		return *this;
-	}
+	// HeapEntry& operator=(const HeapEntry& rhs)
+	// {
+	// 	if (this != &rhs) {
+	// 		key = rhs.key;
+	// 		priority = rhs.priority;
+	// 	}
+	// 	return *this;
+	// }
 	
 	// Destructor: do we have anything to release?
 	// What happens to myHeap, which is shared among many heap entries?
-	~HeapEntry()
-	{
-		// myHeap.reset();
-	}
+	// Do we define this explicitly as empty or do we not define it?
+
+	// ~HeapEntry()
+	// {
+	// 	// myHeap.reset();
+	// }
 	/************* End BIG 3 *************/
 
 	HeapEntry() : key(0), priority(0), index(-1), myHeap(NULL) {}

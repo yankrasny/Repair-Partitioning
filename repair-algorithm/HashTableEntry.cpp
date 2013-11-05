@@ -27,7 +27,8 @@ void HashTableEntry::removeOccurrence(Occurrence* target)
 
 	doubleLinkOccurrences(prev, next);
 
-	decrement();
+	this->decrement();
+
 	if (size < 1)
 	{
 		if (occurrences == target)
@@ -57,7 +58,7 @@ void HashTableEntry::addOccurrence(Occurrence* oc)
 	occurrences->setPrev(oc);
 
 	occurrences = oc;
-	increment();
+	this->increment();
 }
 Occurrence* HashTableEntry::getHeadOccurrence() const
 {
