@@ -22,7 +22,7 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 		// Assertion
 		if (sizeAfter != sizeBefore + 1) {
 			throw 7;
-		}		
+		}
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
 		hashTable[key] = new HashTableEntry(hp, version); // This creates the first occurrence (see the constructor)
@@ -67,9 +67,16 @@ void RepairAlgorithm::removeFromHeap(HeapEntry* hp)
 	if (hp && !myHeap.empty())
 	{
 		int sizeBefore = myHeap.getSize();
-		myHeap.deleteAtIndex(hp->getIndex());
+		int idx = hp->getIndex();
+		if (idx > myHeap.getSize() - 1 || idx < 0) {
+			cerr << "idx: " << idx << endl;
+			throw 10;
+		}
+		myHeap.deleteAtIndex(idx);
 		int sizeAfter = myHeap.getSize();
 		if (sizeAfter != sizeBefore - 1) {
+			cerr << "Size before: " << sizeBefore << endl;
+			cerr << "Size after: " << sizeAfter << endl;
 			throw 8;
 		}
 	}
@@ -89,6 +96,10 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 		hashTable[key]->removeOccurrence(oc);
 		if (hashTable[key]->getSize() < 1)
 		{
+			// Assert that there are no more occurrences left
+			if (hashTable[key]->getHeadOccurrence() != NULL) {
+				throw 9;
+			}
 			removeFromHeap(hp);
 			delete hashTable[key];
 			hashTable.erase(key);

@@ -12,7 +12,6 @@ IndexedHeap::IndexedHeap(const std::vector<unsigned long long>& origVec)
 bool IndexedHeap::empty() const
 {
 	return heap.size() <= 0;
-	//return heap.empty();
 }
 
 HeapEntry& IndexedHeap::getAtIndex(int pos) const
@@ -41,6 +40,38 @@ HeapEntry* IndexedHeap::insert(unsigned long long key)
 	int index = heapifyUp(heap.size() - 1);
 	heap[index]->setIndex(index);
 	return entry;
+}
+
+void IndexedHeap::deleteAtIndex(int pos)
+{
+	if (pos >= 0 && pos < heap.size())
+	{
+		// Copy heap.back() into the position of target, thus overwriting it
+		*heap[pos] = *heap.back();
+
+		// Fix the index field for the just copied element
+		heap[pos]->setIndex(pos);
+		
+		// We've removed the target by overwriting it with heap.back()
+		// Now get rid of the extra copy of heap.back()
+		// Release the mem, then pop back to get rid of the pointer
+		delete heap.back();
+		heap.pop_back();
+
+		// Heapify from the position we just messed with
+		// use heapifyDown because back() always has a lower priority than the element we are removing
+		heapifyDown(pos);
+	}
+}
+
+HeapEntry IndexedHeap::extractAtIndex(int pos)
+{
+	if (pos >= 0 && pos < heap.size())
+	{
+		HeapEntry item = *heap[pos];
+		deleteAtIndex(pos);
+		return item;
+	}
 }
 
 int IndexedHeap::heapifyUp(int pos)
@@ -129,37 +160,6 @@ void IndexedHeap::heapifyDown(int pos)
 	}
 }
 
-void IndexedHeap::deleteAtIndex(int pos)
-{
-	if (pos >= 0 && pos < heap.size())
-	{
-		// Copy back into the position of target
-		*heap[pos] = *heap.back();
-
-		// Fix the index field for the just copied element
-		heap[pos]->setIndex(pos);
-		
-		// Remove the target, which is now at the last position
-		// Destruct the object, then pop back
-		delete heap.back();
-		heap.pop_back();
-
-		// Heapify from the position we just messed with
-		// use heapifyDown because back() always has a lower priority than the element we are removing
-		heapifyDown(pos);
-	}
-}
-
-HeapEntry IndexedHeap::extractAtIndex(int pos)
-{
-	if (pos >= 0 && pos < heap.size())
-	{
-		HeapEntry item = *heap[pos];
-		deleteAtIndex(pos);
-		return item;
-	}
-}
-
 /****************************** BIG 3 *********************************/
 IndexedHeap::IndexedHeap(const IndexedHeap& rhs) 
 {
@@ -197,22 +197,25 @@ IndexedHeap::~IndexedHeap()
 /****************************** END BIG 3 *********************************/
 
 
-void IndexedHeapTest::runTest(int n)
+void IndexedHeapTest::runTest(unsigned long long n)
 {
 	std::vector<unsigned long long> keys = std::vector<unsigned long long>();
-	for (int i = 0; i < n; i++)
+	for (unsigned long long i = 0; i < n; i++)
 	{
 		keys.push_back((i << 32) | (i+1));
 	}
 
 	IndexedHeap rHeap(keys);
+	keys.clear();
 
-	for (int i = 0; i < n / 2; i++) {
+	for (unsigned long long i = 0; i < n / 2; i++) {
 		rHeap.extractAtIndex(3);
 	}
 
 	rHeap.insert(1284762);
-	rHeap.extractAtIndex(7);
+	rHeap.insert(12864588);
+	rHeap.insert(12864589);
+	rHeap.insert(12864587);
 
 	HeapEntry max;
 	while (!rHeap.empty())
@@ -221,7 +224,7 @@ void IndexedHeapTest::runTest(int n)
 	}
 }
 
-IndexedHeapTest::IndexedHeapTest(int numElements)
+IndexedHeapTest::IndexedHeapTest(unsigned long long numElements)
 {
 	runTest(numElements);
 }

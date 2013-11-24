@@ -265,7 +265,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
  
 	if (test == "heap")
 	{
-		IndexedHeapTest test = IndexedHeapTest(100000);
+		IndexedHeapTest test = IndexedHeapTest(1000000);
 		exit(0);
 	}
 
@@ -353,7 +353,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 				continue;
 			wordIDs = stringToWordIDs(text, IDsToWords, uniqueWordIDs);
 
-			if (true)
+			if (false)
 			{
 				cerr << "Version " << i << endl;
 				for (unsigned j = 0; j < wordIDs.size(); j++)

@@ -26,8 +26,6 @@ public:
 	size_t getSize() const;
 
 	HeapEntry* getHeapEntryPointer() const;
-
-	~HashTableEntry();
 };
 
 #endif

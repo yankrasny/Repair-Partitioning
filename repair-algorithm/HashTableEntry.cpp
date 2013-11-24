@@ -4,7 +4,7 @@ using namespace std;
 HashTableEntry::HashTableEntry(HeapEntry* hp, unsigned version) : heapEntryPointer(hp), size(1)
 {
 	unsigned long long key = hp->getKey();
-	occurrences = new Occurrence(key, version); // The head of the linked list (Occurrences have a next pointer)
+	occurrences = new Occurrence(key, version); // The head of the linked list
 }
 
 void HashTableEntry::increment()
@@ -71,21 +71,4 @@ size_t HashTableEntry::getSize() const
 HeapEntry* HashTableEntry::getHeapEntryPointer() const
 {
 	return heapEntryPointer;
-}
-
-HashTableEntry::~HashTableEntry() {
-	// heapEntryPointer, what happens when this object is done?
-	// Who owns the occurrences?
-	if (heapEntryPointer != NULL) {
-		delete heapEntryPointer;
-		heapEntryPointer = NULL;
-	}
-
-	// We do this during repair, they should all be gone by now
-	// Occurrence* next(NULL);
-	// while (occurrences != NULL) {
-	// 	next = occurrences->getNext();
-	// 	delete occurrences;
-	// 	occurrences = next;
-	// }
 }

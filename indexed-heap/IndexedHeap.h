@@ -40,13 +40,13 @@ public:
 
 	HeapEntry* insert(unsigned long long key);
 
-	int heapifyUp(int pos);
-
-	void heapifyDown(int pos);
-
 	void deleteAtIndex(int pos);
 
 	HeapEntry extractAtIndex(int pos);
+
+	int heapifyUp(int pos);
+
+	void heapifyDown(int pos);
 
 	void cleanup();
 
@@ -60,9 +60,9 @@ public:
 class IndexedHeapTest
 {
 private:
-	void runTest(int n);
+	void runTest(unsigned long long n);
 public:
-	IndexedHeapTest(int numElements);
+	IndexedHeapTest(unsigned long long numElements);
 };
 
 #endif

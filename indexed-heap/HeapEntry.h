@@ -5,7 +5,7 @@
 
 #include <algorithm>
 #include <vector>
-#include <memory>
+// #include <memory>
 #include "IndexedHeap.h"
 
 
@@ -19,15 +19,10 @@ private:
 	IndexedHeap* myHeap;
 public:
 	HeapEntry(unsigned long long key, size_t priority, IndexedHeap* myHeap)
-		: key(key), priority(priority), index(-1), myHeap(myHeap)
-		{
-			// We can't just do myHeap = rhs.myHeap, it's a shared_ptr
-			// this->myHeap.reset(myHeap);
-		}
+		: key(key), priority(priority), index(-1), myHeap(myHeap) {}
 
 	/************* BIG 3 *************/
-	// This is weird, we're not really managing owned objects here, not the usually kind of big 3
-	// I'm not sure we need it
+	// This is weird, we're not really managing any memory here, so do we need big three at all?
 	// What happens when we use std::swap?
 
 	// Copy Constructor, nothing is initialized
