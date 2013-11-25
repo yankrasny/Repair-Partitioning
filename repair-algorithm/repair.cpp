@@ -5,7 +5,7 @@ int x(0);
 void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 {
 	x++;
-	cerr << x << endl;
+	// cerr << x << endl;
 	if (hashTable.count(key))
 	{
 		hashTable[key]->addOccurrence(new Occurrence(key, version));
@@ -62,13 +62,14 @@ void RepairAlgorithm::extractPairs()
 	}
 }
 
-void RepairAlgorithm::removeFromHeap(HeapEntry* hp)
+void RepairAlgorithm::removeFromHeap(HeapEntry* entry)
 {
-	if (hp && !myHeap.empty())
+	if (entry && !myHeap.empty())
 	{
 		int sizeBefore = myHeap.getSize();
-		int idx = hp->getIndex();
+		int idx = entry->getIndex();
 		if (idx > myHeap.getSize() - 1 || idx < 0) {
+			cerr << "heap size: " << myHeap.getSize() << endl;
 			cerr << "idx: " << idx << endl;
 			throw 10;
 		}
@@ -91,8 +92,7 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 	unsigned long long key = oc->getPair();
 	if (hashTable.count(key))
 	{
-		HeapEntry* hp = hashTable[key]->getHeapEntryPointer();
-		// Handles relinking the nodes around this one in the linked list
+		HeapEntry* entry = hashTable[key]->getHeapEntryPointer();
 		hashTable[key]->removeOccurrence(oc);
 		if (hashTable[key]->getSize() < 1)
 		{
@@ -100,7 +100,7 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 			if (hashTable[key]->getHeadOccurrence() != NULL) {
 				throw 9;
 			}
-			removeFromHeap(hp);
+			removeFromHeap(entry);
 			delete hashTable[key];
 			hashTable.erase(key);
 		}
@@ -311,15 +311,13 @@ RepairTreeNode* RepairAlgorithm::buildTree(int loc, unsigned versionNum)
 
 int RepairAlgorithm::getNextRootLoc(int loc)
 {
-	multiset<unsigned> whichVersions = associations[loc].getVersions();
-	while (whichVersions.size() <= 0)
+	while (associations[loc].getVersions().size() <= 0)
 	{
 		--loc;
 		if (loc < 0)
 		{
 			return -1;
 		}
-		whichVersions = associations[loc].getVersions();
 	}
 	return loc;
 }

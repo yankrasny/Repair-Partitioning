@@ -46,6 +46,13 @@ void IndexedHeap::deleteAtIndex(int pos)
 {
 	if (pos >= 0 && pos < heap.size())
 	{
+		if (pos == heap.size() - 1)
+		{
+			delete heap.back();
+			heap.pop_back();
+			return;
+		}
+
 		// Copy heap.back() into the position of target, thus overwriting it
 		*heap[pos] = *heap.back();
 
@@ -89,16 +96,16 @@ int IndexedHeap::heapifyUp(int pos)
 		int parent = (float) floor( ((float)pos-1) / 2.0 );
 
 		// the current element is greater than its parent, swap it up and continue with the parent's position
-		if ( heap[pos]->getPriority() > heap[parent]->getPriority() )
+		if (heap[pos]->getPriority() > heap[parent]->getPriority())
 		{
-			//Keeping the indexes correct while swapping
-			heap[pos]->setIndex(parent);
-			heap[parent]->setIndex(pos);
+			// swap
+			std::swap(heap[pos], heap[parent]);
 
-			//Swap
-			std::swap( heap[pos], heap[parent] );
+			// keeping the indexes correct after swapping
+			heap[pos]->setIndex(pos);
+			heap[parent]->setIndex(parent);
 			
-			//Next position we're looking at is the parent
+			// next position we're looking at is the parent
 			pos = parent;
 			continue;
 		}
@@ -122,14 +129,15 @@ void IndexedHeap::heapifyDown(int pos)
 		}
 		if (heap[pos]->getPriority() < heap[leftChildIndex]->getPriority())
 		{
-			// keep indexes updated
-			heap[pos]->setIndex(leftChildIndex);
-			heap[leftChildIndex]->setIndex(pos);
-
-			// swap
+			// they are out of order, swap
 			std::swap(heap[pos], heap[leftChildIndex]);
+
+			// keep indexes updated
+			heap[pos]->setIndex(pos);
+			heap[leftChildIndex]->setIndex(leftChildIndex);
 			
-			// the current element is smaller than its left child, swap and check that position
+			// the current element was smaller than its left child
+			// now that we've swapped them, we move down
 			pos = leftChildIndex;
 			continue;
 		}
@@ -143,19 +151,20 @@ void IndexedHeap::heapifyDown(int pos)
 
 		if (heap[pos]->getPriority() < heap[rightChildIndex]->getPriority())
 		{
-			// keep indexes updated
-			heap[pos]->setIndex(rightChildIndex);
-			heap[rightChildIndex]->setIndex(pos);
-			
-			// swap
+			// they are out of order, swap
 			std::swap(heap[pos], heap[rightChildIndex]);
+
+			// keep indexes updated
+			heap[pos]->setIndex(pos);
+			heap[rightChildIndex]->setIndex(rightChildIndex);
 			
-			// the current element is smaller than its right child, swap and check that position
+			// the current element was smaller than its right child
+			// now that we've swapped them, we move down
 			pos = rightChildIndex;
 			continue;
 		}
 
-		// if we got here, then none of those ifs ran, so there is nothing left to do
+		// if we got here, then none of those ifs ran, meaning everything is in order so there is nothing left to do
 		done = true;
 	}
 }
@@ -220,7 +229,7 @@ void IndexedHeapTest::runTest(unsigned long long n)
 	HeapEntry max;
 	while (!rHeap.empty())
 	{
-		max = rHeap.extractMax();
+		max = rHeap.extractAtIndex(rHeap.getSize()-1);
 	}
 }
 
