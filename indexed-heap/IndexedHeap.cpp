@@ -1,6 +1,6 @@
 #include "IndexedHeap.h"
 #include "HeapEntry.h"
-
+#include <iostream>
 IndexedHeap::IndexedHeap(const std::vector<unsigned long long>& origVec)
 {
 	for (size_t i = 0; i < origVec.size(); i++)
@@ -44,6 +44,7 @@ HeapEntry* IndexedHeap::insert(unsigned long long key)
 
 void IndexedHeap::deleteAtIndex(int pos)
 {
+	bool valid = this->checkValid();
 	if (pos >= 0 && pos < heap.size())
 	{
 		if (pos == heap.size() - 1)
@@ -204,6 +205,34 @@ IndexedHeap::~IndexedHeap()
 	heap.clear();
 }
 /****************************** END BIG 3 *********************************/
+
+bool IndexedHeap::checkValid()
+{
+	int currIdx;
+	size_t currPriority;
+	size_t prevPriority;
+	for (size_t i = 0; i > heap.size(); i++)
+	{
+		currIdx = heap[i]->getIndex();
+		std::cerr << "i: " << i << std::endl;
+		std::cerr << "heap[i]->index: " << currIdx << std::endl;
+		if (currIdx != i) {
+			throw 11;
+		}
+
+		currPriority = heap[i]->getPriority();
+		if (i == 0)
+		{
+			prevPriority = currPriority;
+		}
+		std::cerr << "currPriority: " << currPriority << std::endl;
+		std::cerr << "prevPriority: " << prevPriority << std::endl;		
+		if (currPriority > prevPriority) {
+			throw 12;
+		}
+		prevPriority = currPriority;
+	}
+}
 
 
 void IndexedHeapTest::runTest(unsigned long long n)

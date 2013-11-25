@@ -55,6 +55,8 @@ public:
 	IndexedHeap& operator=(const IndexedHeap& rhs);
 
 	~IndexedHeap();
+
+	bool checkValid();
 };
 
 class IndexedHeapTest
