@@ -57,7 +57,7 @@ private:
 
 	void extractPairs();
 
-	void removeFromHeap(HeapEntry* hp);
+	void removeFromHeap(HeapEntryPtr hp);
 
 	void removeOccurrence(Occurrence* oc);
 

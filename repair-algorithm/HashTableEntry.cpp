@@ -1,25 +1,27 @@
 #include "HashTableEntry.h"
 using namespace std;
 
-HashTableEntry::HashTableEntry(HeapEntry* hp, unsigned version) : heapEntryPointer(hp), size(1)
+HashTableEntry::HashTableEntry(HeapEntryPtr entry, unsigned version) : heapEntryPointer(entry), size(1)
 {
-	unsigned long long key = hp->getKey();
+	unsigned long long key = entry.getPtr()->getKey();
 	occurrences = new Occurrence(key, version); // The head of the linked list
 }
 
 void HashTableEntry::increment()
 {
 	size++;
-	heapEntryPointer->increment();
+	heapEntryPointer.getPtr()->increment();
 }
+
 void HashTableEntry::decrement()
 {
 	size--;
-	heapEntryPointer->decrement();
+	heapEntryPointer.getPtr()->decrement();
 }
+
 void HashTableEntry::removeOccurrence(Occurrence* target)
 {
-	if (!target || !heapEntryPointer)
+	if (!target || !heapEntryPointer.getPtr())
 		return;
 
 	Occurrence* next = target->getNext();
@@ -48,6 +50,7 @@ void HashTableEntry::removeOccurrence(Occurrence* target)
 	delete target;
 	target = NULL;
 }
+
 void HashTableEntry::addOccurrence(Occurrence* oc)
 {
 	if (!oc || !occurrences)
@@ -60,15 +63,18 @@ void HashTableEntry::addOccurrence(Occurrence* oc)
 	occurrences = oc;
 	this->increment();
 }
+
 Occurrence* HashTableEntry::getHeadOccurrence() const
 {
 	return occurrences;
 }
+
 size_t HashTableEntry::getSize() const
 {
 	return size;
 }
-HeapEntry* HashTableEntry::getHeapEntryPointer() const
+
+HeapEntryPtr HashTableEntry::getHeapEntryPointer() const
 {
 	return heapEntryPointer;
 }

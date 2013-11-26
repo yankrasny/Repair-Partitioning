@@ -15,7 +15,7 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 		int sizeBefore = myHeap.getSize();
 
 		// Create a heap entry with this key
-		HeapEntry* hp = myHeap.insert(key);
+		HeapEntryPtr entry = myHeap.insert(key);
 
 		int sizeAfter = myHeap.getSize();
 
@@ -25,7 +25,7 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 		}
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
-		hashTable[key] = new HashTableEntry(hp, version); // This creates the first occurrence (see the constructor)
+		hashTable[key] = new HashTableEntry(entry, version); // This creates the first occurrence (see the constructor)
 	}
 }
 
@@ -62,12 +62,12 @@ void RepairAlgorithm::extractPairs()
 	}
 }
 
-void RepairAlgorithm::removeFromHeap(HeapEntry* entry)
+void RepairAlgorithm::removeFromHeap(HeapEntryPtr entry)
 {
-	if (entry && !myHeap.empty())
+	if (entry.getPtr() && !myHeap.empty())
 	{
 		int sizeBefore = myHeap.getSize();
-		int idx = entry->getIndex();
+		int idx = entry.getPtr()->getIndex();
 		if (idx > myHeap.getSize() - 1 || idx < 0) {
 			cerr << "heap size: " << myHeap.getSize() << endl;
 			cerr << "idx: " << idx << endl;
@@ -92,7 +92,7 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 	unsigned long long key = oc->getPair();
 	if (hashTable.count(key))
 	{
-		HeapEntry* entry = hashTable[key]->getHeapEntryPointer();
+		HeapEntryPtr entry = hashTable[key]->getHeapEntryPointer();
 		hashTable[key]->removeOccurrence(oc);
 		if (hashTable[key]->getSize() < 1)
 		{
@@ -146,10 +146,10 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		unsigned symbolToTheRight;
 		
 		// Get the max from the heap
-		HeapEntry hp = myHeap.getMax();
+		HeapEntryPtr hp = myHeap.getMax();
 
 		// The pair of ints represented as one 64 bit int
-		unsigned long long key = hp.getKey();
+		unsigned long long key = hp.getPtr()->getKey();
 
 		// Get the hash table entry (so all occurrences and so on)
 		HashTableEntry* max = hashTable[key];

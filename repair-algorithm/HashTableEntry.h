@@ -7,11 +7,11 @@
 
 class HashTableEntry
 {
-	HeapEntry* heapEntryPointer;
+	HeapEntryPtr heapEntryPointer;
 	Occurrence* occurrences;
 	size_t size;
 public:
-	HashTableEntry(HeapEntry* hp, unsigned version);
+	HashTableEntry(HeapEntryPtr hp, unsigned version);
 
 	void increment();
 
@@ -25,7 +25,7 @@ public:
 
 	size_t getSize() const;
 
-	HeapEntry* getHeapEntryPointer() const;
+	HeapEntryPtr getHeapEntryPointer() const;
 };
 
 #endif

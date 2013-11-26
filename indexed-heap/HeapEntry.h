@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <iostream>
 // #include <memory>
 #include "IndexedHeap.h"
 
@@ -18,8 +19,8 @@ private:
 	// std::shared_ptr<IndexedHeap> myHeap; // reference to the heap, shared among all heap entries
 	IndexedHeap* myHeap;
 public:
-	HeapEntry(unsigned long long key, size_t priority, IndexedHeap* myHeap)
-		: key(key), priority(priority), index(-1), myHeap(myHeap) {}
+	HeapEntry(unsigned long long key, size_t priority, IndexedHeap* myHeap, int index)
+		: key(key), priority(priority), index(index), myHeap(myHeap) {}
 
 	/************* BIG 3 *************/
 	// This is weird, we're not really managing any memory here, so do we need big three at all?
@@ -73,6 +74,58 @@ public:
 	int getIndex();
 
 	void setIndex(int index);
+};
+
+class HeapEntryPtr
+{
+private:
+	HeapEntry* realPointer;
+public:
+	HeapEntryPtr()
+	{
+		std::cerr << "Constructing Default HeapEntryPtr = NULL " << std::endl;
+		std::cerr << std::endl;
+		realPointer = NULL;
+	}
+
+	HeapEntryPtr(HeapEntry* hp)
+	{
+		std::cerr << "Constructing HeapEntryPtr with index = " << hp->getIndex() << std::endl;
+		std::cerr << std::endl;
+		realPointer = hp;
+	}
+
+	HeapEntryPtr& operator=(const HeapEntryPtr& rhs)
+	{
+		std::cerr << "operator= for HeapEntryPtr " << std::endl;
+		std::cerr << "this->index = " << this->realPointer->getIndex() << std::endl;
+		std::cerr << "rhs->index = " << rhs.realPointer->getIndex() << std::endl;
+		std::cerr << std::endl;
+		if (this != &rhs)
+		{
+			this->realPointer = rhs.realPointer;
+			delete rhs.realPointer;
+		}
+		return *this;
+	}
+
+	HeapEntry* getPtr() const
+	{
+		return realPointer;
+	}
+
+	void kill()
+	{
+		std::cerr << "Killing HeapEntryPtr with index = " << realPointer->getIndex() << std::endl;
+		std::cerr << std::endl;
+		delete realPointer;
+	}
+	
+	~HeapEntryPtr()
+	{
+		std::cerr << "Destructor for HeapEntryPtr with index = " << realPointer->getIndex() << std::endl;
+		std::cerr << std::endl;
+	}
 };
 
 #endif
