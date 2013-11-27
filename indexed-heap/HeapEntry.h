@@ -76,6 +76,7 @@ public:
 	void setIndex(int index);
 };
 
+// Wrap the pointer to HeapEntry to better understand the memory corruption
 class HeapEntryPtr
 {
 private:
@@ -109,11 +110,13 @@ public:
 		return *this;
 	}
 
+	// Give access to the pointer to minimize code changes
 	HeapEntry* getPtr() const
 	{
 		return realPointer;
 	}
 
+	// Explicitly release the memory
 	void kill()
 	{
 		std::cerr << "Killing HeapEntryPtr with index = " << realPointer->getIndex() << std::endl;
@@ -121,6 +124,7 @@ public:
 		delete realPointer;
 	}
 	
+	// Take note of when this happens, perhaps we go out of scope and don't notice
 	~HeapEntryPtr()
 	{
 		std::cerr << "Destructor for HeapEntryPtr with index = " << realPointer->getIndex() << std::endl;
