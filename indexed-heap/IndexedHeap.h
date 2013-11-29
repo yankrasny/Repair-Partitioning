@@ -53,11 +53,12 @@ public:
 
 	void cleanup();
 
-	IndexedHeap(const IndexedHeap& rhs);
+	// Big 3
+	// IndexedHeap(const IndexedHeap& rhs);
 
-	IndexedHeap& operator=(const IndexedHeap& rhs);
+	// IndexedHeap& operator=(const IndexedHeap& rhs);
 
-	~IndexedHeap();
+	// ~IndexedHeap();
 
 	bool checkValid();
 };

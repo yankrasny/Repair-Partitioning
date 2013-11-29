@@ -92,7 +92,7 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 	unsigned long long key = oc->getPair();
 	if (hashTable.count(key))
 	{
-		HeapEntryPtr entry = hashTable[key]->getHeapEntryPointer();
+		// HeapEntryPtr entry = hashTable[key]->getHeapEntryPointer();
 		hashTable[key]->removeOccurrence(oc);
 		if (hashTable[key]->getSize() < 1)
 		{
@@ -100,8 +100,8 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 			if (hashTable[key]->getHeadOccurrence() != NULL) {
 				throw 9;
 			}
-			removeFromHeap(entry);
-			delete hashTable[key];
+			// removeFromHeap(entry);
+			delete hashTable[key]; // calls ~HeapEntryPtr() so we don't need removeFromHeap(entry)
 			hashTable.erase(key);
 		}
 	}
@@ -153,6 +153,9 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 
 		// Get the hash table entry (so all occurrences and so on)
 		HashTableEntry* max = hashTable[key];
+		if (!max) {
+			throw 13;
+		}
 		size_t numOccurrences = max->getSize();
 
 		// TODO think about this number

@@ -65,8 +65,8 @@ void IndexedHeap::deleteAtIndex(int pos)
 	{
 		if (pos == heap.size() - 1)
 		{
-			HeapEntryPtr last = heap.back();
-			last.kill();
+			// HeapEntryPtr last = heap.back();
+			// last.kill();
 			heap.pop_back();
 			return;
 		}
@@ -80,8 +80,8 @@ void IndexedHeap::deleteAtIndex(int pos)
 		// We've removed the target by overwriting it with heap.back()
 		// Now get rid of the extra copy of heap.back()
 		// Release the mem, then pop back to get rid of the pointer
-		HeapEntryPtr last = heap.back();
-		last.kill();
+		// HeapEntryPtr last = heap.back();
+		// last.kill();
 		heap.pop_back();
 
 		// Heapify from the position we just messed with
@@ -194,39 +194,39 @@ void IndexedHeap::heapifyDown(int pos)
 }
 
 /****************************** BIG 3 *********************************/
-IndexedHeap::IndexedHeap(const IndexedHeap& rhs) 
-{
-	std::vector<HeapEntryPtr> otherHeap = rhs.heap;
-	for (size_t i = 0; i < otherHeap.size(); i++)
-	{
-		this->heap.push_back(otherHeap[i]);
-	}
-}
+// IndexedHeap::IndexedHeap(const IndexedHeap& rhs) 
+// {
+// 	std::vector<HeapEntryPtr> otherHeap = rhs.heap;
+// 	for (size_t i = 0; i < otherHeap.size(); i++)
+// 	{
+// 		this->heap.push_back(otherHeap[i]);
+// 	}
+// }
 
-IndexedHeap& IndexedHeap::operator=(const IndexedHeap& rhs) 
-{
-	for (size_t i = 0; i < heap.size(); i++)
-	{
-		heap[i].kill();
-	}
-	heap.clear();
+// IndexedHeap& IndexedHeap::operator=(const IndexedHeap& rhs) 
+// {
+// 	// for (size_t i = 0; i < heap.size(); i++)
+// 	// {
+// 	// 	heap[i].kill();
+// 	// }
+// 	heap.clear();
 
-	std::vector<HeapEntryPtr> otherHeap = rhs.heap;
-	for (size_t i = 0; i < otherHeap.size(); i++)
-	{
-		this->heap.push_back(otherHeap[i]);
-	}
-	return *this;
-}
+// 	std::vector<HeapEntryPtr> otherHeap = rhs.heap;
+// 	for (size_t i = 0; i < otherHeap.size(); i++)
+// 	{
+// 		this->heap.push_back(otherHeap[i]);
+// 	}
+// 	return *this;
+// }
 
-IndexedHeap::~IndexedHeap()
-{
-	for (size_t i = 0; i < heap.size(); i++)
-	{
-		heap[i].kill();
-	}
-	heap.clear();
-}
+// IndexedHeap::~IndexedHeap()
+// {
+// 	// for (size_t i = 0; i < heap.size(); i++)
+// 	// {
+// 	// 	heap[i].kill();
+// 	// }
+// 	heap.clear();
+// }
 /****************************** END BIG 3 *********************************/
 
 bool IndexedHeap::checkValid()
