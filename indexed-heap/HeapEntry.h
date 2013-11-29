@@ -100,12 +100,11 @@ public:
 
 	HeapEntryPtr (const HeapEntryPtr& rhs)
 	{
+		this->realPointer = new HeapEntry(rhs.getPtr()->getKey(), rhs.getPtr()->getPriority(), rhs.getPtr()->getMyHeap(), rhs.getPtr()->getIndex());
 		std::cerr << "Copy Constructor for HeapEntryPtr " << std::endl;
 		std::cerr << "this->index = " << this->realPointer->getIndex() << std::endl;
 		std::cerr << "rhs->index = " << rhs.realPointer->getIndex() << std::endl;
 		std::cerr << std::endl;
-
-		this->realPointer = new HeapEntry(rhs.getPtr()->getKey(), rhs.getPtr()->getPriority(), rhs.getPtr()->getMyHeap(), rhs.getPtr()->getIndex());
 	}
 
 	HeapEntryPtr& operator=(const HeapEntryPtr& rhs)
