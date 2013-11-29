@@ -74,6 +74,8 @@ public:
 	int getIndex();
 
 	void setIndex(int index);
+
+	IndexedHeap* const getMyHeap();
 };
 
 // Wrap the pointer to HeapEntry to better understand the memory corruption
@@ -96,6 +98,16 @@ public:
 		realPointer = hp;
 	}
 
+	HeapEntryPtr (const HeapEntryPtr& rhs)
+	{
+		std::cerr << "Copy Constructor for HeapEntryPtr " << std::endl;
+		std::cerr << "this->index = " << this->realPointer->getIndex() << std::endl;
+		std::cerr << "rhs->index = " << rhs.realPointer->getIndex() << std::endl;
+		std::cerr << std::endl;
+
+		this->realPointer = new HeapEntry(rhs.getPtr()->getKey(), rhs.getPtr()->getPriority(), rhs.getPtr()->getMyHeap(), rhs.getPtr()->getIndex());
+	}
+
 	HeapEntryPtr& operator=(const HeapEntryPtr& rhs)
 	{
 		std::cerr << "operator= for HeapEntryPtr " << std::endl;
@@ -104,8 +116,8 @@ public:
 		std::cerr << std::endl;
 		if (this != &rhs)
 		{
-			this->realPointer = rhs.realPointer;
-			delete rhs.realPointer;
+			delete this->realPointer;
+			this->realPointer = new HeapEntry(rhs.getPtr()->getKey(), rhs.getPtr()->getPriority(), rhs.getPtr()->getMyHeap(), rhs.getPtr()->getIndex());
 		}
 		return *this;
 	}
@@ -129,6 +141,7 @@ public:
 	{
 		std::cerr << "Destructor for HeapEntryPtr with index = " << realPointer->getIndex() << std::endl;
 		std::cerr << std::endl;
+		delete realPointer;
 	}
 };
 

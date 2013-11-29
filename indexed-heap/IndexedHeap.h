@@ -33,6 +33,8 @@ public:
 
 	bool empty() const;
 
+	void printHeap() const;
+
 	HeapEntryPtr getAtIndex(int pos) const;
 
 	HeapEntryPtr getMax() const;

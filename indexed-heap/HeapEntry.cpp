@@ -41,3 +41,8 @@ void HeapEntry::setIndex(int index)
 {
 	this->index = index;
 }
+
+IndexedHeap* const HeapEntry::getMyHeap()
+{
+	return myHeap;
+}

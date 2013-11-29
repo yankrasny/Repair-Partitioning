@@ -14,6 +14,18 @@ bool IndexedHeap::empty() const
 	return heap.size() <= 0;
 }
 
+void IndexedHeap::printHeap() const
+{
+	std::cerr << "Printing Heap... " << std::endl;
+	for (size_t i = 0; i < heap.size(); i++)
+	{
+		std::cerr << "i: " << i << ", ";
+		std::cerr << "Index: " << heap[i].getPtr()->getIndex() << ", ";
+		std::cerr << "Priority: " << heap[i].getPtr()->getPriority() << ", ";
+		std::cerr << "Key: " << heap[i].getPtr()->getKey() << std::endl;
+	}
+}
+
 HeapEntryPtr IndexedHeap::getAtIndex(int pos) const
 {
 	if (pos >= 0 && pos < heap.size())
@@ -41,6 +53,7 @@ HeapEntryPtr IndexedHeap::insert(unsigned long long key)
 	heap.push_back(entry);
 	// int index = heapifyUp(heap.size() - 1);
 	// heap[index].getPtr()->setIndex(index);
+	this->printHeap();
 	return entry;
 }
 
@@ -74,6 +87,11 @@ void IndexedHeap::deleteAtIndex(int pos)
 		// Heapify from the position we just messed with
 		// use heapifyDown because back() always has a lower priority than the element we are removing
 		heapifyDown(pos);
+		this->printHeap();
+	}
+	else
+	{
+		throw 12;
 	}
 }
 
