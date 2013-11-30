@@ -9,6 +9,8 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
+#include <assert.h>
+
 
 class RepairPartitioningPrototype
 {

@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
+#include <assert.h>
+
 
 /*
 Goal: to be able to refer to a specific entry from an outside data structure, in O(1)

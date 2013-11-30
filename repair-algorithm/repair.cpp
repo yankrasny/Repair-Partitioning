@@ -19,10 +19,7 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 
 		int sizeAfter = myHeap.getSize();
 
-		// Assertion
-		if (sizeAfter != sizeBefore + 1) {
-			throw 7;
-		}
+		assert(sizeAfter == sizeBefore + 1);
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
 		hashTable[key] = new HashTableEntry(entry, version); // This creates the first occurrence (see the constructor)
@@ -67,19 +64,16 @@ void RepairAlgorithm::removeFromHeap(HeapEntryPtr entry)
 	if (entry.getPtr() && !myHeap.empty())
 	{
 		int sizeBefore = myHeap.getSize();
+
 		int idx = entry.getPtr()->getIndex();
-		if (idx > myHeap.getSize() - 1 || idx < 0) {
-			cerr << "heap size: " << myHeap.getSize() << endl;
-			cerr << "idx: " << idx << endl;
-			throw 10;
-		}
+
+		assert(idx < myHeap.getSize() && idx >= 0);
+
 		myHeap.deleteAtIndex(idx);
+
 		int sizeAfter = myHeap.getSize();
-		if (sizeAfter != sizeBefore - 1) {
-			cerr << "Size before: " << sizeBefore << endl;
-			cerr << "Size after: " << sizeAfter << endl;
-			throw 8;
-		}
+
+		assert(sizeAfter == sizeBefore - 1);
 	}
 }
 
@@ -97,9 +91,8 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 		if (hashTable[key]->getSize() < 1)
 		{
 			// Assert that there are no more occurrences left
-			if (hashTable[key]->getHeadOccurrence() != NULL) {
-				throw 9;
-			}
+			assert(hashTable[key]->getHeadOccurrence() == NULL);
+
 			// removeFromHeap(entry);
 			delete hashTable[key]; // calls ~HeapEntryPtr() so we don't need removeFromHeap(entry)
 			hashTable.erase(key);
@@ -153,9 +146,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 
 		// Get the hash table entry (so all occurrences and so on)
 		HashTableEntry* max = hashTable[key];
-		if (!max) {
-			throw 13;
-		}
+		assert(max != NULL);
 		size_t numOccurrences = max->getSize();
 
 		// TODO think about this number
@@ -359,9 +350,7 @@ unsigned* RepairAlgorithm::getOffsetsAllVersions()
 			if (versionNum == -1) break;
 
 			// Assert that versionNum is valid
-			if (versionNum > versions.size() - 1) {
-				throw 5;
-			}
+			assert(versionNum < versions.size() && versionNum >= 0);
 	
 			currRoot = buildTree(loc, versionNum);
 

@@ -1,5 +1,12 @@
+#include <assert.h>
+
 #include "prototype/RepairPartitioningPrototype.h"
-// #include <assert.h>
+
+// Disable debugging (use this in production)
+// #define NDEBUG
+
+
+
 using namespace std;
 
 unsigned currentFragID = 0;

@@ -60,39 +60,33 @@ HeapEntryPtr IndexedHeap::insert(unsigned long long key)
 void IndexedHeap::deleteAtIndex(int pos)
 {
 	// TODO check this method
-	// bool valid = this->checkValid();
-	if (pos >= 0 && pos < heap.size())
+	bool valid = this->checkValid();
+	assert(pos >= 0 && pos < heap.size());
+	if (pos == heap.size() - 1)
 	{
-		if (pos == heap.size() - 1)
-		{
-			// HeapEntryPtr last = heap.back();
-			// last.kill();
-			heap.pop_back();
-			return;
-		}
-
-		// Copy heap.back() into the position of target, thus overwriting it
-		heap[pos] = heap.back();
-
-		// Fix the index field for the just copied element
-		heap[pos].getPtr()->setIndex(pos);
-		
-		// We've removed the target by overwriting it with heap.back()
-		// Now get rid of the extra copy of heap.back()
-		// Release the mem, then pop back to get rid of the pointer
 		// HeapEntryPtr last = heap.back();
 		// last.kill();
 		heap.pop_back();
+		return;
+	}
 
-		// Heapify from the position we just messed with
-		// use heapifyDown because back() always has a lower priority than the element we are removing
-		heapifyDown(pos);
-		this->printHeap();
-	}
-	else
-	{
-		throw 12;
-	}
+	// Copy heap.back() into the position of target, thus overwriting it
+	heap[pos] = heap.back();
+
+	// Fix the index field for the just copied element
+	heap[pos].getPtr()->setIndex(pos);
+	
+	// We've removed the target by overwriting it with heap.back()
+	// Now get rid of the extra copy of heap.back()
+	// Release the mem, then pop back to get rid of the pointer
+	// HeapEntryPtr last = heap.back();
+	// last.kill();
+	heap.pop_back();
+
+	// Heapify from the position we just messed with
+	// use heapifyDown because back() always has a lower priority than the element we are removing
+	heapifyDown(pos);
+	this->printHeap();
 }
 
 HeapEntryPtr IndexedHeap::extractAtIndex(int pos)
@@ -239,9 +233,7 @@ bool IndexedHeap::checkValid()
 		currIdx = heap[i].getPtr()->getIndex();
 		std::cerr << "i: " << i << std::endl;
 		std::cerr << "heap[i]->index: " << currIdx << std::endl;
-		if (currIdx != i) {
-			throw 11;
-		}
+		assert(currIdx == i);
 
 		currPriority = heap[i].getPtr()->getPriority();
 		if (i == 0)
@@ -250,9 +242,9 @@ bool IndexedHeap::checkValid()
 		}
 		std::cerr << "currPriority: " << currPriority << std::endl;
 		std::cerr << "prevPriority: " << prevPriority << std::endl;		
-		if (currPriority > prevPriority) {
-			throw 12;
-		}
+
+		assert(currPriority <= prevPriority);
+
 		prevPriority = currPriority;
 	}
 }
