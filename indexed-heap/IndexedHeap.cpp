@@ -20,13 +20,13 @@ void IndexedHeap::printHeap() const
 	for (size_t i = 0; i < heap.size(); i++)
 	{
 		std::cerr << "i: " << i << ", ";
-		std::cerr << "Index: " << heap[i].getPtr()->getIndex() << ", ";
-		std::cerr << "Priority: " << heap[i].getPtr()->getPriority() << ", ";
-		std::cerr << "Key: " << heap[i].getPtr()->getKey() << std::endl;
+		std::cerr << "Index: " << heap[i]->getIndex() << ", ";
+		std::cerr << "Priority: " << heap[i]->getPriority() << ", ";
+		std::cerr << "Key: " << heap[i]->getKey() << std::endl;
 	}
 }
 
-HeapEntryPtr IndexedHeap::getAtIndex(int pos) const
+HeapEntry* IndexedHeap::getAtIndex(int pos) const
 {
 	if (pos >= 0 && pos < heap.size())
 	{
@@ -34,7 +34,7 @@ HeapEntryPtr IndexedHeap::getAtIndex(int pos) const
 	}
 }
 
-HeapEntryPtr IndexedHeap::getMax() const
+HeapEntry* IndexedHeap::getMax() const
 {
 	if (heap.size() > 0)
 	{
@@ -42,58 +42,65 @@ HeapEntryPtr IndexedHeap::getMax() const
 	}
 }
 
-HeapEntryPtr IndexedHeap::extractMax()
+HeapEntry* IndexedHeap::getBack() const
+{
+	return heap.back();
+}
+
+HeapEntry* IndexedHeap::extractMax()
 {
 	return extractAtIndex(0);
 }
 
-HeapEntryPtr IndexedHeap::insert(unsigned long long key)
+HeapEntry* IndexedHeap::insert(unsigned long long key)
 {
-	HeapEntryPtr entry(new HeapEntry(key, 1, this, heap.size()));
+	HeapEntry* entry = new HeapEntry(key, 1, this, heap.size());
 	heap.push_back(entry);
 	// int index = heapifyUp(heap.size() - 1);
-	// heap[index].getPtr()->setIndex(index);
+	// heap[index]->setIndex(index);
 	this->printHeap();
 	return entry;
 }
 
-void IndexedHeap::deleteAtIndex(int pos)
+int IndexedHeap::deleteAtIndex(int pos)
 {
-	// TODO check this method
-	bool valid = this->checkValid();
-	assert(pos >= 0 && pos < heap.size());
+	this->checkValid();
 	if (pos == heap.size() - 1)
 	{
-		// HeapEntryPtr last = heap.back();
+		// HeapEntry* last = heap.back();
 		// last.kill();
+		delete heap.back();
 		heap.pop_back();
-		return;
+		return -1; // TODO deal with this in the calling code
 	}
 
 	// Copy heap.back() into the position of target, thus overwriting it
-	heap[pos] = heap.back();
+	*heap[pos] = *heap.back();
 
 	// Fix the index field for the just copied element
-	heap[pos].getPtr()->setIndex(pos);
+	// heap[pos]->setIndex(pos);
 	
 	// We've removed the target by overwriting it with heap.back()
 	// Now get rid of the extra copy of heap.back()
 	// Release the mem, then pop back to get rid of the pointer
-	// HeapEntryPtr last = heap.back();
+	// HeapEntry* last = heap.back();
 	// last.kill();
+	delete heap.back();
 	heap.pop_back();
 
 	// Heapify from the position we just messed with
 	// use heapifyDown because back() always has a lower priority than the element we are removing
-	heapifyDown(pos);
 	this->printHeap();
+	int newPos = heapifyDown(pos);
+	this->printHeap();
+	return newPos;
 }
 
-HeapEntryPtr IndexedHeap::extractAtIndex(int pos)
+HeapEntry* IndexedHeap::extractAtIndex(int pos)
 {
 	if (pos >= 0 && pos < heap.size())
 	{
-		HeapEntryPtr entry = heap[pos];
+		HeapEntry* entry = heap[pos];
 		deleteAtIndex(pos);
 		return entry;
 	}
@@ -114,14 +121,14 @@ int IndexedHeap::heapifyUp(int pos)
 		int parent = (float) floor( ((float)pos-1) / 2.0 );
 
 		// the current element is greater than its parent, swap it up and continue with the parent's position
-		if (heap[pos].getPtr()->getPriority() > heap[parent].getPtr()->getPriority())
+		if (heap[pos]->getPriority() > heap[parent]->getPriority())
 		{
 			// swap
 			std::swap(heap[pos], heap[parent]);
 
 			// keeping the indexes correct after swapping
-			heap[pos].getPtr()->setIndex(pos);
-			heap[parent].getPtr()->setIndex(parent);
+			heap[pos]->setIndex(pos);
+			heap[parent]->setIndex(parent);
 			
 			// next position we're looking at is the parent
 			pos = parent;
@@ -132,7 +139,7 @@ int IndexedHeap::heapifyUp(int pos)
 	return pos;
 }
 
-void IndexedHeap::heapifyDown(int pos)
+int IndexedHeap::heapifyDown(int pos)
 {
 	bool done = false;
 	while (!done)
@@ -145,14 +152,14 @@ void IndexedHeap::heapifyDown(int pos)
 			done = true;
 			continue;
 		}
-		if (heap[pos].getPtr()->getPriority() < heap[leftChildIndex].getPtr()->getPriority())
+		if (heap[pos]->getPriority() < heap[leftChildIndex]->getPriority())
 		{
 			// they are out of order, swap
 			std::swap(heap[pos], heap[leftChildIndex]);
 
 			// keep indexes updated
-			heap[pos].getPtr()->setIndex(pos);
-			heap[leftChildIndex].getPtr()->setIndex(leftChildIndex);
+			heap[pos]->setIndex(pos);
+			heap[leftChildIndex]->setIndex(leftChildIndex);
 			
 			// the current element was smaller than its left child
 			// now that we've swapped them, we move down
@@ -167,14 +174,14 @@ void IndexedHeap::heapifyDown(int pos)
 			continue;
 		}
 
-		if (heap[pos].getPtr()->getPriority() < heap[rightChildIndex].getPtr()->getPriority())
+		if (heap[pos]->getPriority() < heap[rightChildIndex]->getPriority())
 		{
 			// they are out of order, swap
 			std::swap(heap[pos], heap[rightChildIndex]);
 
 			// keep indexes updated
-			heap[pos].getPtr()->setIndex(pos);
-			heap[rightChildIndex].getPtr()->setIndex(rightChildIndex);
+			heap[pos]->setIndex(pos);
+			heap[rightChildIndex]->setIndex(rightChildIndex);
 			
 			// the current element was smaller than its right child
 			// now that we've swapped them, we move down
@@ -185,12 +192,13 @@ void IndexedHeap::heapifyDown(int pos)
 		// if we got here, then none of those ifs ran, meaning everything is in order so there is nothing left to do
 		done = true;
 	}
+	return pos;
 }
 
 /****************************** BIG 3 *********************************/
 // IndexedHeap::IndexedHeap(const IndexedHeap& rhs) 
 // {
-// 	std::vector<HeapEntryPtr> otherHeap = rhs.heap;
+// 	std::vector<HeapEntry*> otherHeap = rhs.heap;
 // 	for (size_t i = 0; i < otherHeap.size(); i++)
 // 	{
 // 		this->heap.push_back(otherHeap[i]);
@@ -205,7 +213,7 @@ void IndexedHeap::heapifyDown(int pos)
 // 	// }
 // 	heap.clear();
 
-// 	std::vector<HeapEntryPtr> otherHeap = rhs.heap;
+// 	std::vector<HeapEntry*> otherHeap = rhs.heap;
 // 	for (size_t i = 0; i < otherHeap.size(); i++)
 // 	{
 // 		this->heap.push_back(otherHeap[i]);
@@ -223,19 +231,19 @@ void IndexedHeap::heapifyDown(int pos)
 // }
 /****************************** END BIG 3 *********************************/
 
-bool IndexedHeap::checkValid()
+void IndexedHeap::checkValid()
 {
 	int currIdx;
 	size_t currPriority;
 	size_t prevPriority;
 	for (size_t i = 0; i > heap.size(); i++)
 	{
-		currIdx = heap[i].getPtr()->getIndex();
+		currIdx = heap[i]->getIndex();
 		std::cerr << "i: " << i << std::endl;
 		std::cerr << "heap[i]->index: " << currIdx << std::endl;
 		assert(currIdx == i);
 
-		currPriority = heap[i].getPtr()->getPriority();
+		currPriority = heap[i]->getPriority();
 		if (i == 0)
 		{
 			prevPriority = currPriority;
@@ -270,7 +278,7 @@ void IndexedHeapTest::runTest(unsigned long long n)
 	rHeap.insert(12864589);
 	rHeap.insert(12864587);
 
-	HeapEntryPtr max;
+	HeapEntry* max;
 	while (!rHeap.empty())
 	{
 		max = rHeap.extractAtIndex(rHeap.getSize()-1);

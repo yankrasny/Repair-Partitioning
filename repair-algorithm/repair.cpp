@@ -5,7 +5,7 @@ int x(0);
 void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 {
 	x++;
-	// cerr << x << endl;
+	cerr << x << endl;
 	if (hashTable.count(key))
 	{
 		hashTable[key]->addOccurrence(new Occurrence(key, version));
@@ -15,11 +15,16 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 		int sizeBefore = myHeap.getSize();
 
 		// Create a heap entry with this key
-		HeapEntryPtr entry = myHeap.insert(key);
+		HeapEntry* entry = myHeap.insert(key);
 
 		int sizeAfter = myHeap.getSize();
 
 		assert(sizeAfter == sizeBefore + 1);
+
+		// Ok, I need to call myHeap.insert(key)
+		// I also need hashTable[key] to point to that newly created entry
+		// HeapEntryPtr holds a raw pointer, and tries to manage it 
+		// 
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
 		hashTable[key] = new HashTableEntry(entry, version); // This creates the first occurrence (see the constructor)
@@ -90,11 +95,38 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 		hashTable[key]->removeOccurrence(oc);
 		if (hashTable[key]->getSize() < 1)
 		{
-			// Assert that there are no more occurrences left
-			assert(hashTable[key]->getHeadOccurrence() == NULL);
 
-			// removeFromHeap(entry);
-			delete hashTable[key]; // calls ~HeapEntryPtr() so we don't need removeFromHeap(entry)
+			HashTableEntry* targetHTEntry = hashTable[key];
+
+			// Assert that there are no more occurrences left
+			assert(targetHTEntry->getHeadOccurrence() == NULL);
+
+
+			HeapEntry* lastHeapEntry = myHeap.getBack();
+			unsigned long long lastKey = lastHeapEntry->getKey();
+			HashTableEntry* lastHTEntry = hashTable[lastKey];
+
+			HeapEntry* targetHeapEntry = targetHTEntry->getHeapEntryPointer();
+			
+			/*
+				Here's what's happening:
+				When calling deleteAtIndex(idx) we are swapping heap[pos] with heap.back()
+				The hash table entry that pointed to heap.back() is now pointing to garbage
+				So to fix it: heapifyDown(pos) returns the new position of the element that got moved down
+				And deleteAtIndex grabs that and returns it to us here
+				In our case that element was the former heap.back() so the corr. HTEntry is lastHTEntry (see above)
+				So remember, our only problem was lastHTEntry pointing to a now deleted HeapEntry
+				The correct HeapEntry is the one that got heapified down somewhere in the heap. Where? Well heapifyDown returns that index.
+
+				Now, if deleteAtIndex returns -1, that means no swapping occurred, so skip this step in that case
+			*/
+			int newIdxOfLastHeapEntry = myHeap.deleteAtIndex(targetHeapEntry->getIndex());
+			if (newIdxOfLastHeapEntry >= 0) {
+				lastHTEntry->setHeapEntryPointer(myHeap.getAtIndex(newIdxOfLastHeapEntry));	
+			}
+			
+
+			delete hashTable[key];
 			hashTable.erase(key);
 		}
 	}

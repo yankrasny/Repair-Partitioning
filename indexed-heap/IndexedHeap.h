@@ -14,17 +14,17 @@ Goal: to be able to refer to a specific entry from an outside data structure, in
 That's why we store the index in HeapEntry
 */
 
-// class HeapEntry;
-class HeapEntryPtr;
+class HeapEntry;
+// class HeapEntryPtr;
 
 class IndexedHeap
 {
 private:
-	std::vector<HeapEntryPtr> heap;
+	std::vector<HeapEntry*> heap;
 public:
 	IndexedHeap()
 	{
-		heap = std::vector<HeapEntryPtr>();
+		heap = std::vector<HeapEntry*>();
 	}
 
 	int getSize() {
@@ -37,21 +37,23 @@ public:
 
 	void printHeap() const;
 
-	HeapEntryPtr getAtIndex(int pos) const;
+	HeapEntry* getAtIndex(int pos) const;
 
-	HeapEntryPtr getMax() const;
+	HeapEntry* getMax() const;
 
-	HeapEntryPtr extractMax();
+	HeapEntry* getBack() const;
 
-	HeapEntryPtr insert(unsigned long long key);
+	HeapEntry* extractMax();
 
-	void deleteAtIndex(int pos);
+	HeapEntry* insert(unsigned long long key);
 
-	HeapEntryPtr extractAtIndex(int pos);
+	int deleteAtIndex(int pos);
+
+	HeapEntry* extractAtIndex(int pos);
 
 	int heapifyUp(int pos);
 
-	void heapifyDown(int pos);
+	int heapifyDown(int pos);
 
 	void cleanup();
 
@@ -62,7 +64,7 @@ public:
 
 	// ~IndexedHeap();
 
-	bool checkValid();
+	void checkValid();
 };
 
 class IndexedHeapTest

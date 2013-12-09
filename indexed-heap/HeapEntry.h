@@ -23,38 +23,32 @@ public:
 		: key(key), priority(priority), index(index), myHeap(myHeap) {}
 
 	/************* BIG 3 *************/
-	// This is weird, we're not really managing any memory here, so do we need big three at all?
-	// What happens when we use std::swap?
-
 	// Copy Constructor, nothing is initialized
-	// HeapEntry(const HeapEntry& rhs)
-	// {
-	// 	index = rhs.index;
-	// 	priority = rhs.priority;
-	// 	key = rhs.key;
-	// 	myHeap = rhs.myHeap;
-
-	// }
+	HeapEntry(const HeapEntry& rhs)
+	{
+		index = rhs.index;
+		priority = rhs.priority;
+		key = rhs.key;
+		myHeap = rhs.myHeap;
+	}
 
 	// Assignment Operator, data is all initialized
 	// Do we have anything that needs to be cleaned up before copying values from rhs?
-	// HeapEntry& operator=(const HeapEntry& rhs)
-	// {
-	// 	if (this != &rhs) {
-	// 		key = rhs.key;
-	// 		priority = rhs.priority;
-	// 	}
-	// 	return *this;
-	// }
+	HeapEntry& operator=(const HeapEntry& rhs)
+	{
+		if (this != &rhs) {
+			this->key = rhs.key;
+			this->priority = rhs.priority;
+		}
+		return *this;
+	}
 	
 	// Destructor: do we have anything to release?
-	// What happens to myHeap, which is shared among many heap entries?
-	// Do we define this explicitly as empty or do we not define it?
-
-	// ~HeapEntry()
-	// {
-	// 	// myHeap.reset();
-	// }
+	// TODO Careful, does this result in an infinite loop?
+	~HeapEntry()
+	{
+		// myHeap->deleteAtIndex(this->index);
+	}
 	/************* End BIG 3 *************/
 
 	HeapEntry() : key(0), priority(0), index(-1), myHeap(NULL) {}
@@ -100,10 +94,11 @@ public:
 
 	HeapEntryPtr (const HeapEntryPtr& rhs)
 	{
-		this->realPointer = new HeapEntry(rhs.getPtr()->getKey(), rhs.getPtr()->getPriority(), rhs.getPtr()->getMyHeap(), rhs.getPtr()->getIndex());
+		this->realPointer = rhs.realPointer;
+		// this->realPointer = new HeapEntry(rhs.getPtr()->getKey(), rhs.getPtr()->getPriority(), rhs.getPtr()->getMyHeap(), rhs.getPtr()->getIndex());
 		std::cerr << "Copy Constructor for HeapEntryPtr " << std::endl;
-		std::cerr << "this->index = " << this->realPointer->getIndex() << std::endl;
-		std::cerr << "rhs->index = " << rhs.realPointer->getIndex() << std::endl;
+		// std::cerr << "this->index = " << this->realPointer->getIndex() << std::endl;
+		// std::cerr << "rhs->index = " << rhs.realPointer->getIndex() << std::endl;
 		std::cerr << std::endl;
 	}
 
