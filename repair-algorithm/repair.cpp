@@ -1,11 +1,11 @@
 #include "Repair.h"
 using namespace std;
 
-int x(0);
+// int x(0);
 void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 {
-	x++;
-	cerr << x << endl;
+	// x++;
+	// cerr << x << endl;
 	if (hashTable.count(key))
 	{
 		hashTable[key]->addOccurrence(new Occurrence(key, version));
@@ -171,10 +171,10 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		unsigned symbolToTheRight;
 		
 		// Get the max from the heap
-		HeapEntryPtr hp = myHeap.getMax();
+		HeapEntry* hp = myHeap.getMax();
 
 		// The pair of ints represented as one 64 bit int
-		unsigned long long key = hp.getPtr()->getKey();
+		unsigned long long key = hp->getKey();
 
 		// Get the hash table entry (so all occurrences and so on)
 		HashTableEntry* max = hashTable[key];

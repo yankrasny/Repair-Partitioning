@@ -1,6 +1,19 @@
 #include "IndexedHeap.h"
 #include "HeapEntry.h"
 #include <iostream>
+
+std::ostream& operator<<(std::ostream& os, const IndexedHeap& rhs)
+{
+	os << "Printing Heap... " << std::endl;
+	for (size_t i = 0; i < rhs.heap.size(); i++)
+	{
+		os << "i: " << i << ", ";
+		os << "Index: " << rhs.heap[i]->getIndex() << ", ";
+		os << "Priority: " << rhs.heap[i]->getPriority() << ", ";
+		os << "Key: " << rhs.heap[i]->getKey() << std::endl;
+	}		
+}
+
 IndexedHeap::IndexedHeap(const std::vector<unsigned long long>& origVec)
 {
 	for (size_t i = 0; i < origVec.size(); i++)
@@ -58,20 +71,23 @@ HeapEntry* IndexedHeap::insert(unsigned long long key)
 	heap.push_back(entry);
 	// int index = heapifyUp(heap.size() - 1);
 	// heap[index]->setIndex(index);
-	this->printHeap();
+	// this->printHeap();
 	return entry;
 }
 
 int IndexedHeap::deleteAtIndex(int pos)
 {
 	this->checkValid();
+	// std::cerr << "Starting deleteAtIndex(" << pos << ")..." << std::endl;
+	// this->printHeap();
 	if (pos == heap.size() - 1)
 	{
 		// HeapEntry* last = heap.back();
 		// last.kill();
 		delete heap.back();
 		heap.pop_back();
-		return -1; // TODO deal with this in the calling code
+		// this->printHeap();
+		return -1;
 	}
 
 	// Copy heap.back() into the position of target, thus overwriting it
@@ -90,9 +106,10 @@ int IndexedHeap::deleteAtIndex(int pos)
 
 	// Heapify from the position we just messed with
 	// use heapifyDown because back() always has a lower priority than the element we are removing
-	this->printHeap();
 	int newPos = heapifyDown(pos);
-	this->printHeap();
+	assert(newPos >= 0 && newPos < heap.size());
+	// std::cerr << "Ending deleteAtIndex(" << pos << "): newPos is " << newPos << std::endl;
+	// this->printHeap();
 	return newPos;
 }
 

@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cmath>
 #include <vector>
+#include <iostream>
 #include <assert.h>
 
 
@@ -19,6 +20,8 @@ class HeapEntry;
 
 class IndexedHeap
 {
+	friend std::ostream& operator<<(std::ostream& os, const IndexedHeap& rhs);
+
 private:
 	std::vector<HeapEntry*> heap;
 public:
