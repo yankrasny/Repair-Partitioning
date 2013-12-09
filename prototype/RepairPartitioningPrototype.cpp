@@ -202,19 +202,14 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	// repair assigns an incrementing ID
 	if (debug) {
 		for (size_t i = 0; i < associations.size() - 1; i++) {
-			// cerr << associations[i].getSymbol() << ": (" << associations[i].getLeft() << ", " << associations[i].getRight() << ")" << endl;
-			// cerr << "Versions: {" << associations[i].getVersionString() << "}" << endl;
-			if (associations[i].getSymbol() > associations[i+1].getSymbol()) {
-				throw 1;
-			}
+
+			assert(associations[i].getSymbol() <= associations[i+1].getSymbol());
+
 			std::multiset<unsigned> versionsForAssociation = associations[i].getVersions();
 			for (std::multiset<unsigned>::iterator it = versionsForAssociation.begin(); it != versionsForAssociation.end(); it++) {
 				// (*it) should be an unsigned representing the version number. that number can't be higher than numVersions
 				unsigned vNum = *it;
-				// cerr << "vNum: " << vNum << endl;
-				if (vNum > versions.size()) {
-					throw 2;
-				}
+				assert(vNum <= versions.size());
 			}
 		}
 		// cerr << associations.back().getSymbol() << ": (" << associations.back().getLeft() << ", " << associations.back().getRight() << ")" << endl;
@@ -232,9 +227,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 		for (size_t i = 0; i < versions.size(); i++) {
 			for (size_t j = 0; j < versionPartitionSizes[i] - 1; j++) {
 				// cerr << offsetsAllVersions[totalOffsets] << ",";
-				if (offsetsAllVersions[totalOffsets] > offsetsAllVersions[totalOffsets+1]) {
-					throw 3;
-				}
+				assert(offsetsAllVersions[totalOffsets] <= offsetsAllVersions[totalOffsets+1]);
 				totalOffsets++;
 			}
 			// cerr << endl;
@@ -244,13 +237,13 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 
 	repairAlg.cleanup();
 
-	// string outputFilename = "./Output/results.txt";
+	string outputFilename = "./Output/results.txt";
 
-	// this->writeResults(versions, IDsToWords, outputFilename);
+	this->writeResults(versions, IDsToWords, outputFilename);
 
-	// stringstream command;
-	// command << "start " << outputFilename.c_str();
-	// system(command.str().c_str());
+	stringstream command;
+	command << "start " << outputFilename.c_str();
+	system(command.str().c_str());
 
 	double score = 0.0;
 	return score;

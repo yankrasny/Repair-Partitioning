@@ -109,13 +109,11 @@ public:
 		// Add them to all the structures
 		extractPairs();
 
-		// Replace pairs with symbols until done (either some early stop condition or one symbol left)
+		// Replace pairs with symbols until done
+		// (either some early stop condition or one symbol left)
 		doRepair(repairStoppingPoint);
 
-		for (RepairHashTable::iterator it = hashTable.begin(); it != hashTable.end(); it++) { 
-			delete (*it).second;
-		}
-
+		// Return the payload
 		return this->associations;		
 	}
 

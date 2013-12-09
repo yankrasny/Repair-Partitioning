@@ -295,11 +295,16 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 // So still need this, but obviously we didn't clean up enough
 void RepairAlgorithm::cleanup()
 {
-	for (unordered_map<unsigned long long, HashTableEntry*>::iterator it = hashTable.begin(); it != hashTable.end(); it++)
-	{
-		delete it->second;
-		it->second = NULL;
+	for (RepairHashTable::iterator it = hashTable.begin(); it != hashTable.end(); it++) { 
+		delete (*it).second;
 	}
+
+	for (size_t i = 0; i < versions.size(); ++i)
+	{
+		versions[i].clear();
+	}
+	versions.clear();
+
 	this->associations.clear();
 	resetcurrentWordID();
 	resetFragID();
