@@ -85,8 +85,8 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 	// int depth = node->getDepth();
 	// cerr << "Depth: " << depth << endl;
 
-	// Don't ever make more calls than numCallsAllowed
-	if (numLevels > 10) {
+	// Limit the number of recursive calls
+	if (numLevels > this->numLevelsDown) {
 		nodes.insert(node);
 		return nodes;
 	}

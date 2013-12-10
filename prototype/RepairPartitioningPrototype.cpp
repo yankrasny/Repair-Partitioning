@@ -193,7 +193,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	bool debug = false;
 
 	// don't really need numLevelsDown for now
-	unsigned numLevelsDown = 5;
+	unsigned numLevelsDown = 15;
 	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize, fragmentationCoefficient);
 
 	associations = repairAlg.getAssociations();
@@ -283,7 +283,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		float fragmentationCoefficient = 1.0;
 
 		/* A variable used in the primitive way to partition the tree: just go n levels down */
-		unsigned numLevelsDown = 3;
+		unsigned numLevelsDown = 5;
 
 		/* The partitioning alg to use. See Partitioning.h for the enum */
 		unsigned method = 1;
