@@ -249,6 +249,75 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	return score;
 }
 
+// Run each step of the algorithm, checking for sanity in between
+double RepairPartitioningPrototype::runRepairPartitioning(
+	vector<vector<unsigned> > versions, 
+	unsigned*& offsetsAllVersions, 
+	unsigned*& versionPartitionSizes, 
+	vector<Association>& associations,
+	unsigned minFragSize, 
+	float fragmentationCoefficient, 
+	unsigned method)
+{
+	bool debug = false;
+
+	// don't really need numLevelsDown for now
+	unsigned numLevelsDown = 15;
+	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize, fragmentationCoefficient);
+
+	associations = repairAlg.getAssociations();
+
+	// associations should be sorted by the symbol on the left
+	// repair assigns an incrementing ID
+	if (debug) {
+		for (size_t i = 0; i < associations.size() - 1; i++) {
+
+			assert(associations[i].getSymbol() <= associations[i+1].getSymbol());
+
+			std::multiset<unsigned> versionsForAssociation = associations[i].getVersions();
+			for (std::multiset<unsigned>::iterator it = versionsForAssociation.begin(); it != versionsForAssociation.end(); it++) {
+				// (*it) should be an unsigned representing the version number. that number can't be higher than numVersions
+				unsigned vNum = *it;
+				assert(vNum <= versions.size());
+			}
+		}
+		// cerr << associations.back().getSymbol() << ": (" << associations.back().getLeft() << ", " << associations.back().getRight() << ")" << endl;
+		// cerr << "Versions: {" << associations.back().getVersionString() << "}" << endl;
+	}
+
+	this->offsetsAllVersions = offsetsAllVersions = repairAlg.getOffsetsAllVersions();
+
+	this->versionPartitionSizes = versionPartitionSizes = repairAlg.getVersionPartitionSizes();
+
+	// offsets must be sorted for each version
+	// think about it, can a version be partitioned like this? [0, 15, 29, 23, ...] No.
+	unsigned totalOffsets = 0;
+	if (debug) {
+		for (size_t i = 0; i < versions.size(); i++) {
+			for (size_t j = 0; j < versionPartitionSizes[i] - 1; j++) {
+				// cerr << offsetsAllVersions[totalOffsets] << ",";
+				assert(offsetsAllVersions[totalOffsets] <= offsetsAllVersions[totalOffsets+1]);
+				totalOffsets++;
+			}
+			// cerr << endl;
+			totalOffsets++;
+		}
+	}
+
+	repairAlg.cleanup();
+
+	// string outputFilename = "./Output/results.txt";
+
+	// this->writeResults(versions, IDsToWords, outputFilename);
+
+	// stringstream command;
+	// command << "start " << outputFilename.c_str();
+	// system(command.str().c_str());
+
+	double score = 0.0;
+	return score;
+}
+
 int RepairPartitioningPrototype::run(int argc, char* argv[])
 {
 	//createOutputDir();
