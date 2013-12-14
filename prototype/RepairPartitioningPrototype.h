@@ -58,7 +58,8 @@ public:
 	void writeAssociations(const std::vector<Association>& associations, 
 		std::ostream& os = std::cerr);
 
-	void writeResults(const std::vector<std::vector<unsigned> >& versions, 
+	void writeResults(
+		const std::vector<std::vector<unsigned> >& versions, 
 		unsigned* offsetsAllVersions, 
 		unsigned* versionPartitionSizes, 
 		const std::vector<Association>& associations, 
@@ -70,38 +71,21 @@ public:
 	void printIDtoWordMapping(std::unordered_map<unsigned, std::string>& IDsToWords, 
 		std::ostream& os = std::cerr);
 
-	double runRepairPartitioning(
-		std::vector<std::vector<unsigned> > versions,
-		std::unordered_map<unsigned, std::string>& IDsToWords,
-		unsigned*& offsetsAllVersions, 
-		unsigned*& versionPartitionSizes, 
-		std::vector<Association>& associations,
-		unsigned minFragSize, 
-		float fragmentationCoefficient,
-		unsigned repairStoppingPoint,
-		unsigned numLevelsDown, 
-		unsigned method, 
-		bool printFragments = true, 
-		bool printAssociations = false);
-
-
-	// Overloaded for integration with versioned indexing system by Jinru He
+	// Use this version with our main
 	double runRepairPartitioning(
 		std::vector<std::vector<unsigned> > versions,
 		std::unordered_map<unsigned, std::string>& IDsToWords, 
 		unsigned*& offsetsAllVersions, 
 		unsigned*& versionPartitionSizes, 
-		std::vector<Association>& associations,
 		unsigned minFragSize, 
 		float fragmentationCoefficient, 
 		unsigned method);
 
-	// Overloaded for integration with versioned indexing system by Jinru He
+	// Use this version with Jinru's code
 	double runRepairPartitioning(
 		std::vector<std::vector<unsigned> > versions,
 		unsigned*& offsetsAllVersions, 
 		unsigned*& versionPartitionSizes, 
-		std::vector<Association>& associations,
 		unsigned minFragSize, 
 		float fragmentationCoefficient, 
 		unsigned method);

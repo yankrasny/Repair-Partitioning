@@ -120,7 +120,6 @@ unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root
 	vector<unsigned>& bounds, unsigned minFragSize, unsigned versionSize)
 {
 	// cerr << "Version Number: " << root->getVersionNum() << endl;
-
 	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
 	switch (this->method)
 	{

@@ -1,4 +1,5 @@
 #include "RepairPartitioningPrototype.h"
+#include <time.h>
 using namespace std;
 
 // void RepairPartitioningPrototype::setFragmentInfo(
@@ -179,13 +180,12 @@ void RepairPartitioningPrototype::writeAssociations(const vector<Association>& a
 	}
 }
 
-// Run each step of the algorithm, checking for sanity in between
+// Use this version with our main
 double RepairPartitioningPrototype::runRepairPartitioning(
 	vector<vector<unsigned> > versions, 
 	unordered_map<unsigned, string>& IDsToWords, 
 	unsigned*& offsetsAllVersions, 
 	unsigned*& versionPartitionSizes, 
-	vector<Association>& associations,
 	unsigned minFragSize, 
 	float fragmentationCoefficient, 
 	unsigned method)
@@ -196,7 +196,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	unsigned numLevelsDown = 15;
 	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize, fragmentationCoefficient);
 
-	associations = repairAlg.getAssociations();
+	vector<Association> associations = repairAlg.getAssociations();
 
 	// associations should be sorted by the symbol on the left
 	// repair assigns an incrementing ID
@@ -236,25 +236,16 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	}
 
 	repairAlg.cleanup();
-
-	string outputFilename = "./Output/results.txt";
-
-	this->writeResults(versions, IDsToWords, outputFilename);
-
-	stringstream command;
-	command << "start " << outputFilename.c_str();
-	system(command.str().c_str());
 
 	double score = 0.0;
 	return score;
 }
 
-// Run each step of the algorithm, checking for sanity in between
+// Use this version with Jinru's code
 double RepairPartitioningPrototype::runRepairPartitioning(
 	vector<vector<unsigned> > versions, 
 	unsigned*& offsetsAllVersions, 
 	unsigned*& versionPartitionSizes, 
-	vector<Association>& associations,
 	unsigned minFragSize, 
 	float fragmentationCoefficient, 
 	unsigned method)
@@ -262,10 +253,10 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	bool debug = false;
 
 	// don't really need numLevelsDown for now
-	unsigned numLevelsDown = 15;
+	unsigned numLevelsDown = 20;
 	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize, fragmentationCoefficient);
 
-	associations = repairAlg.getAssociations();
+	vector<Association> associations = repairAlg.getAssociations();
 
 	// associations should be sorted by the symbol on the left
 	// repair assigns an incrementing ID
@@ -305,14 +296,6 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	}
 
 	repairAlg.cleanup();
-
-	// string outputFilename = "./Output/results.txt";
-
-	// this->writeResults(versions, IDsToWords, outputFilename);
-
-	// stringstream command;
-	// command << "start " << outputFilename.c_str();
-	// system(command.str().c_str());
 
 	double score = 0.0;
 	return score;
@@ -320,9 +303,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 
 int RepairPartitioningPrototype::run(int argc, char* argv[])
 {
-	//createOutputDir();
-
-	//heap, repair
+	// heap, repair
 	string test = "repair";
  
 	if (test == "heap")
@@ -434,39 +415,39 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		// printIDtoWordMapping(IDsToWords);
 		// system("pause");
 
-		vector<Association> associations;
-
 		unsigned* offsetsAllVersions(NULL);
 		unsigned* versionPartitionSizes(NULL);
 
 		double score = 0.0;
-		/* Both overloads are shown below for testing. Just change the bool to switch. */
-		if (false)
-		{
-			score = runRepairPartitioning(versions, IDsToWords, 
-				offsetsAllVersions, versionPartitionSizes, 
-				associations, minFragSize, 
+		
+		clock_t init, final;
+
+		init=clock();
+
+		try {
+			score = runRepairPartitioning(
+				versions, 
+				IDsToWords,
+				offsetsAllVersions,
+				versionPartitionSizes, 
+				minFragSize,
 				fragmentationCoefficient, 
-				repairStoppingPoint, numLevelsDown,
-				method, true, false);
+				method);
+
+			string outputFilename = "./Output/results.txt";
+
+			this->writeResults(versions, IDsToWords, outputFilename);
+
+			stringstream command;
+			command << "start " << outputFilename.c_str();
+			// system(command.str().c_str());
+		} catch (int e) {
+			cerr << "Error code: " << e << endl;
+			exit(e);
 		}
-		else
-		{
-			try {
-				score = runRepairPartitioning(
-					versions, 
-					IDsToWords,
-					offsetsAllVersions,
-					versionPartitionSizes, 
-					associations,
-					minFragSize,
-					fragmentationCoefficient, 
-					method);
-			} catch (int e) {
-				cerr << "Error code: " << e << endl;
-				exit(e);
-			}
-		}
+
+		final=clock()-init;
+		cout << (double)final / ((double)CLOCKS_PER_SEC) << endl;
 
 		return score;
 	}

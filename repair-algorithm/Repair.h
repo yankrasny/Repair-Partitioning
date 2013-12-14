@@ -27,6 +27,7 @@ typedef std::unordered_map<unsigned long long, HashTableEntry*> RepairHashTable;
 class RepairAlgorithm
 {
 private:
+	/***** Private Vars *****/
 
 	// The entry at i is the number of fragments for version i
 	unsigned* versionPartitionSizes;
@@ -55,11 +56,11 @@ private:
 	// The result of repair, a list of associations in the form (roughly) symbol -> (left, right)
 	std::vector<Association> associations;
 	
+
+	/***** Repair Core Algorithm *****/
 	void addOrUpdatePair(unsigned long long key, unsigned version);
 
 	void extractPairs();
-
-	void removeFromHeap(HeapEntryPtr hp);
 
 	void removeOccurrence(Occurrence* oc);
 

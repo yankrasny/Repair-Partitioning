@@ -12,19 +12,11 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 	}
 	else // First time we've seen this pair
 	{
+		// Create a heap entry with this key, and assert that we have one more entry than we did before
 		int sizeBefore = myHeap.getSize();
-
-		// Create a heap entry with this key
 		HeapEntry* entry = myHeap.insert(key);
-
 		int sizeAfter = myHeap.getSize();
-
 		assert(sizeAfter == sizeBefore + 1);
-
-		// Ok, I need to call myHeap.insert(key)
-		// I also need hashTable[key] to point to that newly created entry
-		// HeapEntryPtr holds a raw pointer, and tries to manage it 
-		// 
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
 		hashTable[key] = new HashTableEntry(entry, version); // This creates the first occurrence (see the constructor)
@@ -61,24 +53,6 @@ void RepairAlgorithm::extractPairs()
 			// Update the previous occurrence variable
 			prevOccurrence = lastAddedOccurrence;
 		}
-	}
-}
-
-void RepairAlgorithm::removeFromHeap(HeapEntryPtr entry)
-{
-	if (entry.getPtr() && !myHeap.empty())
-	{
-		int sizeBefore = myHeap.getSize();
-
-		int idx = entry.getPtr()->getIndex();
-
-		assert(idx < myHeap.getSize() && idx >= 0);
-
-		myHeap.deleteAtIndex(idx);
-
-		int sizeAfter = myHeap.getSize();
-
-		assert(sizeAfter == sizeBefore - 1);
 	}
 }
 
@@ -125,7 +99,6 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 				lastHTEntry->setHeapEntryPointer(myHeap.getAtIndex(newIdxOfLastHeapEntry));	
 			}
 			
-
 			delete hashTable[key];
 			hashTable.erase(key);
 		}
