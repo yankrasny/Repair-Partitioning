@@ -15,7 +15,6 @@
 #include "../indexed-heap/HeapEntry.h"
 #include "../indexed-heap/IndexedHeap.h"
 #include "../partitioning/Partitioning.h"
-#include "../util/Profiler.h"
 #include "../util/FileUtils.h"
 #include "RepairTreeNode.h"
 #include "Util.h"

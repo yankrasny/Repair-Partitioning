@@ -21,7 +21,7 @@ private:
 public:
 	HeapEntry(unsigned long long key, size_t priority, IndexedHeap* myHeap, int index)
 		: key(key), priority(priority), index(index), myHeap(myHeap) {
-			std::cerr << "Constructor for HeapEntry[key = " << key << "]" << std::endl;
+			// std::cerr << "Constructor for HeapEntry[key = " << key << "]" << std::endl;
 		}
 
 	/************* BIG 3 *************/
@@ -49,7 +49,8 @@ public:
 	// TODO Careful, does this result in an infinite loop?
 	~HeapEntry()
 	{
-		std::cerr << "Destructor for HeapEntry[key = " << key << "]" << std::endl;
+		myHeap = NULL;
+		// std::cerr << "Destructor for HeapEntry[key = " << key << "]" << std::endl;
 		// myHeap->deleteAtIndex(this->index);
 	}
 	/************* End BIG 3 *************/

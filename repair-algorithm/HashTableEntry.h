@@ -46,7 +46,9 @@ public:
 	
 	~HashTableEntry()
 	{
-		std::cerr << "Destructor for HashTableEntry[key = " << heapEntryPointer->getKey() << "]" << std::endl;
+		// std::cerr << "Destructor for HashTableEntry[key = " << heapEntryPointer->getKey() << "]" << std::endl;
+		occurrences = NULL;
+		heapEntryPointer = NULL;
 	}
 };
 

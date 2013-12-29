@@ -23,7 +23,7 @@ public:
 
 	~Occurrence()
 	{
-		std::cerr << "Destructor for Occurrence[left = " << left << ", right = " << right << ", version = " << version << "]" << std::endl;
+		// std::cerr << "Destructor for Occurrence[left = " << left << ", right = " << right << ", version = " << version << "]" << std::endl;
 		
 		next = NULL;
 		prev = NULL;
@@ -38,7 +38,7 @@ public:
 	Occurrence(unsigned long long key, unsigned version)
 		: prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), 
 		version(version), next(NULL), prev(NULL) {
-			std::cerr << "Constructor for Occurrence[left = " << left << ", right = " << right << ", version = " << version << "]" << std::endl;
+			// std::cerr << "Constructor for Occurrence[left = " << left << ", right = " << right << ", version = " << version << "]" << std::endl;
 		}
 
 	Occurrence* getNext() { return next; }

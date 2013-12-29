@@ -4,7 +4,7 @@ using namespace std;
 HashTableEntry::HashTableEntry(HeapEntry* entry, unsigned version) : heapEntryPointer(entry), size(1)
 {
 	unsigned long long key = entry->getKey();
-	std::cerr << "Constructor for HashTableEntry[key = " << key << "]" << std::endl;
+	// std::cerr << "Constructor for HashTableEntry[key = " << key << "]" << std::endl;
 	occurrences = new Occurrence(key, version); // The head of the linked list
 }
 

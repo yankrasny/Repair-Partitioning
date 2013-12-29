@@ -295,6 +295,8 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 		}
 	}
 
+	associations.clear();
+
 	repairAlg.cleanup();
 
 	double score = 0.0;
@@ -314,7 +316,6 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 
 	if (test == "repair")
 	{
-		Profiler::getInstance().start("all");
 		string inputFilepath = "./Input/ints/";
 
 		/*
@@ -440,7 +441,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 
 			stringstream command;
 			command << "start " << outputFilename.c_str();
-			// system(command.str().c_str());
+			system(command.str().c_str());
 		} catch (int e) {
 			cerr << "Error code: " << e << endl;
 			exit(e);
