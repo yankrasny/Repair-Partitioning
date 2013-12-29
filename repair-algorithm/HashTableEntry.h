@@ -44,10 +44,10 @@ public:
 
 	// }
 	
-	// ~HashTableEntry()
-	// {
-
-	// }
+	~HashTableEntry()
+	{
+		std::cerr << "Destructor for HashTableEntry[key = " << heapEntryPointer->getKey() << "]" << std::endl;
+	}
 };
 
 #endif

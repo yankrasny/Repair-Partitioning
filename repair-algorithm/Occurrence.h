@@ -21,18 +21,25 @@ private:
 public:
 	Occurrence() : prec(NULL), succ(NULL), next(NULL), prev(NULL) {}
 
-	// ~Occurrence()
-	// {
-	// 	// Delete something with pointers in all directions
-	// 	// Well shit
-	// }
+	~Occurrence()
+	{
+		std::cerr << "Destructor for Occurrence[left = " << left << ", right = " << right << ", version = " << version << "]" << std::endl;
+		
+		next = NULL;
+		prev = NULL;
+
+		prec = NULL;
+		succ = NULL;
+	}
 
 	Occurrence(unsigned long long key)
 		: prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), next(NULL), prev(NULL) {}
 
 	Occurrence(unsigned long long key, unsigned version)
 		: prec(NULL), succ(NULL), left(key >> 32), right((key << 32) >> 32), 
-		version(version), next(NULL), prev(NULL) {}
+		version(version), next(NULL), prev(NULL) {
+			std::cerr << "Constructor for Occurrence[left = " << left << ", right = " << right << ", version = " << version << "]" << std::endl;
+		}
 
 	Occurrence* getNext() { return next; }
 	Occurrence* getPrev() { return prev; }

@@ -4,9 +4,9 @@ using namespace std;
 // int x(0);
 void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 {
-	// x++;
+	// x++; 
 	// cerr << x << endl;
-	if (hashTable.count(key))
+	if (hashTable.count(key) > 0)
 	{
 		hashTable[key]->addOccurrence(new Occurrence(key, version));
 	}
@@ -65,6 +65,8 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 	unsigned long long key = oc->getPair();
 	if (hashTable.count(key))
 	{
+		// TODO remove the occurrence after garbage collecting the entries in the heap and hash table
+
 		// HeapEntryPtr entry = hashTable[key]->getHeapEntryPointer();
 		hashTable[key]->removeOccurrence(oc);
 		if (hashTable[key]->getSize() < 1)
@@ -96,10 +98,11 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 			*/
 			int newIdxOfLastHeapEntry = myHeap.deleteAtIndex(targetHeapEntry->getIndex());
 			if (newIdxOfLastHeapEntry >= 0) {
-				lastHTEntry->setHeapEntryPointer(myHeap.getAtIndex(newIdxOfLastHeapEntry));	
+				lastHTEntry->setHeapEntryPointer(myHeap.getAtIndex(newIdxOfLastHeapEntry));
 			}
 			
 			delete hashTable[key];
+			hashTable[key] = NULL;
 			hashTable.erase(key);
 		}
 	}
@@ -170,6 +173,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		// Will use this as the new symbol (say we're replacing abcd with axd, this is x)
 		symbol = nextWordID();
 
+		// TODO: consider removing this
 		curr = max->getHeadOccurrence();
 
 		// For all occurrences of this entry, do the replacement and modify the corresponding entries
