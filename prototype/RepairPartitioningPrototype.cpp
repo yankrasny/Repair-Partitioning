@@ -328,13 +328,13 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		And it shouldn't be larger than the number of versions (this is trivial, we expect to get repetition 
 		at most numVersions times for inter-version repetitions)
 		*/
-		unsigned repairStoppingPoint = 1; //pairs that occur less than this amount of times will not be replaced
+//		unsigned repairStoppingPoint = 1; //pairs that occur less than this amount of times will not be replaced
 
 		/* To what extent are we willing to fragment? See the partitioning algorithm for how this is used */
 		float fragmentationCoefficient = 1.0;
 
 		/* A variable used in the primitive way to partition the tree: just go n levels down */
-		unsigned numLevelsDown = 5;
+//		unsigned numLevelsDown = 5;
 
 		/* The partitioning alg to use. See Partitioning.h for the enum */
 		unsigned method = 1;
@@ -416,8 +416,11 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		// printIDtoWordMapping(IDsToWords);
 		// system("pause");
 
-		unsigned* offsetsAllVersions(NULL);
-		unsigned* versionPartitionSizes(NULL);
+		unsigned* versionPartitionSizes = new unsigned[versions.size()];
+		unsigned* offsetsAllVersions = new unsigned[versions.size() * MAX_NUM_FRAGMENTS_PER_VERSION];
+
+		this->versionPartitionSizes = versionPartitionSizes;
+		this->offsetsAllVersions = offsetsAllVersions;
 
 		double score = 0.0;
 		
@@ -427,15 +430,27 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 
 		try {
 			score = runRepairPartitioning(
-				versions, 
-				IDsToWords,
-				offsetsAllVersions,
-				versionPartitionSizes, 
-				minFragSize,
-				fragmentationCoefficient, 
-				method);
+			 	versions,
+			 	IDsToWords,
+			 	offsetsAllVersions,
+			 	versionPartitionSizes,
+			 	minFragSize,
+			 	fragmentationCoefficient,
+			 	method);
+
+			score = 0.0;
 
 			string outputFilename = "./Output/results.txt";
+
+			// Set versionPartitionSizes and offsetsAllVersions
+//			size_t x = 0;
+//			unsigned numberOfVersions = versions.size();
+//			for (size_t i = 0; i < numberOfVersions; i++) {
+//				versionPartitionSizes[i] = 5;
+//				for (size_t j = 0; j < 5; j++) {
+//					offsetsAllVersions[x++] = j;
+//				}
+//			}
 
 			this->writeResults(versions, IDsToWords, outputFilename);
 
@@ -452,4 +467,5 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 
 		return score;
 	}
+	return 0;
 }

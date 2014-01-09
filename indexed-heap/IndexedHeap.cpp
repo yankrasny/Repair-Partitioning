@@ -11,7 +11,8 @@ std::ostream& operator<<(std::ostream& os, const IndexedHeap& rhs)
 		os << "Index: " << rhs.heap[i]->getIndex() << ", ";
 		os << "Priority: " << rhs.heap[i]->getPriority() << ", ";
 		os << "Key: " << rhs.heap[i]->getKey() << std::endl;
-	}		
+	}
+	return os;
 }
 
 IndexedHeap::IndexedHeap(const std::vector<unsigned long long>& origVec)
@@ -39,12 +40,13 @@ void IndexedHeap::printHeap() const
 	}
 }
 
-HeapEntry* IndexedHeap::getAtIndex(int pos) const
+HeapEntry* IndexedHeap::getAtIndex(unsigned pos) const
 {
 	if (pos >= 0 && pos < heap.size())
 	{
 		return heap[pos];
 	}
+	return NULL;
 }
 
 HeapEntry* IndexedHeap::getMax() const
@@ -53,6 +55,7 @@ HeapEntry* IndexedHeap::getMax() const
 	{
 		return heap[0];
 	}
+	return NULL;
 }
 
 HeapEntry* IndexedHeap::getBack() const
@@ -121,6 +124,7 @@ HeapEntry* IndexedHeap::extractAtIndex(int pos)
 		deleteAtIndex(pos);
 		return entry;
 	}
+	return NULL;
 }
 
 int IndexedHeap::heapifyUp(int pos)
@@ -295,7 +299,7 @@ void IndexedHeapTest::runTest(unsigned long long n)
 	rHeap.insert(12864589);
 	rHeap.insert(12864587);
 
-	HeapEntry* max;
+	HeapEntry* max(NULL);
 	while (!rHeap.empty())
 	{
 		max = rHeap.extractAtIndex(rHeap.getSize()-1);

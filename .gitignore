@@ -21,8 +21,14 @@ Output/*
 # NetBeans
 nbproject/
 
+# Eclipse
+.cproject
+.project
+.settings/
+
 test.cpp
 
 # Inputs I'd rather not make public
 Input/cover
 Input/large
+/Default

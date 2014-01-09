@@ -40,7 +40,7 @@ public:
 
 	void printHeap() const;
 
-	HeapEntry* getAtIndex(int pos) const;
+	HeapEntry* getAtIndex(unsigned pos) const;
 
 	HeapEntry* getMax() const;
 

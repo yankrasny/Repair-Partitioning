@@ -96,7 +96,7 @@ void RepairAlgorithm::removeOccurrence(Occurrence* oc)
 
 				Now, if deleteAtIndex returns -1, that means no swapping occurred, so skip this step in that case
 			*/
-			int newIdxOfLastHeapEntry = myHeap.deleteAtIndex(targetHeapEntry->getIndex());
+			unsigned newIdxOfLastHeapEntry = myHeap.deleteAtIndex(targetHeapEntry->getIndex());
 			if (newIdxOfLastHeapEntry >= 0) {
 				lastHTEntry->setHeapEntryPointer(myHeap.getAtIndex(newIdxOfLastHeapEntry));
 			}
@@ -143,11 +143,13 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 	while (!myHeap.empty())
 	{
 		unsigned symbol;
-		unsigned symbolToTheLeft;
-		unsigned symbolToTheRight;
+//		unsigned symbolToTheLeft;
+//		unsigned symbolToTheRight;
 		
 		// Get the max from the heap
 		HeapEntry* hp = myHeap.getMax();
+
+		assert(hp != NULL);
 
 		// The pair of ints represented as one 64 bit int
 		unsigned long long key = hp->getKey();

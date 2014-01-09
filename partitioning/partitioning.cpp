@@ -134,7 +134,7 @@ unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root
 	unsigned prevVal(0); // the previous node's index in the file
 	unsigned currVal(0); // the current node's index in the file
 	unsigned diff(0); // the difference between consecutive indexes (a large value signifies a good fragment)
-	unsigned numFrags(0); // the number of fragments (gets incremented in the following loop)
+//	unsigned numFrags(0); // the number of fragments (gets incremented in the following loop)
 	RepairTreeNode* previous(NULL);
 
 	// We know the first fragment is always at the beginning of the file, and we'll skip the first node in the loop below

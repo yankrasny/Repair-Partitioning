@@ -274,6 +274,8 @@ inline int binarySearch(unsigned target, const std::vector<Association>& associa
 	// target is on the right
 	if (target > midVal)
 		return binarySearch(target, associations, mid + 1, rightPos);
+
+	return -1;
 }
 
 
