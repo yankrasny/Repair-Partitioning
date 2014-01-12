@@ -57,15 +57,19 @@ private:
 	
 
 	/***** Repair Core Algorithm *****/
-	void addOrUpdatePair(unsigned long long key, unsigned version);
+	void addOrUpdatePair(unsigned long long key, unsigned version, int idx);
 
 	void extractPairs();
 
 	void removeOccurrence(Occurrence* oc);
 
-	unsigned long long getNewRightKey(unsigned symbol, Occurrence* succ);
+	int scanLeft(unsigned v, unsigned idx);
 
-	unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec);
+	int scanRight(unsigned v, unsigned idx);
+
+	void checkVersionAndIdx(unsigned v, unsigned idx);
+
+	unsigned long long getKeyAtIdx(unsigned v, unsigned idx);
 
 	void doRepair(unsigned repairStoppingPoint);
 
@@ -88,7 +92,7 @@ public:
 		// Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures	
 		myHeap = IndexedHeap();
 		
-		hashTable = std::unordered_map<unsigned long long, HashTableEntry*> ();
+		hashTable = RepairHashTable();
 		
 		associations = std::vector<Association>();
 		

@@ -1,14 +1,11 @@
 #include "Repair.h"
 using namespace std;
 
-// int x(0);
-void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
+void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version, int idx)
 {
-	// x++; 
-	// cerr << x << endl;
 	if (hashTable.count(key) > 0)
 	{
-		hashTable[key]->addOccurrence(new Occurrence(key, version));
+		hashTable[key]->addOccurrence(version, idx);
 	}
 	else // First time we've seen this pair
 	{
@@ -19,108 +16,65 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version)
 		assert(sizeAfter == sizeBefore + 1);
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
-		hashTable[key] = new HashTableEntry(entry, version); // This creates the first occurrence (see the constructor)
+		// This creates the first occurrence (see the constructor)
+		cerr << "Version: " << version << ", idx: " << idx << endl;
+		hashTable[key] = new HashTableEntry(entry, version, idx);
 	}
+}
+
+void RepairAlgorithm::checkVersionAndIdx(unsigned v, unsigned idx)
+{
+	assert(v >= 0 && v < this->versions.size());
+	assert(idx >= 0 && idx < versions[v].size());
+}
+
+int RepairAlgorithm::scanLeft(unsigned v, unsigned idx)
+{
+	checkVersionAndIdx(v, idx);
+	while (idx > 0) {
+		if (versions[v][--idx] != 0) return idx;
+	}
+	return -1;
+}
+
+int RepairAlgorithm::scanRight(unsigned v, unsigned idx)
+{
+	checkVersionAndIdx(v, idx);
+	while (idx < versions[v].size() - 1) {
+		if (versions[v][++idx] != 0) return idx;
+	}
+	return -1;
+}
+
+unsigned long long RepairAlgorithm::getKeyAtIdx(unsigned v, unsigned idx)
+{
+	checkVersionAndIdx(v, idx);
+	if (versions[v][idx] == 0) {
+		return -1;
+	}
+	unsigned rightIdx = scanRight(v, idx);
+	return combineToUInt64(versions[v][idx], versions[v][rightIdx]);
 }
 
 void RepairAlgorithm::extractPairs()
 {
-	vector<unsigned> wordIDs;
 	for (size_t v = 0; v < versions.size(); v++)
 	{
 		unsigned long long currPair;
 
-		wordIDs = versions[v];
-
-		// The previous entry in the HT (used to set preceding and succeeding pointers)
-		Occurrence* prevOccurrence(NULL);
-
 		// Go through the string and get all overlapping pairs, and process them
-		for (size_t i = 0; i < wordIDs.size() - 1; i++)
+		for (size_t i = 0; i < versions[v].size() - 1; i++)
 		{
 			// Squeeze the pair of two unsigned numbers together for storage
-			currPair = combineToUInt64((unsigned long long)wordIDs[i], (unsigned long long)wordIDs[i+1]);
+			currPair = combineToUInt64((unsigned long long)versions[v][i], (unsigned long long)versions[v][i+1]);
+
+			cerr << currPair << endl;
 
 			// Add the pair to our structures
-			addOrUpdatePair(currPair, v);
-
-			// The first occurrence was the last one added because we add to the head
-			Occurrence* lastAddedOccurrence = hashTable[currPair]->getHeadOccurrence();
-
-			// Checks for existence of prev, and links them to each other
-			doubleLinkNeighbors(prevOccurrence, lastAddedOccurrence);
-
-			// Update the previous occurrence variable
-			prevOccurrence = lastAddedOccurrence;
+			addOrUpdatePair(currPair, v, i);
 		}
 	}
 }
-
-void RepairAlgorithm::removeOccurrence(Occurrence* oc)
-{
-	if (!oc)
-	{
-		return;
-	}
-	unsigned long long key = oc->getPair();
-	if (hashTable.count(key))
-	{
-		// TODO remove the occurrence after garbage collecting the entries in the heap and hash table
-
-		// HeapEntryPtr entry = hashTable[key]->getHeapEntryPointer();
-		hashTable[key]->removeOccurrence(oc);
-		if (hashTable[key]->getSize() < 1)
-		{
-
-			HashTableEntry* targetHTEntry = hashTable[key];
-
-			// Assert that there are no more occurrences left
-			assert(targetHTEntry->getHeadOccurrence() == NULL);
-
-
-			HeapEntry* lastHeapEntry = myHeap.getBack();
-			unsigned long long lastKey = lastHeapEntry->getKey();
-			HashTableEntry* lastHTEntry = hashTable[lastKey];
-
-			HeapEntry* targetHeapEntry = targetHTEntry->getHeapEntryPointer();
-			
-			/*
-				Here's what's happening:
-				When calling deleteAtIndex(idx) we are swapping heap[pos] with heap.back()
-				The hash table entry that pointed to heap.back() is now pointing to garbage
-				So to fix it: heapifyDown(pos) returns the new position of the element that got moved down
-				And deleteAtIndex grabs that and returns it to us here
-				In our case that element was the former heap.back() so the corr. HTEntry is lastHTEntry (see above)
-				So remember, our only problem was lastHTEntry pointing to a now deleted HeapEntry
-				The correct HeapEntry is the one that got heapified down somewhere in the heap. Where? Well heapifyDown returns that index.
-
-				Now, if deleteAtIndex returns -1, that means no swapping occurred, so skip this step in that case
-			*/
-			unsigned newIdxOfLastHeapEntry = myHeap.deleteAtIndex(targetHeapEntry->getIndex());
-			if (newIdxOfLastHeapEntry >= 0) {
-				lastHTEntry->setHeapEntryPointer(myHeap.getAtIndex(newIdxOfLastHeapEntry));
-			}
-			
-			delete hashTable[key];
-			hashTable[key] = NULL;
-			hashTable.erase(key);
-		}
-	}
-}
-
-unsigned long long RepairAlgorithm::getNewRightKey(unsigned symbol, Occurrence* succ)
-{
-	if (!succ) return 0;
-	unsigned symbolToTheRight = succ->getRight();
-	return combineToUInt64(symbol, symbolToTheRight);
-}
-
-unsigned long long RepairAlgorithm::getNewLeftKey(unsigned symbol, Occurrence* prec)
-{
-	if (!prec) return 0;
-	unsigned symbolToTheLeft = prec->getLeft();
-	return combineToUInt64(symbolToTheLeft, symbol);
-} 
 
 /*
 	While the heap is not empty, get the max and process it (that is, replace all occurrences and modify all prec and succ pointers)
@@ -140,16 +94,17 @@ unsigned long long RepairAlgorithm::getNewLeftKey(unsigned symbol, Occurrence* p
 */
 void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 {
+	// TODO update the condition since we're not actually deleting them any more
 	while (!myHeap.empty())
 	{
 		unsigned symbol;
-//		unsigned symbolToTheLeft;
-//		unsigned symbolToTheRight;
 		
 		// Get the max from the heap
 		HeapEntry* hp = myHeap.getMax();
 
 		assert(hp != NULL);
+
+		if (hp->isDeleted()) continue;
 
 		// The pair of ints represented as one 64 bit int
 		unsigned long long key = hp->getKey();
@@ -165,116 +120,90 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		if (numOccurrences < repairStoppingPoint)
 			return;
 
-		Occurrence* curr;
-		Occurrence* prec;
-		Occurrence* succ;
-
-		Occurrence* newLeftOcc(NULL);
-		Occurrence* newRightOcc(NULL);
-
 		// Will use this as the new symbol (say we're replacing abcd with axd, this is x)
 		symbol = nextWordID();
 
-		// TODO: consider removing this
-		curr = max->getHeadOccurrence();
+		unsigned totalCount = 0;
 
-		// For all occurrences of this entry, do the replacement and modify the corresponding entries
-		for (size_t i = 0; i < numOccurrences; i++)
+		// For all versions
+		for (size_t v = 0; v < versions.size(); v++)
 		{
-			newLeftOcc = NULL;
-			newRightOcc = NULL;
-			
-			// Get the occurrence and its neighbors
-			curr = max->getHeadOccurrence();
-
-			// If curr is null, we have a problem. This should never happen.
-			if (!curr)
-				break;
-
-			prec = curr->getPrec();
-			succ = curr->getSucc();
-
-			// Store the association and which version it occurs in
-			if (i == 0)
-				associations.push_back(Association(symbol, curr->getLeft(), curr->getRight(), numOccurrences, curr->getVersion()));
-			else
-				associations.back().addVersion(curr->getVersion());
-
-			
-			// Now go through all the edge cases (because of the links we have to make, there are a lot)
-			bool onLeftEdge(false);
-			bool onRightEdge(false);
-			bool nearLeftEdge(false);
-			bool nearRightEdge(false);
-
-			unsigned long long newLeftKey;
-			unsigned long long newRightKey;
-
-			// Use these bools instead of following the pointers repeatedly
-			if (!prec)
-				onLeftEdge = true;
-			else
-				if (!prec->getPrec())
-					nearLeftEdge = true;
-			
-			if (!succ)
-				onRightEdge = true;
-			else
-				if (!succ->getSucc())
-					nearRightEdge = true;
-
-			newLeftKey = getNewLeftKey(symbol, prec);
-			newRightKey = getNewRightKey(symbol, succ);
-
-			// Just creates the occurrence in the hash table and heap, doesn't link it to its neighbors
-			if (!onLeftEdge)
-				addOrUpdatePair(newLeftKey, curr->getVersion());
-			
-			if (!onRightEdge)
-				addOrUpdatePair(newRightKey, curr->getVersion());
-
-			if (!nearLeftEdge && !onLeftEdge)
+			// For all locations of the pair in the current version
+			auto indexes = max->getLocationsAtVersion(v);
+			for (auto it = indexes.begin(); it != indexes.end(); ++it)
 			{
-				// Have 2 neighbors to the left
-				newLeftOcc = hashTable[newLeftKey]->getHeadOccurrence();
-				doubleLinkNeighbors(prec->getPrec(), newLeftOcc);
-			}
-			if (!nearRightEdge && !onRightEdge)
-			{
-				// Have 2 neighbors to the right
-				newRightOcc = hashTable[newRightKey]->getHeadOccurrence();
-				doubleLinkNeighbors(newRightOcc, succ->getSucc());
-			}
-			if (!onRightEdge && !onLeftEdge)
-			{
-				// A neighbor on each side, link them
-				newLeftOcc = hashTable[newLeftKey]->getHeadOccurrence();
-				newRightOcc = hashTable[newRightKey]->getHeadOccurrence();
-				doubleLinkNeighbors(newLeftOcc, newRightOcc);
-			}
+				int idx = *it;
 
-			//cerr << "Removing curr: " << curr->getLeft() << "," << curr->getRight() << endl;
-			removeOccurrence(curr);
-			
-			if (!onRightEdge)
-			{
-				//cerr << "Removing succ: " << succ->getLeft() << "," << succ->getRight() << endl;
-				removeOccurrence(succ);
-			}
-			if (!onLeftEdge)
-			{
-				//cerr << "Removing prec: " << prec->getLeft() << "," << prec->getRight() << endl;
-				removeOccurrence(prec);
+				// EXAMPLE: idx = 3, so currKey = (5,6)
+				// 0 1 2 3 4 5 6 7 8
+				// 1 3 0 5 0 0 6 2 2
+
+				// Find the key to the left of this one and remove that occurrence of it from our structures
+				// 1 3 0 5 0 0 6 2 2
+				// We want leftKey = (3,5)
+				// leftIdx = scanLeft(v, idx) // should be 1
+				// leftKey = getKeyAtIdx(leftIdx)
+				// hashTable[leftKey]->removeOccurrence(v, leftIdx)
+
+				int leftIdx = scanLeft(v, idx);
+				unsigned long long leftKey = getKeyAtIdx(v, leftIdx);
+				hashTable[leftKey]->removeOccurrence(v, leftIdx);
+
+				// Find the key to the right of this one and remove that occurrence of it from our structures
+				// 1 3 0 5 0 0 6 2 2
+				// We want leftKey = (6,2)
+				// rightIdx = scanRight(v, idx) // should be 6
+				// rightKey = getKeyAtIdx(rightIdx)
+				// hashTable[rightKey]->removeOccurrence(v, rightIdx)
+
+				int rightIdx = scanRight(v, idx); // should be 6
+				unsigned long long rightKey = getKeyAtIdx(v, rightIdx);
+				hashTable[rightKey]->removeOccurrence(v, rightIdx);
+
+
+				// Store the association and which version it occurs in
+				if (totalCount == 0)
+					associations.push_back(Association(symbol, versions[v][idx], versions[v][rightIdx], numOccurrences, v));
+				else
+					associations.back().addVersion(v);
+
+
+				// We have the current key, remove this occurrence of it from our structures
+				// 1 3 0 5 0 0 6 2 2 key = (5,6) and idx = 3
+				hashTable[key]->removeOccurrence(v, idx);
+
+
+				// Now the replacement: 7 -> (5,6)
+				// We modify the actual array of word Ids
+				// 1 3 0 7 0 0 0 2 2
+				versions[v][idx] = symbol;
+				versions[v][rightIdx] = 0;
+
+				// Now add the 2 new pairs
+				// (3,7) at idx 1 and (7,2) at idx 3
+				unsigned long long newLeftKey = getKeyAtIdx(v, leftIdx);
+				unsigned long long newRightKey = getKeyAtIdx(v, idx);
+
+				if (newLeftKey != -1)
+				{
+					this->addOrUpdatePair(newLeftKey, v, leftIdx);
+				}
+
+				if (newRightKey != -1)
+				{
+					this->addOrUpdatePair(newRightKey, v, idx);
+				}
+
+				totalCount++;
 			}
 		}
 	}
 }
 
-// New way: realize that this was bullshit to begin with. What about all the nodes in the repair trees, how about clearing those?
-// So still need this, but obviously we didn't clean up enough
+// Release memory from all structures
 void RepairAlgorithm::cleanup()
 {
-	for (RepairHashTable::iterator it = hashTable.begin(); it != hashTable.end(); it++) { 
+	for (auto it = hashTable.begin(); it != hashTable.end(); it++) {
 		delete (*it).second;
 	}
 
