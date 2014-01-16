@@ -17,18 +17,18 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version, 
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
 		// This creates the first occurrence (see the constructor)
-		cerr << "Version: " << version << ", idx: " << idx << endl;
+		// cerr << "Version: " << version << ", idx: " << idx << endl;
 		hashTable[key] = new HashTableEntry(entry, version, idx);
 	}
 }
 
-void RepairAlgorithm::checkVersionAndIdx(unsigned v, unsigned idx)
+void RepairAlgorithm::checkVersionAndIdx(unsigned v, int idx)
 {
 	assert(v >= 0 && v < this->versions.size());
 	assert(idx >= 0 && idx < versions[v].size());
 }
 
-int RepairAlgorithm::scanLeft(unsigned v, unsigned idx)
+int RepairAlgorithm::scanLeft(unsigned v, int idx)
 {
 	checkVersionAndIdx(v, idx);
 	while (idx > 0) {
@@ -37,7 +37,7 @@ int RepairAlgorithm::scanLeft(unsigned v, unsigned idx)
 	return -1;
 }
 
-int RepairAlgorithm::scanRight(unsigned v, unsigned idx)
+int RepairAlgorithm::scanRight(unsigned v, int idx)
 {
 	checkVersionAndIdx(v, idx);
 	while (idx < versions[v].size() - 1) {
@@ -46,13 +46,16 @@ int RepairAlgorithm::scanRight(unsigned v, unsigned idx)
 	return -1;
 }
 
-unsigned long long RepairAlgorithm::getKeyAtIdx(unsigned v, unsigned idx)
+unsigned long long RepairAlgorithm::getKeyAtIdx(unsigned v, int idx)
 {
 	checkVersionAndIdx(v, idx);
 	if (versions[v][idx] == 0) {
-		return -1;
+		return 0;
 	}
 	unsigned rightIdx = scanRight(v, idx);
+	if (rightIdx == -1)
+		return 0;
+
 	return combineToUInt64(versions[v][idx], versions[v][rightIdx]);
 }
 
@@ -68,12 +71,11 @@ void RepairAlgorithm::extractPairs()
 			// Squeeze the pair of two unsigned numbers together for storage
 			currPair = combineToUInt64((unsigned long long)versions[v][i], (unsigned long long)versions[v][i+1]);
 
-			cerr << currPair << endl;
-
 			// Add the pair to our structures
 			addOrUpdatePair(currPair, v, i);
 		}
 	}
+	cerr << "Size: " <<  hashTable.size() << endl;
 }
 
 /*
@@ -94,6 +96,13 @@ void RepairAlgorithm::extractPairs()
 */
 void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 {
+	// for (auto it = hashTable.begin(); it != hashTable.end(); it++)
+	// {
+	// 	unsigned long long k = it->first;
+	// 	HashTableEntry* ht = it->second;
+	// 	cerr << k << ": " << &ht << endl;
+	// }
+	// exit(1);
 	// TODO update the condition since we're not actually deleting them any more
 	while (!myHeap.empty())
 	{
@@ -129,6 +138,9 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		for (size_t v = 0; v < versions.size(); v++)
 		{
 			// For all locations of the pair in the current version
+			if (!max->hasLocationsAtVersion(v)) {
+				continue;
+			}
 			auto indexes = max->getLocationsAtVersion(v);
 			for (auto it = indexes.begin(); it != indexes.end(); ++it)
 			{
@@ -146,8 +158,13 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				// hashTable[leftKey]->removeOccurrence(v, leftIdx)
 
 				int leftIdx = scanLeft(v, idx);
-				unsigned long long leftKey = getKeyAtIdx(v, leftIdx);
-				hashTable[leftKey]->removeOccurrence(v, leftIdx);
+				if (leftIdx != -1) {
+					unsigned long long leftKey = getKeyAtIdx(v, leftIdx);
+					if (leftKey != 0) {
+						assert(hashTable[leftKey] != NULL);
+						hashTable[leftKey]->removeOccurrence(v, leftIdx);
+					}
+				}
 
 				// Find the key to the right of this one and remove that occurrence of it from our structures
 				// 1 3 0 5 0 0 6 2 2
@@ -157,9 +174,22 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				// hashTable[rightKey]->removeOccurrence(v, rightIdx)
 
 				int rightIdx = scanRight(v, idx); // should be 6
-				unsigned long long rightKey = getKeyAtIdx(v, rightIdx);
-				hashTable[rightKey]->removeOccurrence(v, rightIdx);
-
+				if (rightIdx != -1) {
+					unsigned long long rightKey = getKeyAtIdx(v, rightIdx);
+					if (rightKey != 0) {
+						assert(hashTable[rightKey] != NULL);
+						hashTable[rightKey]->removeOccurrence(v, rightIdx);
+					}
+					// if (hashTable[rightKey] == NULL) {
+					// 	cerr << rightIdx << endl;
+					// 	cerr << rightKey << endl;
+					// 	for (unsigned j = 0; j < versions[v].size(); j++)
+					// 	{
+					// 		cerr << versions[v][j] << " ";
+					// 	}
+					// 	cerr << endl;
+					// }
+				}
 
 				// Store the association and which version it occurs in
 				if (totalCount == 0)
@@ -181,17 +211,19 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 
 				// Now add the 2 new pairs
 				// (3,7) at idx 1 and (7,2) at idx 3
-				unsigned long long newLeftKey = getKeyAtIdx(v, leftIdx);
-				unsigned long long newRightKey = getKeyAtIdx(v, idx);
-
-				if (newLeftKey != -1)
-				{
-					this->addOrUpdatePair(newLeftKey, v, leftIdx);
+				if (leftIdx != -1) {
+					unsigned long long newLeftKey = getKeyAtIdx(v, leftIdx);
+					if (newLeftKey != -1)
+					{
+						this->addOrUpdatePair(newLeftKey, v, leftIdx);
+					}
 				}
-
-				if (newRightKey != -1)
-				{
-					this->addOrUpdatePair(newRightKey, v, idx);
+				if (rightIdx != -1) {
+					unsigned long long newRightKey = getKeyAtIdx(v, idx);
+					if (newRightKey != -1)
+					{
+						this->addOrUpdatePair(newRightKey, v, idx);
+					}
 				}
 
 				totalCount++;

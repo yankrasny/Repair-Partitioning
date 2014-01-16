@@ -63,13 +63,13 @@ private:
 
 	void removeOccurrence(Occurrence* oc);
 
-	int scanLeft(unsigned v, unsigned idx);
+	int scanLeft(unsigned v, int idx);
 
-	int scanRight(unsigned v, unsigned idx);
+	int scanRight(unsigned v, int idx);
 
-	void checkVersionAndIdx(unsigned v, unsigned idx);
+	void checkVersionAndIdx(unsigned v, int idx);
 
-	unsigned long long getKeyAtIdx(unsigned v, unsigned idx);
+	unsigned long long getKeyAtIdx(unsigned v, int idx);
 
 	void doRepair(unsigned repairStoppingPoint);
 

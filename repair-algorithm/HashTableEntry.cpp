@@ -11,10 +11,18 @@ void HashTableEntry::decrement()
 	heapEntryPointer->decrement();
 }
 
+bool HashTableEntry::hasLocationsAtVersion(unsigned version)
+{
+	if (locationsInDoc.find(version) != locationsInDoc.end())
+		return locationsInDoc[version].size() > 0;
+	return false;
+}
+
 unordered_set<int> HashTableEntry::getLocationsAtVersion(unsigned version)
 {
-	assert(locationsInDoc.find(version) != locationsInDoc.end());
-	return locationsInDoc[version];
+	if (locationsInDoc.find(version) != locationsInDoc.end())
+		return locationsInDoc[version];
+	return unordered_set<int>();
 }
 
 void HashTableEntry::addOccurrence(unsigned version, int idx)

@@ -60,6 +60,7 @@ public:
 	void setDeleted()
 	{
 		deleted = true;
+		myHeap->incrementDeleted();
 	}
 
 	bool isDeleted() const

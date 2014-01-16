@@ -17,6 +17,7 @@ public:
 	{
 		this->addOccurrence(version, firstIdx);
 	}
+	bool hasLocationsAtVersion(unsigned version);
 
 	std::unordered_set<int> getLocationsAtVersion(unsigned version);
 
