@@ -2,3 +2,6 @@ SOURCES = $(wildcard *.cpp) $(wildcard util/*.cpp) $(wildcard repair-algorithm/*
 
 all:
 	g++ $(SOURCES) -o repair -g -std=c++0x
+
+clean:
+	rm -rvf repair repair.dSYM
