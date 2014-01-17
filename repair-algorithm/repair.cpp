@@ -22,6 +22,52 @@ void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version, 
 	}
 }
 
+void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int idx)
+{
+	if (myHeap.empty()) {
+		return;
+	}
+
+	if (hashTable.count(key) < 1) {
+		cerr << "Key: " << key << " not found in hashTable" << endl;
+		system("pause");
+	}
+
+	// Assertions
+	checkVersionAndIdx(v, idx);
+	assert(hashTable[key] != NULL);
+
+	cerr << hashTable[key] << endl;
+	cerr << hashTable[key]->getSize() << endl;
+	system("pause");
+
+	// Remove this occurrence at this key
+	hashTable[key]->removeOccurrence(v, idx);
+	
+	// If we've removed all the occurrences at this key, remove the heap entry as well
+	if (hashTable[key]->getSize() < 1) {
+		// TODOs
+		// 1) Is idxInHeap always defined in this way?
+		// 2) Will there always be a swap?
+		int idxInHeap = hashTable[key]->getHeapEntryPointer()->getIndex();
+
+		// We can already set our heap entry pointer to null because we'll be deleting by idxInHeap
+		hashTable[key]->setHeapEntryPointer(NULL);
+
+		// To understand this, look at the implementation of myHeap.deleteAtIdx(idxInHeap)
+		// If indexOfEntryThatGotSwapped is -1, that means there was no swap
+		int indexOfEntryThatGotSwapped = myHeap.deleteAtIndex(idxInHeap);
+		if (indexOfEntryThatGotSwapped != -1) {
+			unsigned long long keyOfEntryThatGotSwapped = myHeap.getAtIndex(indexOfEntryThatGotSwapped)->getKey();
+	
+			// When we delete from the heap, we use a swap with the last element
+			// Well, hashTable[keyOfLastElement] was pointing to it, so that's not very nice
+			// Our delete function returns to us the new location of the swapped last element specifically so we can use it here like so
+			hashTable[keyOfEntryThatGotSwapped]->setHeapEntryPointer(myHeap.getAtIndex(indexOfEntryThatGotSwapped));
+		}
+	}
+}
+
 void RepairAlgorithm::checkVersionAndIdx(unsigned v, int idx)
 {
 	assert(v >= 0 && v < this->versions.size());
@@ -113,8 +159,6 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 
 		assert(hp != NULL);
 
-		if (hp->isDeleted()) continue;
-
 		// The pair of ints represented as one 64 bit int
 		unsigned long long key = hp->getKey();
 
@@ -162,7 +206,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 					unsigned long long leftKey = getKeyAtIdx(v, leftIdx);
 					if (leftKey != 0) {
 						assert(hashTable[leftKey] != NULL);
-						hashTable[leftKey]->removeOccurrence(v, leftIdx);
+						removeOccurrence(leftKey, v, leftIdx);
 					}
 				}
 
@@ -178,7 +222,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 					unsigned long long rightKey = getKeyAtIdx(v, rightIdx);
 					if (rightKey != 0) {
 						assert(hashTable[rightKey] != NULL);
-						hashTable[rightKey]->removeOccurrence(v, rightIdx);
+						removeOccurrence(rightKey, v, rightIdx);
 					}
 					// if (hashTable[rightKey] == NULL) {
 					// 	cerr << rightIdx << endl;
@@ -200,7 +244,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 
 				// We have the current key, remove this occurrence of it from our structures
 				// 1 3 0 5 0 0 6 2 2 key = (5,6) and idx = 3
-				hashTable[key]->removeOccurrence(v, idx);
+				removeOccurrence(key, v, idx);
 
 
 				// Now the replacement: 7 -> (5,6)

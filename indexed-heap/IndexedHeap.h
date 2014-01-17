@@ -24,7 +24,7 @@ class IndexedHeap
 
 private:
 	std::vector<HeapEntry*> heap;
-	unsigned numDeleted = 0;
+	// unsigned numDeleted = 0;
 public:
 	IndexedHeap()
 	{
@@ -39,15 +39,15 @@ public:
 
 	bool empty() const;
 
-	unsigned getNumDeleted() const
-	{
-		return numDeleted;
-	}
+	// unsigned getNumDeleted() const
+	// {
+	// 	return numDeleted;
+	// }
 
-	void incrementDeleted()
-	{
-		++numDeleted;
-	}
+	// void incrementDeleted()
+	// {
+	// 	++numDeleted;
+	// }
 
 	void printHeap() const;
 

@@ -17,7 +17,7 @@ private:
 	unsigned long long key; // the identifier
 	// std::shared_ptr<IndexedHeap> myHeap; // reference to the heap, shared among all heap entries
 	IndexedHeap* myHeap;
-	bool deleted = false;
+	// bool deleted = false;
 public:
 	HeapEntry(unsigned long long key, size_t priority, IndexedHeap* myHeap, int index)
 		: key(key), priority(priority), index(index), myHeap(myHeap) {
@@ -57,16 +57,16 @@ public:
 
 	HeapEntry() : key(0), priority(0), index(-1), myHeap(NULL) {}
 
-	void setDeleted()
-	{
-		deleted = true;
-		myHeap->incrementDeleted();
-	}
+	// void setDeleted()
+	// {
+	// 	deleted = true;
+	// 	myHeap->incrementDeleted();
+	// }
 
-	bool isDeleted() const
-	{
-		return deleted;
-	}
+	// bool isDeleted() const
+	// {
+	// 	return deleted;
+	// }
 
 	unsigned long long getKey()
 	{

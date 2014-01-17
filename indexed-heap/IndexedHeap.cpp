@@ -25,8 +25,9 @@ IndexedHeap::IndexedHeap(const std::vector<unsigned long long>& origVec)
 
 bool IndexedHeap::empty() const
 {
-	unsigned numValid = heap.size() - numDeleted;
-	return numValid <= 0;
+	// unsigned numValid = heap.size() - numDeleted;
+	// return numValid <= 0;
+	return heap.size() < 1;
 }
 
 void IndexedHeap::printHeap() const
