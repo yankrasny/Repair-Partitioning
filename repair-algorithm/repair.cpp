@@ -37,8 +37,10 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
 	checkVersionAndIdx(v, idx);
 	assert(hashTable[key] != NULL);
 
-	cerr << hashTable[key] << endl;
-	cerr << hashTable[key]->getSize() << endl;
+	cerr << "removeOccurrence(" << key << ", " << v << ", " << idx << ")" << endl;
+	cerr << "Key: " << hashTable[key] << endl;
+	cerr << "hashTable[key]: " << hashTable[key] << endl;
+	cerr << "hashTable[key]->getSize(): " << hashTable[key]->getSize() << endl;
 	system("pause");
 
 	// Remove this occurrence at this key
@@ -244,7 +246,9 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 
 				// We have the current key, remove this occurrence of it from our structures
 				// 1 3 0 5 0 0 6 2 2 key = (5,6) and idx = 3
-				removeOccurrence(key, v, idx);
+				if (key != 0) {
+					removeOccurrence(key, v, idx);	
+				}
 
 
 				// Now the replacement: 7 -> (5,6)
