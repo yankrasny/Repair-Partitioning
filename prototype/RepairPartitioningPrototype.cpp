@@ -411,6 +411,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 			delete text;
 			text = NULL;
 		}
+		wordIDs.clear();
 		
 		// By this time, IDsToWords should contain the mappings of IDs to words in all versions
 		// printIDtoWordMapping(IDsToWords);
@@ -463,7 +464,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		}
 
 		final=clock()-init;
-		cout << (double)final / ((double)CLOCKS_PER_SEC) << endl;
+		cerr << (double)final / ((double)CLOCKS_PER_SEC) << endl;
 
 		return score;
 	}

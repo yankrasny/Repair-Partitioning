@@ -57,7 +57,7 @@ private:
 	
 
 	/***** Repair Core Algorithm *****/
-	void addOrUpdatePair(unsigned long long key, unsigned version, int idx);
+	void addOccurrence(unsigned long long key, unsigned version, int idx);
 
 	void removeOccurrence(unsigned long long key, unsigned v, int idx);
 

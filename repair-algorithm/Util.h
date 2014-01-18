@@ -4,6 +4,7 @@
 #include "../util/Tokenizer.h"
 #include "RepairTreeNode.h"
 #include <iostream>
+#include <string>
 #include <fstream>
 #include <vector>
 #include <unordered_map>
@@ -61,6 +62,13 @@ inline unsigned getLeft(unsigned long long key)
 inline unsigned getRight(unsigned long long key)
 {
 	return (key << 32) >> 32;
+}
+
+inline std::string getKeyAsString(unsigned long long key)
+{
+	std::stringstream ss;
+	ss << "(" << getLeft(key) << ", " << getRight(key) << ")";
+	return ss.str();
 }
 
 inline std::vector<unsigned> stringToWordIDs(const std::string& text, std::unordered_map<unsigned, 

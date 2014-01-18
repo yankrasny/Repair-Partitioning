@@ -25,8 +25,6 @@ IndexedHeap::IndexedHeap(const std::vector<unsigned long long>& origVec)
 
 bool IndexedHeap::empty() const
 {
-	// unsigned numValid = heap.size() - numDeleted;
-	// return numValid <= 0;
 	return heap.size() < 1;
 }
 
@@ -72,26 +70,24 @@ HeapEntry* IndexedHeap::extractMax()
 
 HeapEntry* IndexedHeap::insert(unsigned long long key)
 {
+	// Default the new entry to have the lowest possible priority
+	unsigned size = heap.size();
 	HeapEntry* entry = new HeapEntry(key, 1, this, heap.size());
 	heap.push_back(entry);
-	// int index = heapifyUp(heap.size() - 1);
-	// heap[index]->setIndex(index);
-	// this->printHeap();
 	return entry;
 }
 
 int IndexedHeap::deleteAtIndex(int pos)
 {
-	this->checkValid();
 	// std::cerr << "Starting deleteAtIndex(" << pos << ")..." << std::endl;
 	// this->printHeap();
+	this->checkValid();
+
+	// If deleting the last entry, there's no need to swap
 	if (pos == heap.size() - 1)
 	{
-		// HeapEntry* last = heap.back();
-		// last.kill();
 		delete heap.back();
 		heap.pop_back();
-		// this->printHeap();
 		return -1;
 	}
 

@@ -1,23 +1,21 @@
 #include "Repair.h"
 using namespace std;
 
-void RepairAlgorithm::addOrUpdatePair(unsigned long long key, unsigned version, int idx)
+void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, int idx)
 {
-	if (hashTable.count(key) > 0)
+	cerr << "addOccurrence(" << key << ", " << version << ", " << idx << ")" << endl;
+	cerr << "Key as pair: " << getKeyAsString(key) << endl;
+	cerr << "Count: " << hashTable.count(key) << endl;
+	if (hashTable.count(key) > 0) // We've seen this pair before
 	{
 		hashTable[key]->addOccurrence(version, idx);
 	}
 	else // First time we've seen this pair
 	{
-		// Create a heap entry with this key, and assert that we have one more entry than we did before
-		int sizeBefore = myHeap.getSize();
 		HeapEntry* entry = myHeap.insert(key);
-		int sizeAfter = myHeap.getSize();
-		assert(sizeAfter == sizeBefore + 1);
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
 		// This creates the first occurrence (see the constructor)
-		// cerr << "Version: " << version << ", idx: " << idx << endl;
 		hashTable[key] = new HashTableEntry(entry, version, idx);
 	}
 }
@@ -37,11 +35,10 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
 	checkVersionAndIdx(v, idx);
 	assert(hashTable[key] != NULL);
 
-	cerr << "removeOccurrence(" << key << ", " << v << ", " << idx << ")" << endl;
-	cerr << "Key: " << hashTable[key] << endl;
-	cerr << "hashTable[key]: " << hashTable[key] << endl;
-	cerr << "hashTable[key]->getSize(): " << hashTable[key]->getSize() << endl;
-	system("pause");
+	// cerr << "removeOccurrence(" << key << ", " << v << ", " << idx << ")" << endl;
+	// cerr << "hashTable[key]: " << hashTable[key] << endl;
+	// cerr << "hashTable[key]->getSize(): " << hashTable[key]->getSize() << endl;
+	// system("pause");
 
 	// Remove this occurrence at this key
 	hashTable[key]->removeOccurrence(v, idx);
@@ -100,7 +97,7 @@ unsigned long long RepairAlgorithm::getKeyAtIdx(unsigned v, int idx)
 	if (versions[v][idx] == 0) {
 		return 0;
 	}
-	unsigned rightIdx = scanRight(v, idx);
+	int rightIdx = scanRight(v, idx);
 	if (rightIdx == -1)
 		return 0;
 
@@ -120,10 +117,11 @@ void RepairAlgorithm::extractPairs()
 			currPair = combineToUInt64((unsigned long long)versions[v][i], (unsigned long long)versions[v][i+1]);
 
 			// Add the pair to our structures
-			addOrUpdatePair(currPair, v, i);
+			addOccurrence(currPair, v, i);
 		}
 	}
-	cerr << "Size: " <<  hashTable.size() << endl;
+	cerr << "Number of versions: " << versions.size() << endl;
+	cerr << "Number of distinct pairs: " << hashTable.size() << endl;
 }
 
 /*
@@ -144,14 +142,15 @@ void RepairAlgorithm::extractPairs()
 */
 void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 {
-	// for (auto it = hashTable.begin(); it != hashTable.end(); it++)
-	// {
-	// 	unsigned long long k = it->first;
-	// 	HashTableEntry* ht = it->second;
-	// 	cerr << k << ": " << &ht << endl;
-	// }
-	// exit(1);
-	// TODO update the condition since we're not actually deleting them any more
+//	HashTableEntry* ht;
+//	for (auto it = hashTable.begin(); it != hashTable.end(); it++)
+//	{
+//		unsigned long long k = it->first;
+//		ht = it->second;
+//		cerr << getKeyAsString(k) << ": " << ht << endl;
+//	}
+//	exit(1);
+
 	while (!myHeap.empty())
 	{
 		unsigned symbol;
@@ -183,11 +182,13 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		// For all versions
 		for (size_t v = 0; v < versions.size(); v++)
 		{
-			// For all locations of the pair in the current version
 			if (!max->hasLocationsAtVersion(v)) {
 				continue;
 			}
+
 			auto indexes = max->getLocationsAtVersion(v);
+
+			// For all locations of the pair in the current version
 			for (auto it = indexes.begin(); it != indexes.end(); ++it)
 			{
 				int idx = *it;
@@ -226,15 +227,6 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 						assert(hashTable[rightKey] != NULL);
 						removeOccurrence(rightKey, v, rightIdx);
 					}
-					// if (hashTable[rightKey] == NULL) {
-					// 	cerr << rightIdx << endl;
-					// 	cerr << rightKey << endl;
-					// 	for (unsigned j = 0; j < versions[v].size(); j++)
-					// 	{
-					// 		cerr << versions[v][j] << " ";
-					// 	}
-					// 	cerr << endl;
-					// }
 				}
 
 				// Store the association and which version it occurs in
@@ -255,7 +247,9 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				// We modify the actual array of word Ids
 				// 1 3 0 7 0 0 0 2 2
 				versions[v][idx] = symbol;
-				versions[v][rightIdx] = 0;
+				if (rightIdx != -1) {
+					versions[v][rightIdx] = 0;
+				}
 
 				// Now add the 2 new pairs
 				// (3,7) at idx 1 and (7,2) at idx 3
@@ -263,14 +257,14 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 					unsigned long long newLeftKey = getKeyAtIdx(v, leftIdx);
 					if (newLeftKey != -1)
 					{
-						this->addOrUpdatePair(newLeftKey, v, leftIdx);
+						this->addOccurrence(newLeftKey, v, leftIdx);
 					}
 				}
 				if (rightIdx != -1) {
 					unsigned long long newRightKey = getKeyAtIdx(v, idx);
 					if (newRightKey != -1)
 					{
-						this->addOrUpdatePair(newRightKey, v, idx);
+						this->addOccurrence(newRightKey, v, idx);
 					}
 				}
 

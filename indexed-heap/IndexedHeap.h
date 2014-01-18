@@ -16,7 +16,6 @@ That's why we store the index in HeapEntry
 */
 
 class HeapEntry;
-// class HeapEntryPtr;
 
 class IndexedHeap
 {
@@ -24,7 +23,6 @@ class IndexedHeap
 
 private:
 	std::vector<HeapEntry*> heap;
-	// unsigned numDeleted = 0;
 public:
 	IndexedHeap()
 	{
@@ -38,16 +36,6 @@ public:
 	IndexedHeap(const std::vector<unsigned long long>& origVec);
 
 	bool empty() const;
-
-	// unsigned getNumDeleted() const
-	// {
-	// 	return numDeleted;
-	// }
-
-	// void incrementDeleted()
-	// {
-	// 	++numDeleted;
-	// }
 
 	void printHeap() const;
 

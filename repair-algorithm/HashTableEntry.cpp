@@ -39,10 +39,6 @@ void HashTableEntry::removeOccurrence(unsigned version, int idx)
 	assert(locationsInDoc.find(version) != locationsInDoc.end());
 	locationsInDoc[version].erase(idx);
 	decrement();
-	// if (locationsInDoc[version].size() < 1)
-	// {
-	// 	this->heapEntryPointer->setDeleted();
-	// }
 }
 
 // The heap's priority is defined as the number of occurrences of the pair (the pair is that entry's key)

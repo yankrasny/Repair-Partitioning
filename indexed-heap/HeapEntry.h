@@ -15,12 +15,10 @@ private:
 	int index; // the object must know where it is, so it can be found in O(1) inside the heap
 	size_t priority; // defines the heap ordering
 	unsigned long long key; // the identifier
-	// std::shared_ptr<IndexedHeap> myHeap; // reference to the heap, shared among all heap entries
 	IndexedHeap* myHeap;
-	// bool deleted = false;
 public:
 	HeapEntry(unsigned long long key, size_t priority, IndexedHeap* myHeap, int index)
-		: key(key), priority(priority), index(index), myHeap(myHeap) {
+		: key(key), priority(priority), myHeap(myHeap), index(index) {
 			// std::cerr << "Constructor for HeapEntry[key = " << key << "]" << std::endl;
 		}
 
@@ -35,7 +33,9 @@ public:
 	}
 
 	// Assignment Operator, data is all initialized
-	// Do we have anything that needs to be cleaned up before copying values from rhs?
+	// Define assignment as copying key and priority
+	// The heap is the same for everyone, just leave it
+	// Don't take the index from rhs either, just take its values
 	HeapEntry& operator=(const HeapEntry& rhs)
 	{
 		if (this != &rhs) {
@@ -45,28 +45,16 @@ public:
 		return *this;
 	}
 	
-	// Destructor: do we have anything to release?
-	// TODO Careful, does this result in an infinite loop?
+	// Don't release the mem for myHeap because others are pointing to it
+	// Just make sure this object no longer points to it
 	~HeapEntry()
 	{
 		myHeap = NULL;
 		// std::cerr << "Destructor for HeapEntry[key = " << key << "]" << std::endl;
-		// myHeap->deleteAtIndex(this->index);
 	}
 	/************* End BIG 3 *************/
 
 	HeapEntry() : key(0), priority(0), index(-1), myHeap(NULL) {}
-
-	// void setDeleted()
-	// {
-	// 	deleted = true;
-	// 	myHeap->incrementDeleted();
-	// }
-
-	// bool isDeleted() const
-	// {
-	// 	return deleted;
-	// }
 
 	unsigned long long getKey()
 	{
