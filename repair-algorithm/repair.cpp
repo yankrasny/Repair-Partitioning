@@ -5,13 +5,14 @@ void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, in
 {
 	cerr << "addOccurrence(" << key << ", " << version << ", " << idx << ")" << endl;
 	cerr << "Key as pair: " << getKeyAsString(key) << endl;
-	cerr << "Count: " << hashTable.count(key) << endl;
 	if (hashTable.count(key) > 0) // We've seen this pair before
 	{
+		cerr << "Count: " << hashTable[key]->getSize() << endl;
 		hashTable[key]->addOccurrence(version, idx);
 	}
 	else // First time we've seen this pair
 	{
+		cerr << "Count: 0" << endl;
 		HeapEntry* entry = myHeap.insert(key);
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
@@ -149,7 +150,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 //		ht = it->second;
 //		cerr << getKeyAsString(k) << ": " << ht << endl;
 //	}
-//	exit(1);
+	exit(1);
 
 	while (!myHeap.empty())
 	{

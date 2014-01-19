@@ -72,7 +72,7 @@ HeapEntry* IndexedHeap::insert(unsigned long long key)
 {
 	// Default the new entry to have the lowest possible priority
 	unsigned size = heap.size();
-	HeapEntry* entry = new HeapEntry(key, 1, this, heap.size());
+	HeapEntry* entry = new HeapEntry(key, 0, this, heap.size());
 	heap.push_back(entry);
 	return entry;
 }
