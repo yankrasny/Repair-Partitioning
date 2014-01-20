@@ -29,7 +29,8 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
 
 	if (hashTable.count(key) < 1) {
 		cerr << "Key: " << key << " not found in hashTable" << endl;
-		system("pause");
+//		system("pause");
+		return;
 	}
 
 	// Assertions
@@ -67,6 +68,8 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
 			assert(hashTable[keyOfEntryThatGotSwapped] != NULL);
 			hashTable[keyOfEntryThatGotSwapped]->setHeapEntryPointer(myHeap.getAtIndex(indexOfEntryThatGotSwapped));
 		}
+
+		hashTable.erase(key);
 	}
 }
 
@@ -88,11 +91,9 @@ int RepairAlgorithm::scanLeft(unsigned v, int idx)
 int RepairAlgorithm::scanRight(unsigned v, int idx)
 {
 	checkVersionAndIdx(v, idx);
-//	cerr << "scanRight(" << v << ", " << idx << ")" << endl;
 	while (idx < versions[v].size() - 1) {
 		if (versions[v][++idx] != 0) return idx;
 	}
-//	cerr << "Returning -1" << endl;
 	return -1;
 }
 
@@ -183,9 +184,13 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		// The pair of ints represented as one 64 bit int
 		unsigned long long key = hp->getKey();
 
+		assert(hashTable.count(key));
+
 		// Get the hash table entry (so all occurrences and so on)
 		HashTableEntry* max = hashTable[key];
+
 		assert(max != NULL);
+
 		size_t numOccurrences = max->getSize();
 
 		// TODO think about this number

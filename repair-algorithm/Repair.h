@@ -9,7 +9,6 @@
 #include <sstream>
 #include <locale>
 #include <string>
-#include "Occurrence.h"
 #include "HashTableEntry.h"
 #include "../util/md5.h"
 #include "../indexed-heap/HeapEntry.h"
@@ -62,8 +61,6 @@ private:
 	void removeOccurrence(unsigned long long key, unsigned v, int idx);
 
 	void extractPairs();
-
-	void removeOccurrence(Occurrence* oc);
 
 	int scanLeft(unsigned v, int idx);
 

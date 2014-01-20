@@ -2,7 +2,6 @@
 #define HASH_TABLE_ENTRY_H
 
 #include "../indexed-heap/HeapEntry.h"
-#include "Occurrence.h"
 #include <iostream>
 #include <unordered_set>
 #include <unordered_map>
@@ -10,6 +9,9 @@
 class HashTableEntry
 {
 	HeapEntry* heapEntryPointer;
+
+	// The sets of locations of this pair for each version
+	// Ex: locationsInDoc[0] = {1,4,7}, locationsInDoc[1] = {1,4,12}
 	std::unordered_map<unsigned, std::unordered_set<int> > locationsInDoc;
 
 public:

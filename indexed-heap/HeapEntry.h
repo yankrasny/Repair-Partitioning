@@ -12,10 +12,10 @@
 class HeapEntry
 {
 private:
-	int index; // the object must know where it is, so it can be found in O(1) inside the heap
-	size_t priority; // defines the heap ordering
 	unsigned long long key; // the identifier
+	size_t priority; // defines the heap ordering
 	IndexedHeap* myHeap;
+	int index; // the object must know where it is, so it can be found in O(1) inside the heap
 public:
 	HeapEntry(unsigned long long key, size_t priority, IndexedHeap* myHeap, int index)
 		: key(key), priority(priority), myHeap(myHeap), index(index) {
@@ -54,7 +54,7 @@ public:
 	}
 	/************* End BIG 3 *************/
 
-	HeapEntry() : key(0), priority(0), index(-1), myHeap(NULL) {}
+	HeapEntry() : key(0), priority(0), myHeap(NULL), index(-1) {}
 
 	unsigned long long getKey()
 	{

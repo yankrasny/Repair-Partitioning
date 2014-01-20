@@ -27,6 +27,7 @@ unordered_set<int> HashTableEntry::getLocationsAtVersion(unsigned version)
 	return unordered_set<int>();
 }
 
+// We create the set of locations for this version if it doesn't yet exist
 void HashTableEntry::addOccurrence(unsigned version, int idx)
 {
 	if (locationsInDoc.find(version) == locationsInDoc.end()) {
@@ -36,6 +37,7 @@ void HashTableEntry::addOccurrence(unsigned version, int idx)
 	increment();
 }
 
+// We expect the set of locations to exist for this version
 void HashTableEntry::removeOccurrence(unsigned version, int idx)
 {
 	assert(locationsInDoc.find(version) != locationsInDoc.end());
