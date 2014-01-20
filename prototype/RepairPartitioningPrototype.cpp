@@ -404,6 +404,8 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		versions.push_back(wordIDs);
 		wordIDs.clear();
 
+		currentWordID = 4;
+
 //		for (unsigned i = 0; i < inputFilenames.size(); i++)
 //		{
 //			stringstream filenameSS;

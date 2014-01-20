@@ -3,12 +3,12 @@ using namespace std;
 
 void HashTableEntry::increment()
 {
-	heapEntryPointer->increment();
+	this->heapEntryPointer->increment();
 }
 
 void HashTableEntry::decrement()
 {
-	heapEntryPointer->decrement();
+	this->heapEntryPointer->decrement();
 }
 
 bool HashTableEntry::hasLocationsAtVersion(unsigned version)

@@ -63,6 +63,8 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
 			// When we delete from the heap, we use a swap with the last element
 			// Well, hashTable[keyOfLastElement] was pointing to it, so that's not very nice
 			// Our delete function returns to us the new location of the swapped last element specifically so we can use it here like so
+			assert(hashTable.count(keyOfEntryThatGotSwapped) > 0);
+			assert(hashTable[keyOfEntryThatGotSwapped] != NULL);
 			hashTable[keyOfEntryThatGotSwapped]->setHeapEntryPointer(myHeap.getAtIndex(indexOfEntryThatGotSwapped));
 		}
 	}
@@ -86,9 +88,11 @@ int RepairAlgorithm::scanLeft(unsigned v, int idx)
 int RepairAlgorithm::scanRight(unsigned v, int idx)
 {
 	checkVersionAndIdx(v, idx);
+//	cerr << "scanRight(" << v << ", " << idx << ")" << endl;
 	while (idx < versions[v].size() - 1) {
 		if (versions[v][++idx] != 0) return idx;
 	}
+//	cerr << "Returning -1" << endl;
 	return -1;
 }
 
@@ -101,6 +105,10 @@ unsigned long long RepairAlgorithm::getKeyAtIdx(unsigned v, int idx)
 	int rightIdx = scanRight(v, idx);
 	if (rightIdx == -1)
 		return 0;
+
+	if (versions[v][idx] == 0 || versions[v][rightIdx] == 0) {
+		return 0;
+	}
 
 	return combineToUInt64(versions[v][idx], versions[v][rightIdx]);
 }
@@ -117,8 +125,8 @@ void RepairAlgorithm::extractPairs()
 			// Squeeze the pair of two unsigned numbers together for storage
 			currPair = combineToUInt64((unsigned long long)versions[v][i], (unsigned long long)versions[v][i+1]);
 
-			// Add the pair to our structures
-			addOccurrence(currPair, v, i);
+			// Add this occurrence of the pair to our structures
+			this->addOccurrence(currPair, v, i);
 		}
 	}
 	cerr << "Number of versions: " << versions.size() << endl;
@@ -150,10 +158,21 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 //		ht = it->second;
 //		cerr << getKeyAsString(k) << ": " << ht << endl;
 //	}
-	exit(1);
+//	exit(1);
 
 	while (!myHeap.empty())
 	{
+		// Print the vectors
+		for (unsigned v = 0; v < versions.size(); v++) {
+			// Print each vector in one line
+			cerr << "Version " << v << ": ";
+			for (unsigned i = 0; i < versions[v].size(); i++) {
+				cerr << versions[v][i] << " ";
+			}
+			cerr << endl;
+		}
+//		system("pause");
+
 		unsigned symbol;
 		
 		// Get the max from the heap
@@ -178,7 +197,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		// Will use this as the new symbol (say we're replacing abcd with axd, this is x)
 		symbol = nextWordID();
 
-		unsigned totalCount = 0;
+		unsigned totalCountOfCurrPair = 0;
 
 		// For all versions
 		for (size_t v = 0; v < versions.size(); v++)
@@ -230,18 +249,19 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 					}
 				}
 
+				// We have the current key, remove this occurrence of it from our structures
+				// 1 3 0 5 0 0 6 2 2 key = (5,6) and idx = 3
+				if (key != 0) {
+					removeOccurrence(key, v, idx);
+				}
+
+
 				// Store the association and which version it occurs in
-				if (totalCount == 0)
+				if (totalCountOfCurrPair == 0)
 					associations.push_back(Association(symbol, versions[v][idx], versions[v][rightIdx], numOccurrences, v));
 				else
 					associations.back().addVersion(v);
 
-
-				// We have the current key, remove this occurrence of it from our structures
-				// 1 3 0 5 0 0 6 2 2 key = (5,6) and idx = 3
-				if (key != 0) {
-					removeOccurrence(key, v, idx);	
-				}
 
 
 				// Now the replacement: 7 -> (5,6)
@@ -256,20 +276,20 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				// (3,7) at idx 1 and (7,2) at idx 3
 				if (leftIdx != -1) {
 					unsigned long long newLeftKey = getKeyAtIdx(v, leftIdx);
-					if (newLeftKey != -1)
+					if (newLeftKey != 0)
 					{
 						this->addOccurrence(newLeftKey, v, leftIdx);
 					}
 				}
 				if (rightIdx != -1) {
 					unsigned long long newRightKey = getKeyAtIdx(v, idx);
-					if (newRightKey != -1)
+					if (newRightKey != 0)
 					{
 						this->addOccurrence(newRightKey, v, idx);
 					}
 				}
 
-				totalCount++;
+				totalCountOfCurrPair++;
 			}
 		}
 	}
