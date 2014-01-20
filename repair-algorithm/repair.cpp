@@ -3,16 +3,16 @@ using namespace std;
 
 void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, int idx)
 {
-	cerr << "addOccurrence(" << key << ", " << version << ", " << idx << ")" << endl;
-	cerr << "Key as pair: " << getKeyAsString(key) << endl;
+//	cerr << "addOccurrence(" << key << ", " << version << ", " << idx << ")" << endl;
+//	cerr << "Key as pair: " << getKeyAsString(key) << endl;
 	if (hashTable.count(key) > 0) // We've seen this pair before
 	{
-		cerr << "Count: " << hashTable[key]->getSize() << endl;
+//		cerr << "Count: " << hashTable[key]->getSize() << endl;
 		hashTable[key]->addOccurrence(version, idx);
 	}
 	else // First time we've seen this pair
 	{
-		cerr << "Count: 0" << endl;
+//		cerr << "Count: 0" << endl;
 		HeapEntry* entry = myHeap.insert(key);
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
@@ -59,7 +59,7 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
 		int indexOfEntryThatGotSwapped = myHeap.deleteAtIndex(idxInHeap);
 		if (indexOfEntryThatGotSwapped != -1) {
 			unsigned long long keyOfEntryThatGotSwapped = myHeap.getAtIndex(indexOfEntryThatGotSwapped)->getKey();
-	
+
 			// When we delete from the heap, we use a swap with the last element
 			// Well, hashTable[keyOfLastElement] was pointing to it, so that's not very nice
 			// Our delete function returns to us the new location of the swapped last element specifically so we can use it here like so
@@ -129,8 +129,8 @@ void RepairAlgorithm::extractPairs()
 			this->addOccurrence(currPair, v, i);
 		}
 	}
-	cerr << "Number of versions: " << versions.size() << endl;
-	cerr << "Number of distinct pairs: " << hashTable.size() << endl;
+//	cerr << "Number of versions: " << versions.size() << endl;
+//	cerr << "Number of distinct pairs: " << hashTable.size() << endl;
 }
 
 /*
@@ -163,14 +163,14 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 	while (!myHeap.empty())
 	{
 		// Print the vectors
-		for (unsigned v = 0; v < versions.size(); v++) {
-			// Print each vector in one line
-			cerr << "Version " << v << ": ";
-			for (unsigned i = 0; i < versions[v].size(); i++) {
-				cerr << versions[v][i] << " ";
-			}
-			cerr << endl;
-		}
+//		for (unsigned v = 0; v < versions.size(); v++) {
+//			// Print each vector in one line
+//			cerr << "Version " << v << ": ";
+//			for (unsigned i = 0; i < versions[v].size(); i++) {
+//				cerr << versions[v][i] << " ";
+//			}
+//			cerr << endl;
+//		}
 //		system("pause");
 
 		unsigned symbol;

@@ -3,11 +3,13 @@ using namespace std;
 
 void HashTableEntry::increment()
 {
+	assert(this->heapEntryPointer != NULL);
 	this->heapEntryPointer->increment();
 }
 
 void HashTableEntry::decrement()
 {
+	assert(this->heapEntryPointer != NULL);
 	this->heapEntryPointer->decrement();
 }
 
