@@ -18,7 +18,7 @@
 #include "RepairTreeNode.h"
 #include "Util.h"
 #include <assert.h>
-
+#include <stdlib.h>
 
 typedef std::unordered_map<unsigned long long, HashTableEntry*> RepairHashTable;
 

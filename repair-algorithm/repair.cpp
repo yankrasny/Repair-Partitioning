@@ -3,7 +3,7 @@ using namespace std;
 
 void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, int idx)
 {
-//	cerr << "addOccurrence(" << key << ", " << version << ", " << idx << ")" << endl;
+//	cerr << "addOccurrence(" << getKeyAsString(key) << ", " << version << ", " << idx << ")" << endl;
 //	cerr << "Key as pair: " << getKeyAsString(key) << endl;
 	if (hashTable.count(key) > 0) // We've seen this pair before
 	{
@@ -23,13 +23,15 @@ void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, in
 
 void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int idx)
 {
+//	cerr << "removeOccurrence(" << getKeyAsString(key) << ", " << v << ", " << idx << ")" << endl;
+
 	if (myHeap.empty()) {
 		return;
 	}
 
 	if (hashTable.count(key) < 1) {
 		cerr << "Key: " << key << " not found in hashTable" << endl;
-//		system("pause");
+		system("pause");
 		return;
 	}
 
@@ -204,6 +206,13 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 
 		unsigned totalCountOfCurrPair = 0;
 
+		// If we ever have 3 of the same symbol in a row, an interesting bug happens
+		// BUG DESCRIPTION: given 3 of the same symbol in a row, we have 2 consecutive equivalent occurrences of the same pair
+		// When we do the removes and adds for one of them, the other one becomes invalid
+		// Without checking for this case, we proceed to do the removes and adds for the now invalid pair, causing a runtime error
+		// So, if there are two adjacent indexes (abs(idx - prevIdx) < 2) then we just skip replacement for that occurrence, as it is invalid
+		int prevIdx;
+
 		// For all versions
 		for (size_t v = 0; v < versions.size(); v++)
 		{
@@ -211,12 +220,25 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				continue;
 			}
 
+			prevIdx = -1;
 			auto indexes = max->getLocationsAtVersion(v);
+
+			cerr << "Replacement: [" << symbol << " -> " << getKeyAsString(key) << "]" << endl;
 
 			// For all locations of the pair in the current version
 			for (auto it = indexes.begin(); it != indexes.end(); ++it)
 			{
 				int idx = *it;
+
+				// This isn't good enough.
+				// First of all the indexes are unordered, so you might get 5, then 7, then 6, which would screw things up
+				// Second, even if they were, what about 5 or 10 such occurrences? We would skip replacing all but one of them, which is also wrong
+				if (prevIdx >= 0) {
+					if (abs(idx - prevIdx) < 2) {
+						prevIdx = idx;
+						continue;
+					}
+				}
 
 				// EXAMPLE: idx = 3, so currKey = (5,6)
 				// 0 1 2 3 4 5 6 7 8
@@ -233,6 +255,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				if (leftIdx != -1) {
 					unsigned long long leftKey = getKeyAtIdx(v, leftIdx);
 					if (leftKey != 0) {
+						assert(hashTable.count(leftKey));
 						assert(hashTable[leftKey] != NULL);
 						removeOccurrence(leftKey, v, leftIdx);
 					}
@@ -249,6 +272,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				if (rightIdx != -1) {
 					unsigned long long rightKey = getKeyAtIdx(v, rightIdx);
 					if (rightKey != 0) {
+						assert(hashTable.count(rightKey));
 						assert(hashTable[rightKey] != NULL);
 						removeOccurrence(rightKey, v, rightIdx);
 					}
@@ -257,6 +281,8 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				// We have the current key, remove this occurrence of it from our structures
 				// 1 3 0 5 0 0 6 2 2 key = (5,6) and idx = 3
 				if (key != 0) {
+					assert(hashTable.count(key));
+					assert(hashTable[key] != NULL);
 					removeOccurrence(key, v, idx);
 				}
 
@@ -295,6 +321,8 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				}
 
 				totalCountOfCurrPair++;
+
+				prevIdx = idx;
 			}
 		}
 	}
