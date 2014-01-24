@@ -3,7 +3,7 @@
 
 #include "../indexed-heap/HeapEntry.h"
 #include <iostream>
-#include <unordered_set>
+#include <set>
 #include <unordered_map>
 #include <vector>
 class HashTableEntry
@@ -12,7 +12,7 @@ class HashTableEntry
 
 	// The sets of locations of this pair for each version
 	// Ex: locationsInDoc[0] = {1,4,7}, locationsInDoc[1] = {1,4,12}
-	std::unordered_map<unsigned, std::unordered_set<int> > locationsInDoc;
+	std::unordered_map<unsigned, std::set<int> > locationsInDoc;
 
 public:
 	HashTableEntry(HeapEntry* hp, unsigned version, int firstIdx) : heapEntryPointer(hp)
@@ -21,7 +21,7 @@ public:
 	}
 	bool hasLocationsAtVersion(unsigned version);
 
-	std::unordered_set<int> getLocationsAtVersion(unsigned version);
+	std::set<int> getLocationsAtVersion(unsigned version);
 
 	void increment();
 

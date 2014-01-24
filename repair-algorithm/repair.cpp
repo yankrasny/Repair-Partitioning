@@ -220,66 +220,75 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				continue;
 			}
 
-			prevIdx = -1;
-			auto indexes = max->getLocationsAtVersion(v);
+			// Print the current vector in one line
+//			cerr << "Version " << v << ": ";
+//			for (unsigned i = 0; i < versions[v].size(); i++) {
+//				cerr << versions[v][i] << " ";
+//			}
+//			cerr << endl;
 
 			cerr << "Replacement: [" << symbol << " -> " << getKeyAsString(key) << "]" << endl;
+
+
+			// First call remove on all identical overlapping pairs, and note their indexes
+			prevIdx = -1;
+			auto indexes = max->getLocationsAtVersion(v);
+			auto removed = set<int>();
+			bool justRemoved = false;
+			for (auto it = indexes.begin(); it != indexes.end(); ++it)
+			{
+				int idx = *it;
+				if (prevIdx >= 0) { // prevIdx is -1 for the first idx
+					if (abs(idx - prevIdx) < 2) { // check that idx and prevIdx are consecutive
+						if (!justRemoved) { // remove every second occurrence in a line of the same occurrences
+							removeOccurrence(key, v, idx);
+							removed.insert(idx);
+							justRemoved = true;
+						} else {
+							justRemoved = false;
+						}
+					}
+				}
+				prevIdx = idx;
+			}
+
+			// Note that indexes no longer contains the deleted ones,
+			// however leftIdx and rightIdx in the algorithm below still can
+			// That is why we need to keep track of them using removed
+			indexes = max->getLocationsAtVersion(v);
 
 			// For all locations of the pair in the current version
 			for (auto it = indexes.begin(); it != indexes.end(); ++it)
 			{
 				int idx = *it;
 
-				// This isn't good enough.
-				// First of all the indexes are unordered, so you might get 5, then 7, then 6, which would screw things up
-				// Second, even if they were, what about 5 or 10 such occurrences? We would skip replacing all but one of them, which is also wrong
-				if (prevIdx >= 0) {
-					if (abs(idx - prevIdx) < 2) {
-						prevIdx = idx;
-						continue;
-					}
-				}
-
-				// EXAMPLE: idx = 3, so currKey = (5,6)
-				// 0 1 2 3 4 5 6 7 8
-				// 1 3 0 5 0 0 6 2 2
-
 				// Find the key to the left of this one and remove that occurrence of it from our structures
-				// 1 3 0 5 0 0 6 2 2
-				// We want leftKey = (3,5)
-				// leftIdx = scanLeft(v, idx) // should be 1
-				// leftKey = getKeyAtIdx(leftIdx)
-				// hashTable[leftKey]->removeOccurrence(v, leftIdx)
-
 				int leftIdx = scanLeft(v, idx);
-				if (leftIdx != -1) {
-					unsigned long long leftKey = getKeyAtIdx(v, leftIdx);
-					if (leftKey != 0) {
-						assert(hashTable.count(leftKey));
-						assert(hashTable[leftKey] != NULL);
-						removeOccurrence(leftKey, v, leftIdx);
+				if (removed.count(leftIdx) < 1) {
+					if (leftIdx != -1) {
+						unsigned long long leftKey = getKeyAtIdx(v, leftIdx);
+						if (leftKey != 0) {
+							assert(hashTable.count(leftKey));
+							assert(hashTable[leftKey] != NULL);
+							removeOccurrence(leftKey, v, leftIdx);
+						}
 					}
 				}
 
 				// Find the key to the right of this one and remove that occurrence of it from our structures
-				// 1 3 0 5 0 0 6 2 2
-				// We want leftKey = (6,2)
-				// rightIdx = scanRight(v, idx) // should be 6
-				// rightKey = getKeyAtIdx(rightIdx)
-				// hashTable[rightKey]->removeOccurrence(v, rightIdx)
-
-				int rightIdx = scanRight(v, idx); // should be 6
-				if (rightIdx != -1) {
-					unsigned long long rightKey = getKeyAtIdx(v, rightIdx);
-					if (rightKey != 0) {
-						assert(hashTable.count(rightKey));
-						assert(hashTable[rightKey] != NULL);
-						removeOccurrence(rightKey, v, rightIdx);
+				int rightIdx = scanRight(v, idx);
+				if (removed.count(rightIdx) < 1) {
+					if (rightIdx != -1) {
+						unsigned long long rightKey = getKeyAtIdx(v, rightIdx);
+						if (rightKey != 0) {
+							assert(hashTable.count(rightKey));
+							assert(hashTable[rightKey] != NULL);
+							removeOccurrence(rightKey, v, rightIdx);
+						}
 					}
 				}
 
 				// We have the current key, remove this occurrence of it from our structures
-				// 1 3 0 5 0 0 6 2 2 key = (5,6) and idx = 3
 				if (key != 0) {
 					assert(hashTable.count(key));
 					assert(hashTable[key] != NULL);
@@ -294,17 +303,13 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 					associations.back().addVersion(v);
 
 
-
-				// Now the replacement: 7 -> (5,6)
-				// We modify the actual array of word Ids
-				// 1 3 0 7 0 0 0 2 2
+				// Now the replacement: we modify the actual array of word Ids
 				versions[v][idx] = symbol;
 				if (rightIdx != -1) {
 					versions[v][rightIdx] = 0;
 				}
 
 				// Now add the 2 new pairs
-				// (3,7) at idx 1 and (7,2) at idx 3
 				if (leftIdx != -1) {
 					unsigned long long newLeftKey = getKeyAtIdx(v, leftIdx);
 					if (newLeftKey != 0)
@@ -321,8 +326,6 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				}
 
 				totalCountOfCurrPair++;
-
-				prevIdx = idx;
 			}
 		}
 	}
