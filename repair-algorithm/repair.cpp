@@ -7,12 +7,10 @@ void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, in
 //	cerr << "Key as pair: " << getKeyAsString(key) << endl;
 	if (hashTable.count(key) > 0) // We've seen this pair before
 	{
-//		cerr << "Count: " << hashTable[key]->getSize() << endl;
 		hashTable[key]->addOccurrence(version, idx);
 	}
 	else // First time we've seen this pair
 	{
-//		cerr << "Count: 0" << endl;
 		HeapEntry* entry = myHeap.insert(key);
 
 		// Create a hash table entry, and initialize it with its heap entry pointer
@@ -39,19 +37,11 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
 	checkVersionAndIdx(v, idx);
 	assert(hashTable[key] != NULL);
 
-	// cerr << "removeOccurrence(" << key << ", " << v << ", " << idx << ")" << endl;
-	// cerr << "hashTable[key]: " << hashTable[key] << endl;
-	// cerr << "hashTable[key]->getSize(): " << hashTable[key]->getSize() << endl;
-	// system("pause");
-
 	// Remove this occurrence at this key
 	hashTable[key]->removeOccurrence(v, idx);
 	
 	// If we've removed all the occurrences at this key, remove the heap entry as well
 	if (hashTable[key]->getSize() < 1) {
-		// TODOs
-		// 1) Is idxInHeap always defined in this way?
-		// 2) Will there always be a swap?
 		int idxInHeap = hashTable[key]->getHeapEntryPointer()->getIndex();
 
 		// We can already set our heap entry pointer to null because we'll be deleting by idxInHeap
@@ -154,43 +144,25 @@ void RepairAlgorithm::extractPairs()
 */
 void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 {
-//	HashTableEntry* ht;
-//	for (auto it = hashTable.begin(); it != hashTable.end(); it++)
-//	{
-//		unsigned long long k = it->first;
-//		ht = it->second;
-//		cerr << getKeyAsString(k) << ": " << ht << endl;
-//	}
-//	exit(1);
+	unsigned symbol;
+	unsigned long long key;
+	HeapEntry* hp;
+	HashTableEntry* max;
+	unsigned totalCountOfCurrPair;
 
 	while (!myHeap.empty())
 	{
-		// Print the vectors
-//		for (unsigned v = 0; v < versions.size(); v++) {
-//			// Print each vector in one line
-//			cerr << "Version " << v << ": ";
-//			for (unsigned i = 0; i < versions[v].size(); i++) {
-//				cerr << versions[v][i] << " ";
-//			}
-//			cerr << endl;
-//		}
-//		system("pause");
-
-		unsigned symbol;
-		
 		// Get the max from the heap
-		HeapEntry* hp = myHeap.getMax();
-
+		hp = myHeap.getMax();
 		assert(hp != NULL);
 
-		// The pair of ints represented as one 64 bit int
-		unsigned long long key = hp->getKey();
-
+		// The key is a pair of unsigned ints represented as one 64 bit unsigned int
+		// This allows us to pull the max from the heap, and then
+		// get the corresponding hash table entry in constant time
+		key = hp->getKey();
 		assert(hashTable.count(key));
 
-		// Get the hash table entry (so all occurrences and so on)
-		HashTableEntry* max = hashTable[key];
-
+		max = hashTable[key];
 		assert(max != NULL);
 
 		size_t numOccurrences = max->getSize();
@@ -201,10 +173,10 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		if (numOccurrences < repairStoppingPoint)
 			return;
 
-		// Will use this as the new symbol (say we're replacing abcd with axd, this is x)
+		// Will use this as the new symbol (say we're replacing 1 2 3 4 with 1 5 4, this is 5)
 		symbol = nextWordID();
 
-		unsigned totalCountOfCurrPair = 0;
+		totalCountOfCurrPair = 0;
 
 		// If we ever have 3 of the same symbol in a row, an interesting bug happens
 		// BUG DESCRIPTION: given 3 of the same symbol in a row, we have 2 consecutive equivalent occurrences of the same pair
@@ -228,7 +200,6 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 //			cerr << endl;
 
 			cerr << "Replacement: [" << symbol << " -> " << getKeyAsString(key) << "]" << endl;
-
 
 			// First call remove on all identical overlapping pairs, and note their indexes
 			prevIdx = -1;
