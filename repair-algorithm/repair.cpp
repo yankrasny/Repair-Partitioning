@@ -17,6 +17,7 @@ void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, in
 		// This creates the first occurrence (see the constructor)
 		hashTable[key] = new HashTableEntry(entry, version, idx);
 	}
+
 }
 
 void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int idx)
@@ -199,7 +200,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 //			}
 //			cerr << endl;
 
-			cerr << "Replacement: [" << symbol << " -> " << getKeyAsString(key) << "]" << endl;
+//			cerr << "Replacement: [" << symbol << " -> " << getKeyAsString(key) << "]" << endl;
 
 			// First call remove on all identical overlapping pairs, and note their indexes
 			prevIdx = -1;
@@ -210,14 +211,16 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 			{
 				int idx = *it;
 				if (prevIdx >= 0) { // prevIdx is -1 for the first idx
-					if (abs(idx - prevIdx) < 2) { // check that idx and prevIdx are consecutive
+					if (scanRight(v, prevIdx) == idx) { // check that idx and prevIdx are consecutive
 						if (!justRemoved) { // remove every second occurrence in a line of the same occurrences
 							removeOccurrence(key, v, idx);
 							removed.insert(idx);
-							justRemoved = true;
-						} else {
+							justRemoved = true; // justRemoved must only be true in this case, so we have to have those elses where it's false
+						} else { // this one
 							justRemoved = false;
 						}
+					} else { // and this one
+						justRemoved = false;
 					}
 				}
 				prevIdx = idx;

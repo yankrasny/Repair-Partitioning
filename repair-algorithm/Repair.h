@@ -116,8 +116,10 @@ public:
 		// (either some early stop condition or one symbol left)
 		doRepair(repairStoppingPoint);
 
+		assert(hashTable.empty());
+
 		// Return the payload
-		return this->associations;		
+		return this->associations;
 	}
 
 	void cleanup();
