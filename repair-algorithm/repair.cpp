@@ -62,7 +62,11 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
 			hashTable[keyOfEntryThatGotSwapped]->setHeapEntryPointer(myHeap.getAtIndex(indexOfEntryThatGotSwapped));
 		}
 
+        // hashTable.erase only decrements the size of the hash table. It doesn't delete the entry.
+        // The value in this table is a pointer.
+        delete hashTable[key];
 		hashTable.erase(key);
+
 	}
 }
 

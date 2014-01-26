@@ -427,7 +427,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 			}
 
 			versions.push_back(wordIDs);
-			delete text;
+			delete [] text;
 			text = NULL;
 		}
 		wordIDs.clear();
@@ -439,6 +439,8 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		unsigned* versionPartitionSizes = new unsigned[versions.size()];
 		unsigned* offsetsAllVersions = new unsigned[versions.size() * MAX_NUM_FRAGMENTS_PER_VERSION];
 
+        // DKG: Why are you making memeber varaibles if you are going to reset them at every
+        // iteration of this loop?
 		this->versionPartitionSizes = versionPartitionSizes;
 		this->offsetsAllVersions = offsetsAllVersions;
 
@@ -481,6 +483,9 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 			cerr << "Error code: " << e << endl;
 			exit(e);
 		}
+
+        delete [] this->versionPartitionSizes;
+        delete [] this->offsetsAllVersions;
 
 		final=clock()-init;
 		cerr << (double)final / ((double)CLOCKS_PER_SEC) << endl;
