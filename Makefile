@@ -5,3 +5,6 @@ all:
 
 clean:
 	rm -rvf repair repair.dSYM
+
+clean_win:
+	rm -rvf repair.exe

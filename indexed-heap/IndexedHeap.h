@@ -16,7 +16,6 @@ That's why we store the index in HeapEntry
 */
 
 class HeapEntry;
-// class HeapEntryPtr;
 
 class IndexedHeap
 {

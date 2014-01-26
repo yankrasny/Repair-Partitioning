@@ -386,7 +386,26 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		unordered_map<unsigned, string> IDsToWords = unordered_map<unsigned, string>();
 
 		unordered_map<unsigned, unsigned> uniqueWordIDs = unordered_map<unsigned, unsigned>();
-		
+
+//		wordIDs = vector<unsigned>();
+//
+//		wordIDs.push_back(1);
+//		wordIDs.push_back(2);
+//		wordIDs.push_back(3);
+//		versions.push_back(wordIDs);
+//		wordIDs.clear();
+//
+//		wordIDs.push_back(1);
+//		wordIDs.push_back(2);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(4);
+//		wordIDs.push_back(1);
+//		wordIDs.push_back(2);
+//		versions.push_back(wordIDs);
+//		wordIDs.clear();
+//
+//		currentWordID = 4;
+
 		for (unsigned i = 0; i < inputFilenames.size(); i++)
 		{
 			stringstream filenameSS;
@@ -406,11 +425,12 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 				}
 				cerr << endl << endl;
 			}
-			
+
 			versions.push_back(wordIDs);
 			delete text;
 			text = NULL;
 		}
+		wordIDs.clear();
 		
 		// By this time, IDsToWords should contain the mappings of IDs to words in all versions
 		// printIDtoWordMapping(IDsToWords);
@@ -463,7 +483,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		}
 
 		final=clock()-init;
-		cout << (double)final / ((double)CLOCKS_PER_SEC) << endl;
+		cerr << (double)final / ((double)CLOCKS_PER_SEC) << endl;
 
 		return score;
 	}

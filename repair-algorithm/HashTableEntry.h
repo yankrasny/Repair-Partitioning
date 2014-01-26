@@ -2,28 +2,34 @@
 #define HASH_TABLE_ENTRY_H
 
 #include "../indexed-heap/HeapEntry.h"
-#include "Occurrence.h"
 #include <iostream>
-
+#include <set>
+#include <unordered_map>
+#include <vector>
 class HashTableEntry
 {
 	HeapEntry* heapEntryPointer;
-	// HeapEntryPtr heapEntryPointer;
-	Occurrence* occurrences;
-	size_t size;
+
+	// The sets of locations of this pair for each version
+	// Ex: locationsInDoc[0] = {1,4,7}, locationsInDoc[1] = {1,4,12}
+	std::unordered_map<unsigned, std::set<int> > locationsInDoc;
+
 public:
-	HashTableEntry(HeapEntry* hp, unsigned version);
-	// HashTableEntry(HeapEntryPtr hp, unsigned version);
+	HashTableEntry(HeapEntry* hp, unsigned version, int firstIdx) : heapEntryPointer(hp)
+	{
+		this->addOccurrence(version, firstIdx);
+	}
+	bool hasLocationsAtVersion(unsigned version);
+
+	std::set<int> getLocationsAtVersion(unsigned version);
 
 	void increment();
 
 	void decrement();
 
-	void removeOccurrence(Occurrence* target);
+	void removeOccurrence(unsigned version, int idx);
 
-	void addOccurrence(Occurrence* oc);
-
-	Occurrence* getHeadOccurrence() const;
+	void addOccurrence(unsigned version, int idx);
 
 	size_t getSize() const;
 
@@ -47,7 +53,6 @@ public:
 	~HashTableEntry()
 	{
 		// std::cerr << "Destructor for HashTableEntry[key = " << heapEntryPointer->getKey() << "]" << std::endl;
-		occurrences = NULL;
 		heapEntryPointer = NULL;
 	}
 };

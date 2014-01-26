@@ -26,7 +26,7 @@ nbproject/
 .project
 .settings/
 
-test.cpp
+.gdbinit
 
 # Inputs I'd rather not make public
 Input/cover

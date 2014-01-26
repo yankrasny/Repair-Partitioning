@@ -1,85 +1,61 @@
 #include "HashTableEntry.h"
 using namespace std;
 
-HashTableEntry::HashTableEntry(HeapEntry* entry, unsigned version) : heapEntryPointer(entry), size(1)
-{
-	unsigned long long key = entry->getKey();
-	// std::cerr << "Constructor for HashTableEntry[key = " << key << "]" << std::endl;
-	occurrences = new Occurrence(key, version); // The head of the linked list
-}
-
 void HashTableEntry::increment()
 {
-	size++;
-	heapEntryPointer->increment();
+	assert(this->heapEntryPointer != NULL);
+	this->heapEntryPointer->increment();
 }
 
 void HashTableEntry::decrement()
 {
-	size--;
-	heapEntryPointer->decrement();
+	assert(this->heapEntryPointer != NULL);
+	this->heapEntryPointer->decrement();
 }
 
-void HashTableEntry::removeOccurrence(Occurrence* target)
+bool HashTableEntry::hasLocationsAtVersion(unsigned version)
 {
-	if (!target || !heapEntryPointer)
-		return;
+	if (locationsInDoc.find(version) != locationsInDoc.end())
+		return locationsInDoc[version].size() > 0;
+	return false;
+}
 
-	Occurrence* next = target->getNext();
-	Occurrence* prev = target->getPrev();
+set<int> HashTableEntry::getLocationsAtVersion(unsigned version)
+{
+	if (locationsInDoc.find(version) != locationsInDoc.end())
+		return locationsInDoc[version];
+	return set<int>();
+}
 
-	doubleLinkOccurrences(prev, next);
-
-	this->decrement();
-
-	if (size < 1)
-	{
-		if (occurrences == target)
-		{
-			delete occurrences;
-			occurrences = NULL;
-			return;
-		}
-		cerr << "we didn't find the target, wtf?" << endl;
-		return;
+// We create the set of locations for this version if it doesn't yet exist
+void HashTableEntry::addOccurrence(unsigned version, int idx)
+{
+	if (locationsInDoc.find(version) == locationsInDoc.end()) {
+		locationsInDoc[version] = set<int>();
 	}
-
-	if (occurrences == target)
-	{
-		occurrences = next;
-	}
-	delete target;
-	target = NULL;
+	locationsInDoc[version].insert(idx);
+	increment();
 }
 
-void HashTableEntry::addOccurrence(Occurrence* oc)
+// We expect the set of locations to exist for this version
+void HashTableEntry::removeOccurrence(unsigned version, int idx)
 {
-	if (!oc || !occurrences)
-		return;
-
-	// Adds an occurrence to the head of the linked list	
-	oc->setNext(occurrences);
-	occurrences->setPrev(oc);
-
-	occurrences = oc;
-	this->increment();
+	assert(locationsInDoc.find(version) != locationsInDoc.end());
+	locationsInDoc[version].erase(idx);
+	decrement();
 }
 
-Occurrence* HashTableEntry::getHeadOccurrence() const
-{
-	return occurrences;
-}
-
+// The heap's priority is defined as the number of occurrences of the pair (the pair is that entry's key)
 size_t HashTableEntry::getSize() const
 {
-	return size;
+	return this->heapEntryPointer->getPriority();
 }
 
+// TODO remove these 2 (getter and setter)
 HeapEntry* HashTableEntry::getHeapEntryPointer() const
 {
 	return heapEntryPointer;
 }
-
 void HashTableEntry::setHeapEntryPointer(HeapEntry* newHeapEntryPointer)
 {
 	heapEntryPointer = newHeapEntryPointer;

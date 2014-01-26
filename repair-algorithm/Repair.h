@@ -9,7 +9,6 @@
 #include <sstream>
 #include <locale>
 #include <string>
-#include "Occurrence.h"
 #include "HashTableEntry.h"
 #include "../util/md5.h"
 #include "../indexed-heap/HeapEntry.h"
@@ -19,7 +18,7 @@
 #include "RepairTreeNode.h"
 #include "Util.h"
 #include <assert.h>
-
+#include <stdlib.h>
 
 typedef std::unordered_map<unsigned long long, HashTableEntry*> RepairHashTable;
 
@@ -57,15 +56,19 @@ private:
 	
 
 	/***** Repair Core Algorithm *****/
-	void addOrUpdatePair(unsigned long long key, unsigned version);
+	void addOccurrence(unsigned long long key, unsigned version, int idx);
+
+	void removeOccurrence(unsigned long long key, unsigned v, int idx);
 
 	void extractPairs();
 
-	void removeOccurrence(Occurrence* oc);
+	int scanLeft(unsigned v, int idx);
 
-	unsigned long long getNewRightKey(unsigned symbol, Occurrence* succ);
+	int scanRight(unsigned v, int idx);
 
-	unsigned long long getNewLeftKey(unsigned symbol, Occurrence* prec);
+	void checkVersionAndIdx(unsigned v, int idx);
+
+	unsigned long long getKeyAtIdx(unsigned v, int idx);
 
 	void doRepair(unsigned repairStoppingPoint);
 
@@ -88,7 +91,7 @@ public:
 		// Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures	
 		myHeap = IndexedHeap();
 		
-		hashTable = std::unordered_map<unsigned long long, HashTableEntry*> ();
+		hashTable = RepairHashTable();
 		
 		associations = std::vector<Association>();
 		
@@ -113,8 +116,10 @@ public:
 		// (either some early stop condition or one symbol left)
 		doRepair(repairStoppingPoint);
 
+		assert(hashTable.empty());
+
 		// Return the payload
-		return this->associations;		
+		return this->associations;
 	}
 
 	void cleanup();
