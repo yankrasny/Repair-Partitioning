@@ -24,18 +24,10 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
 {
 //	cerr << "removeOccurrence(" << getKeyAsString(key) << ", " << v << ", " << idx << ")" << endl;
 
-	if (myHeap.empty()) {
-		return;
-	}
-
-	if (hashTable.count(key) < 1) {
-		cerr << "Key: " << key << " not found in hashTable" << endl;
-		system("pause");
-		return;
-	}
-
 	// Assertions
 	checkVersionAndIdx(v, idx);
+	assert(!myHeap.empty());
+	assert(hashTable.count(key) > 0);
 	assert(hashTable[key] != NULL);
 
 	// Remove this occurrence at this key
@@ -66,7 +58,6 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
         // The value in this table is a pointer.
         delete hashTable[key];
 		hashTable.erase(key);
-
 	}
 }
 

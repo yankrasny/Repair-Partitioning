@@ -39,20 +39,21 @@ public:
 
 	// HeapEntryPtr getHeapEntryPointer() const;
 
-	// Big 3
-	// HashTableEntry(const HashTableEntry& rhs)
-	// {
-
-	// }
+	// Copy ctor
+	HashTableEntry(const HashTableEntry& rhs)
+	{
+		std::cerr << "Copy ctor for HashTableEntry" << std::endl;
+	}
 	
-	// HashTableEntry& operator=(const HashTableEntry& rhs)
-	// {
-
-	// }
+	// Assignment operator
+	HashTableEntry& operator=(const HashTableEntry& rhs)
+	{
+		std::cerr << "Assignment operator for HashTableEntry" << std::endl;
+	}
 	
 	~HashTableEntry()
 	{
-		// std::cerr << "Destructor for HashTableEntry[key = " << heapEntryPointer->getKey() << "]" << std::endl;
+		std::cerr << "Destructor for HashTableEntry" << std::endl;
 		heapEntryPointer = NULL;
 	}
 };
