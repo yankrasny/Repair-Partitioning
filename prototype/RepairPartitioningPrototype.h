@@ -48,6 +48,8 @@ public:
 
 	void writeResults(
 		const std::vector<std::vector<unsigned> >& versions, 
+		unsigned* offsetsAllVersions,
+		unsigned* versionPartitionSizes,
 		std::unordered_map<unsigned, std::string>& IDsToWords, 
 		const std::string& outFilename);
 
@@ -75,8 +77,8 @@ public:
 	double runRepairPartitioning(
 		std::vector<std::vector<unsigned> > versions,
 		std::unordered_map<unsigned, std::string>& IDsToWords, 
-		unsigned*& offsetsAllVersions, 
-		unsigned*& versionPartitionSizes, 
+		unsigned* offsetsAllVersions,
+		unsigned* versionPartitionSizes,
 		unsigned minFragSize, 
 		float fragmentationCoefficient, 
 		unsigned method);
@@ -84,8 +86,8 @@ public:
 	// Use this version with Jinru's code
 	double runRepairPartitioning(
 		std::vector<std::vector<unsigned> > versions,
-		unsigned*& offsetsAllVersions, 
-		unsigned*& versionPartitionSizes, 
+		unsigned* offsetsAllVersions,
+		unsigned* versionPartitionSizes,
 		unsigned minFragSize, 
 		float fragmentationCoefficient, 
 		unsigned method);

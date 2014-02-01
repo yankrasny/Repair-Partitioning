@@ -2,69 +2,6 @@
 #include <time.h>
 using namespace std;
 
-// void RepairPartitioningPrototype::setFragmentInfo(
-// 	const vector<vector<unsigned> >& versions, 
-// 	ostream& os, 
-// 	bool print)
-// {
-// 	os << "*** Fragments ***" << endl;
-
-// 	unsigned start, end, theID, fragSize;
-// 	string word;
-// 	vector<unsigned> wordIDs;
-	
-// 	MD5 md5;
-// 	char* concatOfWordIDs;
-	
-// 	unsigned totalCountFragments(0);
-
-// 	// Iterate over versions
-// 	for (unsigned v = 0; v < versions.size(); v++)
-// 	{
-// 		wordIDs = versions[v]; // all the word IDs for version v
-// 		this->fragments.push_back(vector<FragInfo >());
-// 		if (print)
-// 			os << "Version " << v << endl;
-
-// 		// One version: iterate over the words in that version
-// 		for (unsigned i = 0; i < this->versionSizes[v] - 1; i++)
-// 		{			
-// 			start = this->offsets[totalCountFragments + i];
-// 			end = this->offsets[totalCountFragments + i + 1];
-// 			fragSize = end - start;
-// 			if (print)
-// 				os << "Fragment " << i << ": ";
-// 			stringstream ss;
-// 			for (unsigned j = start; j < end; j++)
-// 			{
-// 				theID = wordIDs[j];
-
-// 				// Need a delimiter to ensure uniqueness (1,2,3 is different from 12,3)
-// 				ss << theID << ",";
-// 			}
-
-// 			// Store the concatenation of the IDs for this fragment
-// 			concatOfWordIDs = new char[MAX_FRAG_LENGTH];
-// 			strcpy(concatOfWordIDs, ss.str().c_str());
-			
-// 			// Calculate the hash of the fragment
-// 			string hash; // = new char[128]; // md5 produces 128 bit output
-// 			hash = md5.digestString(concatOfWordIDs);
-// 			this->fragments[v].push_back(FragInfo(0, 0, fragSize, hash));
-// 			ss.str("");
-			
-// 			if (print)
-// 				os << "hash (" << hash << ")" << endl;
-// 			delete [] concatOfWordIDs;
-// 			concatOfWordIDs = NULL;
-// 		}
-// 		totalCountFragments += this->versionSizes[v];
-// 		if (print)
-// 			os << endl;
-// 	}
-// }
-
-
 double RepairPartitioningPrototype::getScore(ostream& os)
 {
 	double term;
@@ -113,7 +50,9 @@ void RepairPartitioningPrototype::updateUniqueFragmentHashMap()
 
 void RepairPartitioningPrototype::writeResults(
 	const vector<vector<unsigned> >& versions, 
-	unordered_map<unsigned, string>& IDsToWords, 
+	unsigned* offsetsAllVersions,
+	unsigned* versionPartitionSizes,
+	unordered_map<unsigned, string>& IDsToWords,
 	const string& outFilename)
 {
 	ofstream os(outFilename.c_str());
@@ -137,8 +76,8 @@ void RepairPartitioningPrototype::writeResults(
 		{
 			if (i < numFragsInVersion - 1)
 			{
-				unsigned currOffset = this->offsetsAllVersions[totalCountFragments + i];
-				unsigned nextOffset = this->offsetsAllVersions[totalCountFragments + i + 1];
+				unsigned currOffset = offsetsAllVersions[totalCountFragments + i];
+				unsigned nextOffset = offsetsAllVersions[totalCountFragments + i + 1];
 				diff = nextOffset - currOffset;
 			}
 			else
@@ -146,8 +85,8 @@ void RepairPartitioningPrototype::writeResults(
 				diff = 0;
 			}
 
-			os << "Fragment " << i << ": " << this->offsetsAllVersions[totalCountFragments + i] << "-" << 
-				this->offsetsAllVersions[totalCountFragments + i + 1] << " (frag size: " << diff << ")" << endl;
+			os << "Fragment " << i << ": " << offsetsAllVersions[totalCountFragments + i] << "-" <<
+				offsetsAllVersions[totalCountFragments + i + 1] << " (frag size: " << diff << ")" << endl;
 		}
 		totalCountFragments += numFragsInVersion;
 		os << endl;
@@ -184,8 +123,8 @@ void RepairPartitioningPrototype::writeAssociations(const vector<Association>& a
 double RepairPartitioningPrototype::runRepairPartitioning(
 	vector<vector<unsigned> > versions, 
 	unordered_map<unsigned, string>& IDsToWords, 
-	unsigned*& offsetsAllVersions, 
-	unsigned*& versionPartitionSizes, 
+	unsigned* offsetsAllVersions,
+	unsigned* versionPartitionSizes,
 	unsigned minFragSize, 
 	float fragmentationCoefficient, 
 	unsigned method)
@@ -216,9 +155,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 		// cerr << "Versions: {" << associations.back().getVersionString() << "}" << endl;
 	}
 
-	this->offsetsAllVersions = repairAlg.getOffsetsAllVersions();
-
-	this->versionPartitionSizes = repairAlg.getVersionPartitionSizes();
+	repairAlg.getOffsetsAllVersions(offsetsAllVersions, versionPartitionSizes);
 
 	// offsets must be sorted for each version
 	// think about it, can a version be partitioned like this? [0, 15, 29, 23, ...] No.
@@ -244,8 +181,8 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 // Use this version with Jinru's code
 double RepairPartitioningPrototype::runRepairPartitioning(
 	vector<vector<unsigned> > versions, 
-	unsigned*& offsetsAllVersions, 
-	unsigned*& versionPartitionSizes, 
+	unsigned* offsetsAllVersions,
+	unsigned* versionPartitionSizes,
 	unsigned minFragSize, 
 	float fragmentationCoefficient, 
 	unsigned method)
@@ -276,9 +213,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 		// cerr << "Versions: {" << associations.back().getVersionString() << "}" << endl;
 	}
 
-	offsetsAllVersions = repairAlg.getOffsetsAllVersions();
-
-	versionPartitionSizes = repairAlg.getVersionPartitionSizes();
+	repairAlg.getOffsetsAllVersions(offsetsAllVersions, versionPartitionSizes);
 
 	// offsets must be sorted for each version
 	// think about it, can a version be partitioned like this? [0, 15, 29, 23, ...] No.
@@ -389,12 +324,34 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 
 		wordIDs.push_back(1);
 		wordIDs.push_back(2);
+		wordIDs.push_back(2);
+		wordIDs.push_back(2);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(4);
+		wordIDs.push_back(2);
 		wordIDs.push_back(3);
 		versions.push_back(wordIDs);
 		wordIDs.clear();
 
 		wordIDs.push_back(1);
 		wordIDs.push_back(2);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
+		wordIDs.push_back(3);
 		wordIDs.push_back(3);
 		wordIDs.push_back(4);
 		wordIDs.push_back(1);
@@ -437,11 +394,6 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		unsigned* versionPartitionSizes = new unsigned[versions.size()];
 		unsigned* offsetsAllVersions = new unsigned[versions.size() * MAX_NUM_FRAGMENTS_PER_VERSION];
 
-        // DKG: Why are you making memeber varaibles if you are going to reset them at every
-        // iteration of this loop?
-		this->versionPartitionSizes = versionPartitionSizes;
-		this->offsetsAllVersions = offsetsAllVersions;
-
 		double score = 0.0;
 		
 		clock_t init, final;
@@ -472,7 +424,8 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 //				}
 //			}
 
-			this->writeResults(versions, IDsToWords, outputFilename);
+			this->writeResults(versions, offsetsAllVersions,
+				 	versionPartitionSizes, IDsToWords, outputFilename);
 
 			stringstream command;
 			command << "start " << outputFilename.c_str();
@@ -482,8 +435,8 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 			exit(e);
 		}
 
-        delete [] this->versionPartitionSizes;
-        delete [] this->offsetsAllVersions;
+        delete [] versionPartitionSizes;
+        delete [] offsetsAllVersions;
 
 		final=clock()-init;
 		cerr << (double)final / ((double)CLOCKS_PER_SEC) << endl;

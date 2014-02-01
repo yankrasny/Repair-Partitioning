@@ -361,11 +361,7 @@ int RepairAlgorithm::getNextRootLoc(int loc)
 	return loc;
 }
 
-unsigned* RepairAlgorithm::getVersionPartitionSizes() {
-	return this->versionPartitionSizes;
-}
-
-unsigned* RepairAlgorithm::getOffsetsAllVersions()
+void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsigned* versionPartitionSizes)
 {
 	int loc = associations.size() - 1;
 	RepairTreeNode* currRoot = NULL;
@@ -435,19 +431,16 @@ unsigned* RepairAlgorithm::getOffsetsAllVersions()
 		theList = *it;
 		for (size_t j = 0; j < theList.size(); j++)
 		{
-			this->offsets[totalOffsetInArray + j] = theList.get(j);
+			offsetsAllVersions[totalOffsetInArray + j] = theList.get(j);
 		}
-		this->versionPartitionSizes[numVersions++] = theList.size();
+		versionPartitionSizes[numVersions++] = theList.size();
 		totalOffsetInArray += theList.size();
 	}
 
-	// Clean up offsetMap
 	offsetMap.clear();
 
-	return this->offsets;
 }
 
-// Not tested, well sorta tested
 void RepairAlgorithm::deleteTree(RepairTreeNode* node) {
 	RepairTreeNode* leftChild = node->getLeftChild();
 	RepairTreeNode* rightChild = node->getRightChild();

@@ -31,7 +31,7 @@ private:
 	unsigned* versionPartitionSizes;
 	
 	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
-	unsigned* offsets;
+	unsigned* offsetsAllVersions;
 
 	// Pass this to the partitioning alg, it prevents us from going too far down a repair tree
 	unsigned numLevelsDown;
@@ -85,26 +85,20 @@ private:
 public:
 
 	RepairAlgorithm(std::vector<std::vector<unsigned> > versions,
-		unsigned numLevelsDown = 1, unsigned minFragSize = 2, double fragmentationCoefficient = 1.0) : 
-	versions(versions), numLevelsDown(numLevelsDown), minFragSize(minFragSize), fragmentationCoefficient(fragmentationCoefficient)
+		unsigned numLevelsDown = 1,
+		unsigned minFragSize = 2,
+		double fragmentationCoefficient = 1.0) :
+			versions(versions),
+			numLevelsDown(numLevelsDown),
+			minFragSize(minFragSize),
+			fragmentationCoefficient(fragmentationCoefficient)
 	{
-		// Allocate the heap, hash table, array of associations, and list of pointers to neighbor structures	
 		myHeap = IndexedHeap();
-		
 		hashTable = RepairHashTable();
-		
 		associations = std::vector<Association>();
-		
-	 	unsigned maxArraySize = versions.size() * MAX_NUM_FRAGMENTS_PER_VERSION;
-
-		this->offsets = new unsigned[maxArraySize];
-
-		this->versionPartitionSizes = new unsigned[versions.size()];
 	}
 
-	unsigned* getVersionPartitionSizes();
-
-	unsigned* getOffsetsAllVersions();
+	void getOffsetsAllVersions(unsigned* offsetsAllVersions, unsigned* versionPartitionSizes);
 
 	std::vector<Association> getAssociations(unsigned repairStoppingPoint = 0)
 	{
@@ -117,6 +111,7 @@ public:
 		doRepair(repairStoppingPoint);
 
 		assert(hashTable.empty());
+		assert(myHeap.empty());
 
 		// Return the payload
 		return this->associations;
@@ -126,7 +121,7 @@ public:
 };
 
 
-// The whole point of this is to be able to order the lists of offsets by version number
+// The whole point of this is to be able to order the lists of offsetsAllVersions by version number
 // After repair, we go through the resulting associations and build trees for each version
 // That iteration doesn't go in order of versionNum
 // Our output must be ordered by version number, so we do the following
