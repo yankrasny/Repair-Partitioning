@@ -20,7 +20,7 @@ void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, in
 
 }
 
-void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int idx)
+bool RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int idx)
 {
 //	cerr << "removeOccurrence(" << getKeyAsString(key) << ", " << v << ", " << idx << ")" << endl;
 
@@ -58,7 +58,10 @@ void RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
         // The value in this table is a pointer.
         delete hashTable[key];
 		hashTable.erase(key);
+
+		return true;
 	}
+	return false;
 }
 
 void RepairAlgorithm::checkVersionAndIdx(unsigned v, int idx)
@@ -180,10 +183,15 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 		// Without checking for this case, we proceed to do the removes and adds for the now invalid pair, causing a runtime error
 		// So, if there are two adjacent indexes (abs(idx - prevIdx) < 2) then we just skip replacement for that occurrence, as it is invalid
 		int prevIdx;
+		bool maxDeleted = false;
 
 		// For all versions
 		for (size_t v = 0; v < versions.size(); v++)
 		{
+			if (maxDeleted) {
+				break;
+			}
+
 			if (!max->hasLocationsAtVersion(v)) {
 				continue;
 			}
@@ -208,7 +216,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				if (prevIdx >= 0) { // prevIdx is -1 for the first idx
 					if (scanRight(v, prevIdx) == idx) { // check that idx and prevIdx are consecutive
 						if (!justRemoved) { // remove every second occurrence in a line of the same occurrences
-							removeOccurrence(key, v, idx);
+							maxDeleted = removeOccurrence(key, v, idx);
 							removed.insert(idx);
 							justRemoved = true; // justRemoved must only be true in this case, so we have to have those elses where it's false
 						} else { // this one
@@ -239,7 +247,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 						if (leftKey != 0) {
 							assert(hashTable.count(leftKey));
 							assert(hashTable[leftKey] != NULL);
-							removeOccurrence(leftKey, v, leftIdx);
+							maxDeleted = removeOccurrence(leftKey, v, leftIdx);
 						}
 					}
 				}
@@ -252,7 +260,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 						if (rightKey != 0) {
 							assert(hashTable.count(rightKey));
 							assert(hashTable[rightKey] != NULL);
-							removeOccurrence(rightKey, v, rightIdx);
+							maxDeleted = removeOccurrence(rightKey, v, rightIdx);
 						}
 					}
 				}
@@ -261,7 +269,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 				if (key != 0) {
 					assert(hashTable.count(key));
 					assert(hashTable[key] != NULL);
-					removeOccurrence(key, v, idx);
+					maxDeleted = removeOccurrence(key, v, idx);
 				}
 
 

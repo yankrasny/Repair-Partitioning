@@ -58,7 +58,7 @@ private:
 	/***** Repair Core Algorithm *****/
 	void addOccurrence(unsigned long long key, unsigned version, int idx);
 
-	void removeOccurrence(unsigned long long key, unsigned v, int idx);
+	bool removeOccurrence(unsigned long long key, unsigned v, int idx);
 
 	void extractPairs();
 

@@ -17,8 +17,10 @@ class HashTableEntry
 public:
 	HashTableEntry(HeapEntry* hp, unsigned version, int firstIdx) : heapEntryPointer(hp)
 	{
+		locationsInDoc = std::unordered_map<unsigned, std::set<int> >();
 		this->addOccurrence(version, firstIdx);
 	}
+
 	bool hasLocationsAtVersion(unsigned version);
 
 	std::set<int> getLocationsAtVersion(unsigned version);
@@ -42,18 +44,18 @@ public:
 	// Copy ctor
 	HashTableEntry(const HashTableEntry& rhs)
 	{
-		std::cerr << "Copy ctor for HashTableEntry" << std::endl;
+//		std::cerr << "Copy ctor for HashTableEntry" << std::endl;
 	}
 	
 	// Assignment operator
 	HashTableEntry& operator=(const HashTableEntry& rhs)
 	{
-		std::cerr << "Assignment operator for HashTableEntry" << std::endl;
+//		std::cerr << "Assignment operator for HashTableEntry" << std::endl;
 	}
 	
 	~HashTableEntry()
 	{
-		std::cerr << "Destructor for HashTableEntry" << std::endl;
+//		std::cerr << "Destructor for HashTableEntry" << std::endl;
 		heapEntryPointer = NULL;
 	}
 };

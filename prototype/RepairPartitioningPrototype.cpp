@@ -322,70 +322,70 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 
 		wordIDs = vector<unsigned>();
 
-		wordIDs.push_back(1);
-		wordIDs.push_back(2);
-		wordIDs.push_back(2);
-		wordIDs.push_back(2);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(4);
-		wordIDs.push_back(2);
-		wordIDs.push_back(3);
-		versions.push_back(wordIDs);
-		wordIDs.clear();
-
-		wordIDs.push_back(1);
-		wordIDs.push_back(2);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(3);
-		wordIDs.push_back(4);
-		wordIDs.push_back(1);
-		wordIDs.push_back(2);
-		versions.push_back(wordIDs);
-		wordIDs.clear();
-
-		currentWordID = 4;
-
-//		for (unsigned i = 0; i < inputFilenames.size(); i++)
-//		{
-//			stringstream filenameSS;
-//			filenameSS << inputFilepath << inputFilenames[i];
-//			string filename = filenameSS.str();
-//			text = getText(filename, fileSize);
-//			if (!text)
-//				continue;
-//			wordIDs = stringToWordIDs(text, IDsToWords, uniqueWordIDs);
-//
-//			if (false)
-//			{
-//				cerr << "Version " << i << endl;
-//				for (unsigned j = 0; j < wordIDs.size(); j++)
-//				{
-//					cerr << wordIDs[j] << ",";
-//				}
-//				cerr << endl << endl;
-//			}
-//
-//			versions.push_back(wordIDs);
-//			delete [] text;
-//			text = NULL;
-//		}
+//		wordIDs.push_back(1);
+//		wordIDs.push_back(2);
+//		wordIDs.push_back(2);
+//		wordIDs.push_back(2);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(4);
+//		wordIDs.push_back(2);
+//		wordIDs.push_back(3);
+//		versions.push_back(wordIDs);
 //		wordIDs.clear();
+//
+//		wordIDs.push_back(1);
+//		wordIDs.push_back(2);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(3);
+//		wordIDs.push_back(4);
+//		wordIDs.push_back(1);
+//		wordIDs.push_back(2);
+//		versions.push_back(wordIDs);
+//		wordIDs.clear();
+//
+//		currentWordID = 4;
+
+		for (unsigned i = 0; i < inputFilenames.size(); i++)
+		{
+			stringstream filenameSS;
+			filenameSS << inputFilepath << inputFilenames[i];
+			string filename = filenameSS.str();
+			text = getText(filename, fileSize);
+			if (!text)
+				continue;
+			wordIDs = stringToWordIDs(text, IDsToWords, uniqueWordIDs);
+
+			if (false)
+			{
+				cerr << "Version " << i << endl;
+				for (unsigned j = 0; j < wordIDs.size(); j++)
+				{
+					cerr << wordIDs[j] << ",";
+				}
+				cerr << endl << endl;
+			}
+
+			versions.push_back(wordIDs);
+			delete [] text;
+			text = NULL;
+		}
+		wordIDs.clear();
 		
 		// By this time, IDsToWords should contain the mappings of IDs to words in all versions
 		// printIDtoWordMapping(IDsToWords);
