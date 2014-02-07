@@ -73,17 +73,6 @@ public:
 	void printIDtoWordMapping(std::unordered_map<unsigned, std::string>& IDsToWords, 
 		std::ostream& os = std::cerr);
 
-	// Use this version with our main
-	double runRepairPartitioning(
-		std::vector<std::vector<unsigned> > versions,
-		std::unordered_map<unsigned, std::string>& IDsToWords, 
-		unsigned* offsetsAllVersions,
-		unsigned* versionPartitionSizes,
-		unsigned minFragSize, 
-		float fragmentationCoefficient, 
-		unsigned method);
-
-	// Use this version with Jinru's code
 	double runRepairPartitioning(
 		std::vector<std::vector<unsigned> > versions,
 		unsigned* offsetsAllVersions,

@@ -119,66 +119,6 @@ void RepairPartitioningPrototype::writeAssociations(const vector<Association>& a
 	}
 }
 
-// Use this version with our main
-double RepairPartitioningPrototype::runRepairPartitioning(
-	vector<vector<unsigned> > versions, 
-	unordered_map<unsigned, string>& IDsToWords, 
-	unsigned* offsetsAllVersions,
-	unsigned* versionPartitionSizes,
-	unsigned minFragSize, 
-	float fragmentationCoefficient, 
-	unsigned method)
-{
-	bool debug = false;
-
-	// don't really need numLevelsDown for now
-	unsigned numLevelsDown = 15;
-	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize, fragmentationCoefficient);
-
-	vector<Association> associations = repairAlg.getAssociations();
-
-	// associations should be sorted by the symbol on the left
-	// repair assigns an incrementing ID
-	if (debug) {
-		for (size_t i = 0; i < associations.size() - 1; i++) {
-
-			assert(associations[i].getSymbol() <= associations[i+1].getSymbol());
-
-			std::multiset<unsigned> versionsForAssociation = associations[i].getVersions();
-			for (std::multiset<unsigned>::iterator it = versionsForAssociation.begin(); it != versionsForAssociation.end(); it++) {
-				// (*it) should be an unsigned representing the version number. that number can't be higher than numVersions
-				unsigned vNum = *it;
-				assert(vNum <= versions.size());
-			}
-		}
-		// cerr << associations.back().getSymbol() << ": (" << associations.back().getLeft() << ", " << associations.back().getRight() << ")" << endl;
-		// cerr << "Versions: {" << associations.back().getVersionString() << "}" << endl;
-	}
-
-	repairAlg.getOffsetsAllVersions(offsetsAllVersions, versionPartitionSizes);
-
-	// offsets must be sorted for each version
-	// think about it, can a version be partitioned like this? [0, 15, 29, 23, ...] No.
-	unsigned totalOffsets = 0;
-	if (debug) {
-		for (size_t i = 0; i < versions.size(); i++) {
-			for (size_t j = 0; j < versionPartitionSizes[i] - 1; j++) {
-				// cerr << offsetsAllVersions[totalOffsets] << ",";
-				assert(offsetsAllVersions[totalOffsets] <= offsetsAllVersions[totalOffsets+1]);
-				totalOffsets++;
-			}
-			// cerr << endl;
-			totalOffsets++;
-		}
-	}
-
-	repairAlg.cleanup();
-
-	double score = 0.0;
-	return score;
-}
-
-// Use this version with Jinru's code
 double RepairPartitioningPrototype::runRepairPartitioning(
 	vector<vector<unsigned> > versions, 
 	unsigned* offsetsAllVersions,
@@ -301,8 +241,6 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		if (argc > 4)
 			method = atoi(argv[4]);
 
-		// if (argc > 3)
-		// 	repairStoppingPoint = atoi(argv[3]);
 		
 		vector<string> inputFilenames = vector<string>();
 		if (getFileNames(inputFilepath, inputFilenames))
@@ -403,26 +341,13 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		try {
 			score = runRepairPartitioning(
 			 	versions,
-			 	IDsToWords,
 			 	offsetsAllVersions,
 			 	versionPartitionSizes,
 			 	minFragSize,
 			 	fragmentationCoefficient,
 			 	method);
 
-			score = 0.0;
-
 			string outputFilename = "./Output/results.txt";
-
-			// Set versionPartitionSizes and offsetsAllVersions
-//			size_t x = 0;
-//			unsigned numberOfVersions = versions.size();
-//			for (size_t i = 0; i < numberOfVersions; i++) {
-//				versionPartitionSizes[i] = 5;
-//				for (size_t j = 0; j < 5; j++) {
-//					offsetsAllVersions[x++] = j;
-//				}
-//			}
 
 			this->writeResults(versions, offsetsAllVersions,
 				 	versionPartitionSizes, IDsToWords, outputFilename);
