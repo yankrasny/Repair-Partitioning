@@ -375,7 +375,7 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
 	RepairTreeNode* currRoot = NULL;
 	int versionNum = 0;
 
-	SortedPartitionsByVersionNum offsetMap = SortedPartitionsByVersionNum();
+	SortedPartitionsByVersion offsetMap = SortedPartitionsByVersion();
 	PartitionList theList;
 
 	RepairDocumentPartition partitionAlg = RepairDocumentPartition(this->associations, this->versions.size(),
@@ -389,16 +389,9 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
 
 		while (true)
 		{
-			// TODO verify that this is the lowest version number in the list
-			// Wait, why? I don't remember the logic...
-			// Ok, versionNum is one of the versions in which this association occurred
-			// We don't go in order of versionNum, which is worrying because we use it as an array index below
-			// It is the lowest because we return begin() and the set is sorted by symbol
-			// BULLSHIT: the lowest for that location, but not the lowest overall, IDIOT!
 			versionNum = associations[loc].getVersionAtBegin();
 			if (versionNum == -1) break;
 
-			// Assert that versionNum is valid
 			assert(versionNum < versions.size() && versionNum >= 0);
 	
 			currRoot = buildTree(loc, versionNum);
@@ -433,7 +426,7 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
 	unsigned numVersions = 0;
 
 	// Post processing to get offsetMap into offsets and versionPartitionSizes
-	for (SortedPartitionsByVersionNum::iterator it = offsetMap.begin(); it != offsetMap.end(); it++)
+	for (SortedPartitionsByVersion::iterator it = offsetMap.begin(); it != offsetMap.end(); it++)
 	{
 		// Reusing the same var from above, should be ok
 		theList = *it;

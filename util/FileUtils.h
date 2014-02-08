@@ -16,15 +16,6 @@ inline std::string getFileName(const std::string& filepath)
 	return tokens.back();
 }
 
-inline std::string stripDot(const std::string& filepath)
-{
-// 	std::vector<std::string> tokens;
-// 	bool trimEmpty = false;
-// 	tokenize(filepath, tokens, ".", trimEmpty);
-// 	std::string s = tokens[0];
-	return filepath.substr(1, filepath.size());
-}
-
 inline int getFileNames(const std::string& dir, std::vector<std::string>& files)
 {
     DIR *dp;

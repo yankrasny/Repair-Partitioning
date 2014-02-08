@@ -23,17 +23,10 @@ private:
 	// Unique Fragments in all the versions
 	std::unordered_map<std::string, FragInfo> uniqueFrags;
 
-	unsigned* offsetsAllVersions;
-
-	unsigned* versionPartitionSizes;
-
-	
-
 public:
 	RepairPartitioningPrototype() 
 	{
 		fragments = std::vector<std::vector<FragInfo > >();
-
 		uniqueFrags = std::unordered_map<std::string, FragInfo>();
 	}
 
@@ -80,6 +73,15 @@ public:
 		unsigned minFragSize, 
 		float fragmentationCoefficient, 
 		unsigned method);
+
+	void checkAssociations(
+		const std::vector<std::vector<unsigned> >& versions,
+		const std::vector<Association>& associations) const;
+
+	void checkOffsets(
+		const std::vector<std::vector<unsigned> >& versions,
+		unsigned* offsetsAllVersions,
+		unsigned* versionPartitionSizes) const;
 
 	int run(int argc, char* argv[]);
 };

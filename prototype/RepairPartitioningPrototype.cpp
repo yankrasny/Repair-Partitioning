@@ -7,7 +7,7 @@ double RepairPartitioningPrototype::getScore(ostream& os)
 	double term;
 	double sum(0);
 	double totalFragSize(0);
-	for (unordered_map<string, FragInfo>::iterator it = uniqueFrags.begin(); it != uniqueFrags.end(); it++)
+	for (auto it = uniqueFrags.begin(); it != uniqueFrags.end(); it++)
 	{
 		term = it->second.count * it->second.fragSize;
 		sum += term;
@@ -63,6 +63,8 @@ void RepairPartitioningPrototype::writeResults(
 	unsigned totalCountFragments(0);
 	unsigned diff(0);
 	unsigned numVersions = versions.size();
+	unsigned currOffset(0);
+	unsigned nextOffset(0);
 	for (unsigned v = 0; v < numVersions; v++)
 	{
 		unsigned numFragsInVersion = versionPartitionSizes[v];
@@ -76,8 +78,8 @@ void RepairPartitioningPrototype::writeResults(
 		{
 			if (i < numFragsInVersion - 1)
 			{
-				unsigned currOffset = offsetsAllVersions[totalCountFragments + i];
-				unsigned nextOffset = offsetsAllVersions[totalCountFragments + i + 1];
+				currOffset = offsetsAllVersions[totalCountFragments + i];
+				nextOffset = offsetsAllVersions[totalCountFragments + i + 1];
 				diff = nextOffset - currOffset;
 			}
 			else
@@ -85,8 +87,10 @@ void RepairPartitioningPrototype::writeResults(
 				diff = 0;
 			}
 
-			os << "Fragment " << i << ": " << offsetsAllVersions[totalCountFragments + i] << "-" <<
-				offsetsAllVersions[totalCountFragments + i + 1] << " (frag size: " << diff << ")" << endl;
+			os << "Fragment " << i << ": " << 
+				offsetsAllVersions[totalCountFragments + i] << "-" <<
+				offsetsAllVersions[totalCountFragments + i + 1] << 
+				" (frag size: " << diff << ")" << endl;
 		}
 		totalCountFragments += numFragsInVersion;
 		os << endl;
@@ -103,15 +107,17 @@ void RepairPartitioningPrototype::writeResults(
 }
 
 
-void RepairPartitioningPrototype::printIDtoWordMapping(unordered_map<unsigned, string>& IDsToWords, ostream& os)
+void RepairPartitioningPrototype::printIDtoWordMapping(unordered_map<unsigned, 
+	string>& IDsToWords, ostream& os)
 {
-	for (unordered_map<unsigned, string>::iterator it = IDsToWords.begin(); it != IDsToWords.end(); it++)
+	for (auto it = IDsToWords.begin(); it != IDsToWords.end(); it++)
 	{
 		os << it->first << ": " << it->second << endl;
 	}
 }
 
-void RepairPartitioningPrototype::writeAssociations(const vector<Association>& associations, ostream& os)
+void RepairPartitioningPrototype::writeAssociations(
+	const vector<Association>& associations, ostream& os)
 {
 	for (size_t i = 0; i < associations.size(); i++)
 	{
@@ -130,50 +136,75 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	bool debug = false;
 
 	// don't really need numLevelsDown for now
-	unsigned numLevelsDown = 20;
-	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize, fragmentationCoefficient);
+	unsigned numLevelsDown = 10;
+	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize,
+		fragmentationCoefficient);
 
 	vector<Association> associations = repairAlg.getAssociations();
 
-	// associations should be sorted by the symbol on the left
-	// repair assigns an incrementing ID
-	if (debug) {
-		for (size_t i = 0; i < associations.size() - 1; i++) {
-
-			assert(associations[i].getSymbol() <= associations[i+1].getSymbol());
-
-			std::multiset<unsigned> versionsForAssociation = associations[i].getVersions();
-			for (std::multiset<unsigned>::iterator it = versionsForAssociation.begin(); it != versionsForAssociation.end(); it++) {
-				// (*it) should be an unsigned representing the version number. that number can't be higher than numVersions
-				unsigned vNum = *it;
-				assert(vNum <= versions.size());
-			}
-		}
-		// cerr << associations.back().getSymbol() << ": (" << associations.back().getLeft() << ", " << associations.back().getRight() << ")" << endl;
-		// cerr << "Versions: {" << associations.back().getVersionString() << "}" << endl;
-	}
+	if (debug)
+		checkAssociations(versions, associations);
 
 	repairAlg.getOffsetsAllVersions(offsetsAllVersions, versionPartitionSizes);
 
-	// offsets must be sorted for each version
-	// think about it, can a version be partitioned like this? [0, 15, 29, 23, ...] No.
-	unsigned totalOffsets = 0;
-	if (debug) {
-		for (size_t i = 0; i < versions.size(); i++) {
-			for (size_t j = 0; j < versionPartitionSizes[i] - 1; j++) {
-				// cerr << offsetsAllVersions[totalOffsets] << ",";
-				assert(offsetsAllVersions[totalOffsets] <= offsetsAllVersions[totalOffsets+1]);
-				totalOffsets++;
-			}
-			// cerr << endl;
-			totalOffsets++;
-		}
-	}
+	if (debug)
+		checkOffsets(versions, offsetsAllVersions, versionPartitionSizes);
 
 	repairAlg.cleanup();
 
 	double score = 0.0;
 	return score;
+}
+
+
+void RepairPartitioningPrototype::checkAssociations(
+	const vector<vector<unsigned> >& versions,
+	const vector<Association>& associations) const
+{
+	// associations should be sorted by the symbol on the left
+	// repair assigns an incrementing ID
+	for (size_t i = 0; i < associations.size() - 1; i++) {
+
+		assert(associations[i].getSymbol() <=
+			associations[i+1].getSymbol());
+
+		std::multiset<unsigned> versionsForAssociation 
+			= associations[i].getVersions();
+
+		for (auto it = versionsForAssociation.begin(); 
+			it != versionsForAssociation.end(); it++) {
+			// (*it) should be an unsigned representing the version number
+			// that number can't be higher than numVersions
+			unsigned vNum = *it;
+			assert(vNum <= versions.size());
+		}
+	}
+	cerr << associations.back().getSymbol() << ": (" << 
+		associations.back().getLeft() << ", " << 
+		associations.back().getRight() << ")" << endl;
+	cerr << "Versions: {" <<
+		associations.back().getVersionString() << "}" << endl;
+}
+
+void RepairPartitioningPrototype::checkOffsets(
+	const vector<vector<unsigned> >& versions,
+	unsigned* offsetsAllVersions,
+	unsigned* versionPartitionSizes) const
+{
+	// offsets must be sorted for each version
+	// think about it, can a version be partitioned like this?
+	// [0, 15, 29, 23, ...] No.
+	unsigned totalOffsets = 0;
+	for (size_t i = 0; i < versions.size(); i++) {
+		for (size_t j = 0; j < versionPartitionSizes[i] - 1; j++) {
+			// cerr << offsetsAllVersions[totalOffsets] << ",";
+			assert(offsetsAllVersions[totalOffsets] <=
+				offsetsAllVersions[totalOffsets+1]);
+			totalOffsets++;
+		}
+		// cerr << endl;
+		totalOffsets++;
+	}
 }
 
 int RepairPartitioningPrototype::run(int argc, char* argv[])
@@ -192,21 +223,23 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		string inputFilepath = "./Input/ints/";
 
 		/*
-		Initial tests show that minFragSize should be proportional to document size
+		I think that minFragSize should be proportional to document size
 		*/
 		unsigned minFragSize = 10; //in words
 
-		/*
-		Initial tests show that repairStoppingPoint shouldn't be too small (repair goes too far for our purposes in this case)
-		And it shouldn't be larger than the number of versions (this is trivial, we expect to get repetition 
-		at most numVersions times for inter-version repetitions)
-		*/
-//		unsigned repairStoppingPoint = 1; //pairs that occur less than this amount of times will not be replaced
+		//pairs that occur less than this amount of times will not be replaced
+//		unsigned repairStoppingPoint = 1;
 
-		/* To what extent are we willing to fragment? See the partitioning algorithm for how this is used */
+		/*
+		To what extent are we willing to fragment?
+		See the partitioning algorithm for how this is used
+		*/
 		float fragmentationCoefficient = 1.0;
 
-		/* A variable used in the primitive way to partition the tree: just go n levels down */
+		/*
+		A variable used in the naive way to partition the tree:
+		just go n levels down
+		*/
 //		unsigned numLevelsDown = 5;
 
 		/* The partitioning alg to use. See Partitioning.h for the enum */
@@ -215,17 +248,32 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		if (argc == 2 && (string) argv[1] == "help")
 		{
 			cerr << "Usage:" << endl;
-			cerr << "\t" << argv[0] << " <directory> <fragmentationCoefficient> <minFragSize> <method>" << endl;
-			cerr << "\t" << argv[0] << " <directory> <fragmentationCoefficient> <minFragSize>" << endl;
-			cerr << "\t" << argv[0] << " <directory> <fragmentationCoefficient>" << endl;
+			
+			cerr << "\t" << argv[0] <<
+				" <directory> <fragmentationCoefficient> <minFragSize> <method>"
+				<< endl;
+
+			cerr << "\t" << argv[0] <<
+				" <directory> <fragmentationCoefficient> <minFragSize>" << endl;
+			
+			cerr << "\t" << argv[0] <<
+				" <directory> <fragmentationCoefficient>" << endl;
+			
 			cerr << "\t" << argv[0] << " <directory>" << endl;
+			
 			cerr << "\t" << argv[0] << "" << endl << endl;
 			
 			cerr << "Defaults: " << endl;
+			
 			cerr << "\tdirectory: " << inputFilepath << endl;
-			cerr << "\tfragmentationCoefficient: " << fragmentationCoefficient << endl;
+			
+			cerr << "\tfragmentationCoefficient: " <<
+				fragmentationCoefficient << endl;
+			
 			cerr << "\tminFragSize: " << minFragSize << endl;
+			
 			cerr << "\tmethod: " << method << endl;
+			
 			exit(0);
 		}
 
@@ -250,7 +298,8 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		
 		int fileSize;
 		
-		vector<vector<unsigned> > versions = vector<vector<unsigned> >(); //each inner vector is the wordIDs for one version
+		//each inner vector is the wordIDs for one version
+		vector<vector<unsigned> > versions = vector<vector<unsigned> >();
 		
 		vector<unsigned> wordIDs;
 		
@@ -325,18 +374,20 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		}
 		wordIDs.clear();
 		
-		// By this time, IDsToWords should contain the mappings of IDs to words in all versions
+		// By this time, IDsToWords should contain the mappings of
+		// IDs to words in all versions
 		// printIDtoWordMapping(IDsToWords);
 		// system("pause");
 
 		unsigned* versionPartitionSizes = new unsigned[versions.size()];
-		unsigned* offsetsAllVersions = new unsigned[versions.size() * MAX_NUM_FRAGMENTS_PER_VERSION];
+		unsigned* offsetsAllVersions = 
+			new unsigned[versions.size() * MAX_NUM_FRAGMENTS_PER_VERSION];
 
 		double score = 0.0;
 		
 		clock_t init, final;
 
-		init=clock();
+		init = clock();
 
 		try {
 			score = runRepairPartitioning(

@@ -39,8 +39,6 @@ public:
 
 	void setHeapEntryPointer(HeapEntry* newHeapEntryPointer);
 
-	// HeapEntryPtr getHeapEntryPointer() const;
-
 	// Copy ctor
 	HashTableEntry(const HashTableEntry& rhs)
 	{

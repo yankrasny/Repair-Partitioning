@@ -25,13 +25,6 @@ typedef std::unordered_map<unsigned long long, HashTableEntry*> RepairHashTable;
 class RepairAlgorithm
 {
 private:
-	/***** Private Vars *****/
-
-	// The entry at i is the number of fragments for version i
-	unsigned* versionPartitionSizes;
-	
-	// The offsets that define fragments, for all versions [v0:f0 v0:f1 v0:f2 v1:f0 v1:f1 v2:f0 v2:f1 ...]
-	unsigned* offsetsAllVersions;
 
 	// Pass this to the partitioning alg, it prevents us from going too far down a repair tree
 	unsigned numLevelsDown;
@@ -121,11 +114,7 @@ public:
 };
 
 
-// The whole point of this is to be able to order the lists of offsetsAllVersions by version number
-// After repair, we go through the resulting associations and build trees for each version
-// That iteration doesn't go in order of versionNum
-// Our output must be ordered by version number, so we do the following
-// TODO finish this explanation
+// Use this class with the comparator below to sort the output by version number
 class PartitionList
 {
 private:
@@ -161,7 +150,7 @@ public:
 	}
 };
 
-class SortPartitionsByVersionNumComparator
+class SortPartitionListsByVersion
 {
 public:
 	bool operator() (const PartitionList lhs, const PartitionList rhs) const
@@ -170,5 +159,5 @@ public:
 	}
 };
 
-typedef std::set<PartitionList, SortPartitionsByVersionNumComparator> SortedPartitionsByVersionNum;
+typedef std::set<PartitionList, SortPartitionListsByVersion> SortedPartitionsByVersion;
 #endif

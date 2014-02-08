@@ -51,7 +51,6 @@ size_t HashTableEntry::getSize() const
 	return this->heapEntryPointer->getPriority();
 }
 
-// TODO remove these 2 (getter and setter)
 HeapEntry* HashTableEntry::getHeapEntryPointer() const
 {
 	return heapEntryPointer;

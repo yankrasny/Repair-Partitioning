@@ -227,7 +227,7 @@ public:
 		versions.erase(versionNum);
 	}
 
-	const std::string getVersionString() {
+	const std::string getVersionString() const {
 		std::stringstream ss;
 		for (std::multiset<unsigned>::iterator it = versions.begin(); it != versions.end(); it++) {
 			ss << (*it) << ",";
