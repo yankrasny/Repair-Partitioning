@@ -45,7 +45,7 @@ private:
 	RepairHashTable hashTable;
 	
 	// The result of repair, a list of associations in the form (roughly) symbol -> (left, right)
-	std::vector<Association> associations;
+	std::unordered_map<unsigned, Association> associations;
 	
 
 	/***** Repair Core Algorithm *****/
@@ -69,9 +69,9 @@ private:
 	/***** Tree building, offsets, and partitioning ******/
 	void deleteTree(RepairTreeNode* node);
 
-	RepairTreeNode* buildTree(int loc, unsigned versionNum);
+	RepairTreeNode* buildTree(unsigned symbol, unsigned versionNum);
 
-	int getNextRootLoc(int loc);
+	int getNextRootSymbol(unsigned symbol);
 
 	unsigned calcOffsets(RepairTreeNode* node);
 
@@ -88,12 +88,12 @@ public:
 	{
 		myHeap = IndexedHeap();
 		hashTable = RepairHashTable();
-		associations = std::vector<Association>();
+		associations = std::unordered_map<unsigned, Association>();
 	}
 
 	void getOffsetsAllVersions(unsigned* offsetsAllVersions, unsigned* versionPartitionSizes);
 
-	std::vector<Association> getAssociations(unsigned repairStoppingPoint = 0)
+	std::unordered_map<unsigned, Association> getAssociations(unsigned repairStoppingPoint = 0)
 	{
 		// Run through the string and grab all the initial pairs
 		// Add them to all the structures

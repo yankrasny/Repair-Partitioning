@@ -24,18 +24,6 @@ SortedByOffsetNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNo
 	return nodes;
 }
 
-int RepairDocumentPartition::getAssociationLocation(unsigned symbol)
-{
-	if (memoizedAssociationLocations.count(symbol))
-		return memoizedAssociationLocations[symbol];
-
-	// It wasn't saved, so search for it, and save it for next time
-	int loc = binarySearch(symbol, associations, 0, associations.size());
-	memoizedAssociationLocations[symbol] = loc;
-
-	return loc;
-}
-
 double RepairDocumentPartition::getSubsetScore(SortedByOffsetNodeSet subset)
 {
 	/* MAX */
@@ -44,10 +32,10 @@ double RepairDocumentPartition::getSubsetScore(SortedByOffsetNodeSet subset)
 	{
 		RepairTreeNode* currNode = *it;
 		double currScore = 1.0;
-		int loc = getAssociationLocation(currNode->getSymbol());
-		if (loc != -1)
+
+		if (associations.count(currNode->getSymbol()) > 0)
 		{
-			Association a = associations[loc];
+			Association a = associations[currNode->getSymbol()];
 			currScore = currNode->getSize() * a.getFreq();
 		}
 		if (currScore > currMax)
@@ -68,10 +56,9 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 		return nodes;
 	
 	double myScore = 1.0;
-	int loc = getAssociationLocation(node->getSymbol());
-	if (loc != -1)
+	if (associations.count(node->getSymbol()) > 0)
 	{
-		Association a = this->associations[loc];
+		Association a = this->associations[node->getSymbol()];
 		myScore = node->getSize() * a.getFreq();
 	}
 
@@ -194,7 +181,6 @@ unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root
 			bounds.push_back(versionSize);
 		}
 	}
-
 
 	return bounds.size();
 }

@@ -44,6 +44,11 @@ inline unsigned nextWordID()
 	return ++currentWordID;
 }
 
+inline unsigned currWordID()
+{
+	return currentWordID;
+}
+
 inline void resetcurrentWordID()
 {
 	currentWordID = 0;	
@@ -186,6 +191,8 @@ private:
 
 	std::multiset<unsigned> versions;
 public:
+	Association() : symbol(0), left(0), right(0), freq(0) {}
+
 	Association(unsigned symbol, unsigned left, unsigned right, unsigned freq, unsigned firstVersion) :
 		symbol(symbol), left(left), right(right), freq(freq)
 	{

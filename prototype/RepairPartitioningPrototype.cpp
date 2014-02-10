@@ -108,7 +108,7 @@ void RepairPartitioningPrototype::writeResults(
 
 
 void RepairPartitioningPrototype::printIDtoWordMapping(unordered_map<unsigned, 
-	string>& IDsToWords, ostream& os)
+	string>& IDsToWords, ostream& os) const
 {
 	for (auto it = IDsToWords.begin(); it != IDsToWords.end(); it++)
 	{
@@ -117,12 +117,13 @@ void RepairPartitioningPrototype::printIDtoWordMapping(unordered_map<unsigned,
 }
 
 void RepairPartitioningPrototype::writeAssociations(
-	const vector<Association>& associations, ostream& os)
+	const unordered_map<unsigned, Association>& associations, ostream& os) const
 {
-	for (size_t i = 0; i < associations.size(); i++)
-	{
-		os << associations[i];
-	}
+	// TODO use iterators
+//	for (size_t i = 0; i < associations.size(); i++)
+//	{
+//		os << associations[i];
+//	}
 }
 
 double RepairPartitioningPrototype::runRepairPartitioning(
@@ -140,7 +141,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize,
 		fragmentationCoefficient);
 
-	vector<Association> associations = repairAlg.getAssociations();
+	std::unordered_map<unsigned, Association> associations = repairAlg.getAssociations();
 
 	if (debug)
 		checkAssociations(versions, associations);
@@ -159,31 +160,32 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 
 void RepairPartitioningPrototype::checkAssociations(
 	const vector<vector<unsigned> >& versions,
-	const vector<Association>& associations) const
+	const unordered_map<unsigned, Association>& associations) const
 {
+	// TODO use iterators
 	// associations should be sorted by the symbol on the left
 	// repair assigns an incrementing ID
-	for (size_t i = 0; i < associations.size() - 1; i++) {
-
-		assert(associations[i].getSymbol() <=
-			associations[i+1].getSymbol());
-
-		std::multiset<unsigned> versionsForAssociation 
-			= associations[i].getVersions();
-
-		for (auto it = versionsForAssociation.begin(); 
-			it != versionsForAssociation.end(); it++) {
-			// (*it) should be an unsigned representing the version number
-			// that number can't be higher than numVersions
-			unsigned vNum = *it;
-			assert(vNum <= versions.size());
-		}
-	}
-	cerr << associations.back().getSymbol() << ": (" << 
-		associations.back().getLeft() << ", " << 
-		associations.back().getRight() << ")" << endl;
-	cerr << "Versions: {" <<
-		associations.back().getVersionString() << "}" << endl;
+//	for (size_t i = 0; i < associations.size() - 1; i++) {
+//
+//		assert(associations[i].getSymbol() <=
+//			associations[i+1].getSymbol());
+//
+//		std::multiset<unsigned> versionsForAssociation
+//			= associations[i].getVersions();
+//
+//		for (auto it = versionsForAssociation.begin();
+//			it != versionsForAssociation.end(); it++) {
+//			// (*it) should be an unsigned representing the version number
+//			// that number can't be higher than numVersions
+//			unsigned vNum = *it;
+//			assert(vNum <= versions.size());
+//		}
+//	}
+//	cerr << associations.back().getSymbol() << ": (" <<
+//		associations.back().getLeft() << ", " <<
+//		associations.back().getRight() << ")" << endl;
+//	cerr << "Versions: {" <<
+//		associations.back().getVersionString() << "}" << endl;
 }
 
 void RepairPartitioningPrototype::checkOffsets(

@@ -39,32 +39,22 @@ public:
 
 	void updateUniqueFragmentHashMap();
 
-	void writeResults(
-		const std::vector<std::vector<unsigned> >& versions, 
-		unsigned* offsetsAllVersions,
-		unsigned* versionPartitionSizes,
-		std::unordered_map<unsigned, std::string>& IDsToWords, 
-		const std::string& outFilename);
-
 	double getScore(std::unordered_map<std::string, FragInfo>& uniqueFrags, 
 		unsigned numVersions, 
 		std::ostream& os = std::cerr);
 
-	void writeAssociations(const std::vector<Association>& associations, 
-		std::ostream& os = std::cerr);
+	void writeAssociations(
+		const std::unordered_map<unsigned, Association>& associations, std::ostream& os) const;
 
 	void writeResults(
 		const std::vector<std::vector<unsigned> >& versions, 
-		unsigned* offsetsAllVersions, 
-		unsigned* versionPartitionSizes, 
-		const std::vector<Association>& associations, 
-		std::unordered_map<unsigned, std::string>& IDsToWords, 
-		const std::string& outFilename, 
-		bool printFragments = true, 
-		bool printAssociations = false);
+		unsigned* offsetsAllVersions,
+		unsigned* versionPartitionSizes,
+		std::unordered_map<unsigned, std::string>& IDsToWords,
+		const std::string& outFilename);
 
 	void printIDtoWordMapping(std::unordered_map<unsigned, std::string>& IDsToWords, 
-		std::ostream& os = std::cerr);
+		std::ostream& os = std::cerr) const;
 
 	double runRepairPartitioning(
 		std::vector<std::vector<unsigned> > versions,
@@ -74,9 +64,10 @@ public:
 		float fragmentationCoefficient, 
 		unsigned method);
 
+
 	void checkAssociations(
 		const std::vector<std::vector<unsigned> >& versions,
-		const std::vector<Association>& associations) const;
+		const std::unordered_map<unsigned, Association>& associations) const;
 
 	void checkOffsets(
 		const std::vector<std::vector<unsigned> >& versions,

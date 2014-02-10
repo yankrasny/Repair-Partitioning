@@ -275,9 +275,15 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 
 				// Store the association and which version it occurs in
 				if (totalCountOfCurrPair == 0)
-					associations.push_back(Association(symbol, versions[v][idx], versions[v][rightIdx], numOccurrences, v));
+				{
+					associations[symbol] = Association(symbol, versions[v][idx], versions[v][rightIdx], numOccurrences, v);
+				}
 				else
-					associations.back().addVersion(v);
+				{
+					assert(associations.count(symbol) > 0);
+					associations[symbol].addVersion(v);
+				}
+
 
 
 				// Now the replacement: we modify the actual array of word Ids
@@ -333,45 +339,46 @@ and builds a tree for each version
 */
 /*************************************************************************************************/
 
-RepairTreeNode* RepairAlgorithm::buildTree(int loc, unsigned versionNum)
+RepairTreeNode* RepairAlgorithm::buildTree(unsigned symbol, unsigned versionNum)
 {
 	// Allocate the current node and set its symbol
-	RepairTreeNode* root = new RepairTreeNode(associations[loc].getSymbol());
+	RepairTreeNode* root = new RepairTreeNode(symbol);
 
 	// Keep track of which versions we've processed in order to choose a root (see getNextRootLoc)
-	associations[loc].removeFromVersions(versionNum);
+	associations[symbol].removeFromVersions(versionNum);
 	
-	unsigned left = associations[loc].getLeft();
-	unsigned right = associations[loc].getRight();
+	unsigned left = associations[symbol].getLeft();
+	unsigned right = associations[symbol].getRight();
 
-	int lLoc = binarySearch(left, associations, 0, loc);
-	int rLoc = binarySearch(right, associations, 0, loc);
+	if (associations.count(left) < 1)
+		root->setLeftChild(new RepairTreeNode(left));
+	else
+		root->setLeftChild(buildTree(left, versionNum));
 
-	if (lLoc == -1) root->setLeftChild(new RepairTreeNode(left));
-	else root->setLeftChild(buildTree(lLoc, versionNum));
-
-	if (rLoc == -1) root->setRightChild(new RepairTreeNode(right));
-	else root->setRightChild(buildTree(rLoc, versionNum));
+	if (associations.count(right) < 1)
+		root->setRightChild(new RepairTreeNode(right));
+	else
+		root->setRightChild(buildTree(right, versionNum));
 
 	return root;
 }
 
-int RepairAlgorithm::getNextRootLoc(int loc)
+int RepairAlgorithm::getNextRootSymbol(unsigned symbol)
 {
-	while (associations[loc].getVersions().size() <= 0)
+	while (associations[symbol].getVersions().size() <= 0)
 	{
-		--loc;
-		if (loc < 0)
+		--symbol;
+		if (symbol < 1)
 		{
 			return -1;
 		}
 	}
-	return loc;
+	return symbol;
 }
 
 void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsigned* versionPartitionSizes)
 {
-	int loc = associations.size() - 1;
+	int symbol = currWordID();
 	RepairTreeNode* currRoot = NULL;
 	int versionNum = 0;
 
@@ -384,17 +391,17 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
 	vector<unsigned> bounds;
 	while (true)
 	{
-		loc = getNextRootLoc(loc);
-		if (loc == -1) break;
+		symbol = getNextRootSymbol(symbol);
+		if (symbol == -1) break;
 
 		while (true)
 		{
-			versionNum = associations[loc].getVersionAtBegin();
+			versionNum = associations[symbol].getVersionAtBegin();
 			if (versionNum == -1) break;
 
 			assert(versionNum < versions.size() && versionNum >= 0);
 	
-			currRoot = buildTree(loc, versionNum);
+			currRoot = buildTree(symbol, versionNum);
 
 			// Let's see if this tree is reasonable
 			// int countNodes = currRoot->getCountNodes();
@@ -419,7 +426,7 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
 			// Deallocate all those tree nodes
 			this->deleteTree(currRoot);
 		}
-		--loc;
+		--symbol;
 	}
 
 	unsigned totalOffsetInArray = 0;
