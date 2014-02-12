@@ -257,41 +257,4 @@ public:
 	}
 };
 
-/*
-Decided to put binarySearch here because this implementation relies on the Association class
-*/
-inline int binarySearch(unsigned target, const std::vector<Association>& associations, int leftPos, int rightPos)
-{
-	// indexes that don't make sense, means we haven't found the target
-	if (leftPos > rightPos)
-		return -1;
-
-	if (leftPos == rightPos)
-	{
-		if (associations[leftPos].getSymbol() == target)
-		{
-			return leftPos;
-		}
-		return -1;
-	}
-
-	int mid = floor(((float)leftPos + rightPos) / 2);
-	unsigned midVal = associations[mid].getSymbol();
-
-	// found it
-	if (target == midVal)
-		return mid;
-
-	// target is on the left
-	if (target < midVal)
-		return binarySearch(target, associations, leftPos, mid);
-	
-	// target is on the right
-	if (target > midVal)
-		return binarySearch(target, associations, mid + 1, rightPos);
-
-	return -1;
-}
-
-
 #endif
