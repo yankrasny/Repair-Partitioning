@@ -337,7 +337,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 //		wordIDs.push_back(3);
 //		wordIDs.push_back(3);
 //		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
+//		wordIDs.push_back(0); // Important edge case
 //		wordIDs.push_back(3);
 //		wordIDs.push_back(3);
 //		wordIDs.push_back(3);

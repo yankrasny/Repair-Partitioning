@@ -65,6 +65,8 @@ private:
 
 	void doRepair(unsigned repairStoppingPoint);
 
+	void printSection(unsigned v, unsigned idx, unsigned range);
+
 	
 	/***** Tree building, offsets, and partitioning ******/
 	void deleteTree(RepairTreeNode* node);

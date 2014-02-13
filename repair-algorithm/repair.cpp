@@ -3,8 +3,7 @@ using namespace std;
 
 void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, int idx)
 {
-//	cerr << "addOccurrence(" << getKeyAsString(key) << ", " << version << ", " << idx << ")" << endl;
-//	cerr << "Key as pair: " << getKeyAsString(key) << endl;
+	// cerr << "addOccurrence(" << getKeyAsString(key) << ", " << version << ", " << idx << ")" << endl;
 	if (hashTable.count(key) > 0) // We've seen this pair before
 	{
 		hashTable[key]->addOccurrence(version, idx);
@@ -22,7 +21,7 @@ void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, in
 
 bool RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int idx)
 {
-//	cerr << "removeOccurrence(" << getKeyAsString(key) << ", " << v << ", " << idx << ")" << endl;
+	// cerr << "removeOccurrence(" << getKeyAsString(key) << ", " << v << ", " << idx << ")" << endl;
 
 	// Assertions
 	checkVersionAndIdx(v, idx);
@@ -95,8 +94,9 @@ unsigned long long RepairAlgorithm::getKeyAtIdx(unsigned v, int idx)
 		return 0;
 	}
 	int rightIdx = scanRight(v, idx);
-	if (rightIdx == -1)
+	if (rightIdx == -1) {
 		return 0;
+	}
 
 	if (versions[v][idx] == 0 || versions[v][rightIdx] == 0) {
 		return 0;
@@ -115,14 +115,19 @@ void RepairAlgorithm::extractPairs()
 		for (size_t i = 0; i < versions[v].size() - 1; i++)
 		{
 			// Squeeze the pair of two unsigned numbers together for storage
-			currPair = combineToUInt64((unsigned long long)versions[v][i], (unsigned long long)versions[v][i+1]);
+			currPair = getKeyAtIdx(v, i);
+
+			// 0 is returned if either the left or right element is 0
+			if (currPair == 0)
+				continue;
 
 			// Add this occurrence of the pair to our structures
 			this->addOccurrence(currPair, v, i);
 		}
+
 	}
-//	cerr << "Number of versions: " << versions.size() << endl;
-//	cerr << "Number of distinct pairs: " << hashTable.size() << endl;
+	// cerr << "Number of versions: " << versions.size() << endl;
+	// cerr << "Number of distinct pairs: " << hashTable.size() << endl;
 }
 
 /*
@@ -203,7 +208,7 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 //			}
 //			cerr << endl;
 
-//			cerr << "Replacement: [" << symbol << " -> " << getKeyAsString(key) << "]" << endl;
+			// cerr << endl << "Replacement (" << numOccurrences << "): [" << symbol << " -> " << getKeyAsString(key) << "]" << endl;
 
 			// First call remove on all identical overlapping pairs, and note their indexes
 			prevIdx = -1;
@@ -238,6 +243,8 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 			for (auto it = indexes.begin(); it != indexes.end(); ++it)
 			{
 				int idx = *it;
+
+				printSection(v, idx, 6);
 
 				// Find the key to the left of this one and remove that occurrence of it from our structures
 				int leftIdx = scanLeft(v, idx);
@@ -312,6 +319,30 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 			}
 		}
 	}
+}
+
+void RepairAlgorithm::printSection(unsigned v, unsigned idx, unsigned range)
+{
+	return;
+	checkVersionAndIdx(v, idx);	
+	if (!(range > 0 && range < versions[v].size()))
+	{
+		return;
+	}
+	cerr << endl;
+	for (size_t i = idx - range / 2; i <= idx + range / 2; i++)
+	{
+		if (i < 0 || i > versions[v].size() - 1)
+		{
+			continue;
+		}
+		if (i == idx)
+			cerr << i << ": " << "[" << versions[v][i] << "]" << endl;	
+		else
+			cerr << i << ": " << versions[v][i] << endl;
+		
+	}
+	cerr << endl;
 }
 
 // Release memory from all structures
