@@ -103,8 +103,8 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 	return nodes;
 }
 
-void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown,
-	vector<unsigned>& bounds, unsigned minFragSize, unsigned versionSize)
+void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root,
+	vector<unsigned>& bounds, unsigned versionSize)
 {
 	// cerr << "Version Number: " << root->getVersionNum() << endl;
 	SortedByOffsetNodeSet nodes = getBestSubset(root);
@@ -146,7 +146,7 @@ void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, un
 			assert(prevVal < currVal);
 
 			diff = currVal - prevVal;
-			if (diff >= minFragSize)
+			if (diff >= this->minFragSize)
 			{
 				// These offsets are already sorted (see the comparator at the top)
 				bounds.push_back(currVal);
@@ -164,7 +164,7 @@ void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, un
 			bounds.push_back(versionSize);
 		} else { // Calculate the last diff so that the last fragment obeys the minFragSize rule
 			unsigned lastDiff = versionSize - bounds.back();
-			if (lastDiff >= minFragSize)
+			if (lastDiff >= this->minFragSize)
 			{
 				// Our last fragment is ok, just add the position at the end of the file
 				// bounds[++numFrags] = versionSize;

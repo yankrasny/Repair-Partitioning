@@ -162,30 +162,7 @@ void RepairPartitioningPrototype::checkAssociations(
 	const vector<vector<unsigned> >& versions,
 	const unordered_map<unsigned, Association>& associations) const
 {
-	// TODO use iterators
-	// associations should be sorted by the symbol on the left
-	// repair assigns an incrementing ID
-//	for (size_t i = 0; i < associations.size() - 1; i++) {
-//
-//		assert(associations[i].getSymbol() <=
-//			associations[i+1].getSymbol());
-//
-//		std::multiset<unsigned> versionsForAssociation
-//			= associations[i].getVersions();
-//
-//		for (auto it = versionsForAssociation.begin();
-//			it != versionsForAssociation.end(); it++) {
-//			// (*it) should be an unsigned representing the version number
-//			// that number can't be higher than numVersions
-//			unsigned vNum = *it;
-//			assert(vNum <= versions.size());
-//		}
-//	}
-//	cerr << associations.back().getSymbol() << ": (" <<
-//		associations.back().getLeft() << ", " <<
-//		associations.back().getRight() << ")" << endl;
-//	cerr << "Versions: {" <<
-//		associations.back().getVersionString() << "}" << endl;
+	// TODO check that associations are continuous?
 }
 
 void RepairPartitioningPrototype::checkOffsets(
@@ -193,20 +170,23 @@ void RepairPartitioningPrototype::checkOffsets(
 	unsigned* offsetsAllVersions,
 	unsigned* versionPartitionSizes) const
 {
-	// offsets must be sorted for each version
-	// think about it, can a version be partitioned like this?
-	// [0, 15, 29, 23, ...] No.
+	// Offsets must be sorted increasing for each version
 	unsigned totalOffsets = 0;
-	for (size_t i = 0; i < versions.size(); i++) {
-		for (size_t j = 0; j < versionPartitionSizes[i] - 1; j++) {
-			// cerr << offsetsAllVersions[totalOffsets] << ",";
-			assert(offsetsAllVersions[totalOffsets] <=
-				offsetsAllVersions[totalOffsets+1]);
+	for (size_t i = 0; i < versions.size(); i++)
+	{
+		for (size_t j = 0; j < versionPartitionSizes[i] - 1; j++)
+		{
+			if (!(offsetsAllVersions[totalOffsets] <= offsetsAllVersions[totalOffsets + 1])) {
+				cerr << "offsetsAllVersions[" << totalOffsets - 1 << "]: " << offsetsAllVersions[totalOffsets - 1];
+				cerr << "offsetsAllVersions[" << totalOffsets << "]: " << offsetsAllVersions[totalOffsets];
+				cerr << "offsetsAllVersions[" << totalOffsets + 1 << "]: " << offsetsAllVersions[totalOffsets + 1];
+				cerr << "offsetsAllVersions[" << totalOffsets + 2 << "]: " << offsetsAllVersions[totalOffsets + 2];
+			}
+			assert(offsetsAllVersions[totalOffsets] <= offsetsAllVersions[totalOffsets + 1]);
 			totalOffsets++;
 		}
 		// Every version must have at least 2 fragment boundaries
-		assert(versionPartitionSizes[i] > 0 && versionPartitionSizes[i] <= MAX_NUM_FRAGMENTS_PER_VERSION);
-		// cerr << endl;
+		assert(versionPartitionSizes[i] > 1 && versionPartitionSizes[i] <= MAX_NUM_FRAGMENTS_PER_VERSION);
 		totalOffsets++;
 	}
 }

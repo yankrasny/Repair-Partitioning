@@ -346,6 +346,11 @@ void RepairAlgorithm::cleanup()
         delete (*it).second;
     }
 
+    while (!myHeap.empty())
+    {
+        myHeap.deleteAtIndex(myHeap.getSize() - 1);
+    }
+
     for (size_t i = 0; i < versions.size(); ++i)
     {
         versions[i].clear();
@@ -428,6 +433,7 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
             assert(versionNum < versions.size() && versionNum >= 0);
             cerr << "Build tree: v" << versionNum << endl;
     
+            // Allocates a lot of memory, see delete at the end of this function
             currRoot = buildTree(symbol, versionNum);
 
             // Let's see if this tree is reasonable
@@ -439,9 +445,10 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
             theList = PartitionList(versionNum);
             bounds = vector<unsigned>();
 
-            partitionAlg.getPartitioningOneVersion(currRoot, this->numLevelsDown,
-                bounds, this->minFragSize, versions[versionNum].size());
+            partitionAlg.getPartitioningOneVersion(currRoot, bounds, versions[versionNum].size());
 
+            // A partitioning is defined as at least one fragment
+            // So at least 2 fragment boundaries
             assert(bounds.size() > 1);
 
             for (size_t i = 0; i < bounds.size(); i++)

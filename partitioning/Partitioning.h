@@ -48,7 +48,7 @@ class RepairDocumentPartition
 	SortedByOffsetNodeSet getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes);
 
 	// Another one, greedy approach
-	SortedByOffsetNodeSet getBestSubset(RepairTreeNode* node, int numCalls = 0);
+	SortedByOffsetNodeSet getBestSubset(RepairTreeNode* node, int numLevels = 0);
 
 	double getSubsetScore(SortedByOffsetNodeSet subset);
 
@@ -79,8 +79,8 @@ public:
 	}
 
 	// Cuts one version
-	void getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, 
-		std::vector<unsigned>& bounds, unsigned minFragSize, unsigned versionSize);
+	void getPartitioningOneVersion(RepairTreeNode* root, 
+		std::vector<unsigned>& bounds, unsigned versionSize);
 };
 
 #endif
