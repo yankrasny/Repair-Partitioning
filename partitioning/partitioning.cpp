@@ -107,16 +107,7 @@ void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, un
 	vector<unsigned>& bounds, unsigned minFragSize, unsigned versionSize)
 {
 	// cerr << "Version Number: " << root->getVersionNum() << endl;
-	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
-	switch (this->method)
-	{
-		case RepairDocumentPartition::NAIVE: nodes = getNodesNthLevelDown(root, numLevelsDown, nodes);
-		    break;
-		case RepairDocumentPartition::GREEDY: nodes = getBestSubset(root);
-		    break;
-		default: nodes = getBestSubset(root);
-		    break;
-	}
+	SortedByOffsetNodeSet nodes = getBestSubset(root);
 
 	unsigned prevVal(0); // the previous node's index in the file
 	unsigned currVal(0); // the current node's index in the file
@@ -136,6 +127,8 @@ void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, un
 		{
 			// We've decided that this is too many, the last one is gonna be huge and stupid
 			// Leave room for the last one
+
+			// TODO re-partition with less levels
 			if (bounds.size() > MAX_NUM_FRAGMENTS_PER_VERSION - 1) {
 				break;
 			}
@@ -150,14 +143,12 @@ void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, un
 			prevVal = previous->getOffset();
 			currVal = current->getOffset();
 
-			// assert prevVal < currVal
 			assert(prevVal < currVal);
 
 			diff = currVal - prevVal;
 			if (diff >= minFragSize)
 			{
 				// These offsets are already sorted (see the comparator at the top)
-				// bounds[++numFrags] = currVal;
 				bounds.push_back(currVal);
 			}
 
@@ -165,21 +156,27 @@ void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, un
 			previous = current;
 		}
 
-		// Calculate the last diff so that the last fragment obeys the minFragSize rule
-		unsigned lastDiff = versionSize - bounds.back();
-		if (lastDiff >= minFragSize)
+		
+		// We might only have bounds = [0], in that case just add version size regardless of anything else
+		if (bounds.size() == 1)
 		{
-			// Our last fragment is ok, just add the position at the end of the file
-			// bounds[++numFrags] = versionSize;
+			assert(bounds[0] == 0);
 			bounds.push_back(versionSize);
-		}
-		else
-		{
-			// Our last fragment is too small, replace the last offset we had with the position at the end of the file
-			// bounds[numFrags - 1] = versionSize;
-			bounds.pop_back();
-			bounds.push_back(versionSize);
+		} else { // Calculate the last diff so that the last fragment obeys the minFragSize rule
+			unsigned lastDiff = versionSize - bounds.back();
+			if (lastDiff >= minFragSize)
+			{
+				// Our last fragment is ok, just add the position at the end of the file
+				// bounds[++numFrags] = versionSize;
+				bounds.push_back(versionSize);
+			}
+			else
+			{
+				// Our last fragment is too small, replace the last offset we had with the position at the end of the file
+				// bounds[numFrags - 1] = versionSize;
+				bounds.pop_back();
+				bounds.push_back(versionSize);
+			}
 		}
 	}
-
 }
