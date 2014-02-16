@@ -204,6 +204,7 @@ void RepairPartitioningPrototype::checkOffsets(
 				offsetsAllVersions[totalOffsets+1]);
 			totalOffsets++;
 		}
+		// Every version must have at least 2 fragment boundaries
 		assert(versionPartitionSizes[i] > 0 && versionPartitionSizes[i] <= MAX_NUM_FRAGMENTS_PER_VERSION);
 		// cerr << endl;
 		totalOffsets++;

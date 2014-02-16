@@ -442,6 +442,8 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
             partitionAlg.getPartitioningOneVersion(currRoot, this->numLevelsDown,
                 bounds, this->minFragSize, versions[versionNum].size());
 
+            assert(bounds.size() > 1);
+
             for (size_t i = 0; i < bounds.size(); i++)
             {
                 theList.push(bounds[i]);
