@@ -79,7 +79,7 @@ public:
 	}
 
 	// Cuts one version
-	unsigned getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, 
+	void getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown, 
 		std::vector<unsigned>& bounds, unsigned minFragSize, unsigned versionSize);
 };
 

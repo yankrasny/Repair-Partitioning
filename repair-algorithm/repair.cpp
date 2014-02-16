@@ -426,6 +426,7 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
                 break;
             }
             assert(versionNum < versions.size() && versionNum >= 0);
+            cerr << "Build tree: v" << versionNum << endl;
     
             currRoot = buildTree(symbol, versionNum);
 
@@ -438,7 +439,8 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
             theList = PartitionList(versionNum);
             bounds = vector<unsigned>();
 
-            partitionAlg.getPartitioningOneVersion(currRoot, this->numLevelsDown, bounds, this->minFragSize, versions[versionNum].size());
+            partitionAlg.getPartitioningOneVersion(currRoot, this->numLevelsDown,
+                bounds, this->minFragSize, versions[versionNum].size());
 
             for (size_t i = 0; i < bounds.size(); i++)
             {
@@ -458,7 +460,7 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
     unsigned numVersions = 0;
 
     // Post processing to get offsetMap into offsets and versionPartitionSizes
-    for (SortedPartitionsByVersion::iterator it = offsetMap.begin(); it != offsetMap.end(); it++)
+    for (auto it = offsetMap.begin(); it != offsetMap.end(); it++)
     {
         // Reusing the same var from above, should be ok
         theList = *it;

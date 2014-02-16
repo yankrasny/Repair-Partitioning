@@ -134,10 +134,10 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	float fragmentationCoefficient, 
 	unsigned method)
 {
-	bool debug = false;
+	bool debug = true;
 
 	// don't really need numLevelsDown for now
-	unsigned numLevelsDown = 10;
+	unsigned numLevelsDown = 5;
 	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize,
 		fragmentationCoefficient);
 
@@ -204,6 +204,7 @@ void RepairPartitioningPrototype::checkOffsets(
 				offsetsAllVersions[totalOffsets+1]);
 			totalOffsets++;
 		}
+		assert(versionPartitionSizes[i] > 0 && versionPartitionSizes[i] <= MAX_NUM_FRAGMENTS_PER_VERSION);
 		// cerr << endl;
 		totalOffsets++;
 	}

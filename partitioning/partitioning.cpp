@@ -103,7 +103,7 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 	return nodes;
 }
 
-unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown,
+void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root, unsigned numLevelsDown,
 	vector<unsigned>& bounds, unsigned minFragSize, unsigned versionSize)
 {
 	// cerr << "Version Number: " << root->getVersionNum() << endl;
@@ -182,5 +182,4 @@ unsigned RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root
 		}
 	}
 
-	return bounds.size();
 }
