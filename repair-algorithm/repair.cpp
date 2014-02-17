@@ -471,12 +471,22 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
             versionNums.insert(versionNum);
         }
 
-        for (size_t i = 0; i < versions.size(); i++)
+        for (size_t v = 0; v < versions.size(); ++v)
         {
-            if (versionNums.count(i) < 1)
+            if (versionNums.count(v) < 1)
             {
-                // We didn't find the version number, print it out
-                cerr << "Version not found in offsetMap: " << i << endl;
+                // We didn't find the version number, handle the possible cases
+                // cerr << "Version not found in offsetMap: " << v << endl;
+                if (versions[v].size() < this->minFragSize)
+                {
+                    theList = PartitionList(v);
+                    theList.push(0);
+                    theList.push(versions[v].size());
+                    offsetMap.insert(theList);
+                } else {
+                    // What else is a possible cause?
+                    cerr << "Version not found in offsetMap: " << v << endl;
+                }
             }
         }
     }
