@@ -65,6 +65,8 @@ private:
 
 	void doRepair(unsigned repairStoppingPoint);
 
+	void printVector(unsigned v);
+
 	void printSection(unsigned v, unsigned idx, unsigned range);
 
 	
@@ -79,7 +81,7 @@ private:
 
 public:
 
-	RepairAlgorithm(std::vector<std::vector<unsigned> > versions,
+	RepairAlgorithm(std::vector<std::vector<unsigned> >& versions,
 		unsigned numLevelsDown = 1,
 		unsigned minFragSize = 2,
 		double fragmentationCoefficient = 1.0) :
@@ -95,7 +97,7 @@ public:
 
 	void getOffsetsAllVersions(unsigned* offsetsAllVersions, unsigned* versionPartitionSizes);
 
-	std::unordered_map<unsigned, Association> getAssociations(unsigned repairStoppingPoint = 0)
+	void getAssociations(unsigned repairStoppingPoint = 0)
 	{
 		// Run through the string and grab all the initial pairs
 		// Add them to all the structures
@@ -107,9 +109,6 @@ public:
 
 		assert(hashTable.empty());
 		assert(myHeap.empty());
-
-		// Return the payload
-		return this->associations;
 	}
 
 	void cleanup();

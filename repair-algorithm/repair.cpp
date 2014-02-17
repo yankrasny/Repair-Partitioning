@@ -147,7 +147,6 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
     unsigned long long key;
     HeapEntry* hp;
     HashTableEntry* max;
-    unsigned totalCountOfCurrPair;
 
     while (!myHeap.empty())
     {
@@ -166,23 +165,20 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
 
         size_t numOccurrences = max->getSize();
 
-        // TODO think about this number
-        // Thought about it: it should be well below the number of versions
-        // Imagine a fragment that occurs in numVersions - 2 of the versions. That's a good fragment, let's keep it. Maybe repairStoppingPoint := numVersions / 2
-        if (numOccurrences < repairStoppingPoint)
-            return;
+        // TODO Consider using this at some point
+        // if (numOccurrences < repairStoppingPoint)
+        //     return;
 
         // Will use this as the new symbol (say we're replacing 1 2 3 4 with 1 5 4, this is 5)
         symbol = nextWordID();
 
-        totalCountOfCurrPair = 0;
-
-        // If we ever have 3 of the same symbol in a row, an interesting bug happens
-        // BUG DESCRIPTION: given 3 of the same symbol in a row, we have 2 consecutive equivalent occurrences of the same pair
+        // EDGE CASE: given runs of the same symbol in a row, we have consecutive equivalent occurrences of the same pair
         // When we do the removes and adds for one of them, the other one becomes invalid
         // Without checking for this case, we proceed to do the removes and adds for the now invalid pair, causing a runtime error
         // So, if there are two adjacent indexes (abs(idx - prevIdx) < 2) then we just skip replacement for that occurrence, as it is invalid
         int prevIdx;
+
+        // Don't continue to loop over all versions if we're done with this pair
         bool maxDeleted = false;
 
         // For all versions
@@ -191,19 +187,12 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
             if (maxDeleted) {
                 break;
             }
-
             if (!max->hasLocationsAtVersion(v)) {
                 continue;
             }
 
-            // Print the current vector in one line
-//          cerr << "Version " << v << ": ";
-//          for (unsigned i = 0; i < versions[v].size(); i++) {
-//              cerr << versions[v][i] << " ";
-//          }
-//          cerr << endl;
-
             // cerr << endl << "Replacement (" << numOccurrences << "): [" << symbol << " -> " << getKeyAsString(key) << "]" << endl;
+            // printVector(v);
 
             // First call remove on all identical overlapping pairs, and note their indexes
             prevIdx = -1;
@@ -253,7 +242,6 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
                         }
                     }
                 }
-
                 // Find the key to the right of this one and remove that occurrence of it from our structures
                 int rightIdx = scanRight(v, idx);
                 if (removed.count(rightIdx) < 1) {
@@ -266,7 +254,6 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
                         }
                     }
                 }
-
                 // We have the current key, remove this occurrence of it from our structures
                 if (key != 0) {
                     assert(hashTable.count(key));
@@ -274,19 +261,15 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
                     maxDeleted = removeOccurrence(key, v, idx);
                 }
 
-
                 // Store the association and which version it occurs in
-                if (totalCountOfCurrPair == 0)
+                if (associations.count(symbol) < 1)
                 {
                     associations[symbol] = Association(symbol, versions[v][idx], versions[v][rightIdx], numOccurrences, v);
                 }
                 else
                 {
-                    assert(associations.count(symbol) > 0);
                     associations[symbol].addVersion(v);
                 }
-
-
 
                 // Now the replacement: we modify the actual array of word Ids
                 versions[v][idx] = symbol;
@@ -309,11 +292,19 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
                         this->addOccurrence(newRightKey, v, idx);
                     }
                 }
-
-                totalCountOfCurrPair++;
             }
         }
     }
+}
+
+void RepairAlgorithm::printVector(unsigned v)
+{
+    // Print the current vector in one line
+    cerr << "Version " << v << ": ";
+    for (unsigned i = 0; i < versions[v].size(); i++) {
+     cerr << versions[v][i] << " ";
+    }
+    cerr << endl;
 }
 
 void RepairAlgorithm::printSection(unsigned v, unsigned idx, unsigned range)

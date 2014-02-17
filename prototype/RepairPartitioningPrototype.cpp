@@ -134,18 +134,14 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	float fragmentationCoefficient, 
 	unsigned method)
 {
-	bool debug = true;
+	bool debug = false;
 
-	// don't really need numLevelsDown for now
 	unsigned numLevelsDown = 5;
+
 	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize,
 		fragmentationCoefficient);
 
-	std::unordered_map<unsigned, Association> associations = repairAlg.getAssociations();
-
-	if (debug)
-		checkAssociations(versions, associations);
-
+	repairAlg.getAssociations();
 	repairAlg.getOffsetsAllVersions(offsetsAllVersions, versionPartitionSizes);
 
 	if (debug)
@@ -155,14 +151,6 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 
 	double score = 0.0;
 	return score;
-}
-
-
-void RepairPartitioningPrototype::checkAssociations(
-	const vector<vector<unsigned> >& versions,
-	const unordered_map<unsigned, Association>& associations) const
-{
-	// TODO check that associations are continuous?
 }
 
 void RepairPartitioningPrototype::checkOffsets(

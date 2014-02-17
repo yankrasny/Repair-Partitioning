@@ -155,7 +155,6 @@ void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root,
 			// Update previous to point to this node now that we're done with it
 			previous = current;
 		}
-
 		
 		// We might only have bounds = [0], in that case just add version size regardless of anything else
 		if (bounds.size() == 1)
