@@ -460,6 +460,11 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
     unsigned numVersions = 0;
 
     // Post processing to get offsetMap into offsets and versionPartitionSizes
+    if (versions.size() != offsetMap.size())
+    {
+        cerr << "offsetMap.size(): " << offsetMap.size() << endl;
+    }
+    assert(versions.size() == offsetMap.size());
     for (auto it = offsetMap.begin(); it != offsetMap.end(); it++)
     {
         // Reusing the same var from above, should be ok
