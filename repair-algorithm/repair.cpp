@@ -402,6 +402,7 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
     RepairTreeNode* currRoot = NULL;
     int versionNum = 0;
 
+    // A set of partition lists, sorted by version number (see Repair.h for typedef)
     SortedPartitionsByVersion offsetMap = SortedPartitionsByVersion();
     PartitionList theList;
 
@@ -417,10 +418,8 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
         while (true)
         {
             versionNum = associations[symbol].getVersionAtBegin();
-            if (versionNum == -1)
-            {
-                break;
-            }
+            if (versionNum == -1) break;
+
             assert(versionNum < versions.size() && versionNum >= 0);
             cerr << "Build tree: v" << versionNum << endl;
     
@@ -463,8 +462,27 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
     if (versions.size() != offsetMap.size())
     {
         cerr << "offsetMap.size(): " << offsetMap.size() << endl;
+        set<unsigned> versionNums = set<unsigned>();
+        for (auto it = offsetMap.begin(); it != offsetMap.end(); it++)
+        {
+            // Reusing the same var from above, should be ok
+            theList = *it;
+            unsigned versionNum = theList.getVersionNum();
+            versionNums.insert(versionNum);
+        }
+
+        for (size_t i = 0; i < versions.size(); i++)
+        {
+            if (versionNums.count(i) < 1)
+            {
+                // We didn't find the version number, print it out
+                cerr << "Version not found in offsetMap: " << i << endl;
+            }
+        }
     }
+
     assert(versions.size() == offsetMap.size());
+    
     for (auto it = offsetMap.begin(); it != offsetMap.end(); it++)
     {
         // Reusing the same var from above, should be ok
