@@ -141,13 +141,16 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize,
 		fragmentationCoefficient);
 
-	repairAlg.getAssociations();
+	repairAlg.doRepair();
+
+	repairAlg.clearRepairStructures();
+
 	repairAlg.getOffsetsAllVersions(offsetsAllVersions, versionPartitionSizes);
+	
+	repairAlg.clearAssociationsAndReset();
 
 	if (debug)
 		checkOffsets(versions, offsetsAllVersions, versionPartitionSizes);
-
-	repairAlg.cleanup();
 
 	double score = 0.0;
 	return score;
@@ -281,44 +284,47 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 
 		wordIDs = vector<unsigned>();
 
-//		wordIDs.push_back(1);
-//		wordIDs.push_back(2);
-//		wordIDs.push_back(2);
-//		wordIDs.push_back(2);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(4);
-//		wordIDs.push_back(2);
-//		wordIDs.push_back(3);
-//		versions.push_back(wordIDs);
-//		wordIDs.clear();
-//
-//		wordIDs.push_back(1);
-//		wordIDs.push_back(2);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(0); // Important edge case
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(3);
-//		wordIDs.push_back(4);
-//		wordIDs.push_back(1);
-//		wordIDs.push_back(2);
-//		versions.push_back(wordIDs);
-//		wordIDs.clear();
-//
-//		currentWordID = 4;
+		// wordIDs.push_back(1);
+		// wordIDs.push_back(2);
+		// wordIDs.push_back(2);
+		// wordIDs.push_back(2);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(4);
+		// wordIDs.push_back(2);
+		// wordIDs.push_back(3);
+		// versions.push_back(wordIDs);
+		// wordIDs.clear();
+
+		// wordIDs.push_back(1);
+		// wordIDs.push_back(2);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(0); // Important edge case
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(3);
+		// wordIDs.push_back(4);
+		// wordIDs.push_back(1);
+		// wordIDs.push_back(2);
+		// versions.push_back(wordIDs);
+		// wordIDs.clear();
+
+		// wordIDs.push_back(2);
+		// versions.push_back(wordIDs); // Another edge case, adding an empty version
+
+		// currentWordID = 4;
 
 		for (unsigned i = 0; i < inputFilenames.size(); i++)
 		{

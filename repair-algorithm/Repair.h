@@ -63,7 +63,7 @@ private:
 
 	unsigned long long getKeyAtIdx(unsigned v, int idx);
 
-	void doRepair(unsigned repairStoppingPoint);
+	void doReplacements(unsigned repairStoppingPoint);
 
 	void printVector(unsigned v);
 
@@ -71,11 +71,11 @@ private:
 
 	
 	/***** Tree building, offsets, and partitioning ******/
-	void deleteTree(RepairTreeNode* node);
-
 	RepairTreeNode* buildTree(unsigned symbol, unsigned versionNum);
 
 	int getNextRootSymbol(unsigned symbol);
+
+	void deleteTree(RepairTreeNode* node);
 
 	unsigned calcOffsets(RepairTreeNode* node);
 
@@ -97,7 +97,7 @@ public:
 
 	void getOffsetsAllVersions(unsigned* offsetsAllVersions, unsigned* versionPartitionSizes);
 
-	void getAssociations(unsigned repairStoppingPoint = 0)
+	void doRepair(unsigned repairStoppingPoint = 0)
 	{
 		// Run through the string and grab all the initial pairs
 		// Add them to all the structures
@@ -105,13 +105,12 @@ public:
 
 		// Replace pairs with symbols until done
 		// (either some early stop condition or one symbol left)
-		doRepair(repairStoppingPoint);
-
-		assert(hashTable.empty());
-		assert(myHeap.empty());
+		doReplacements(repairStoppingPoint);
 	}
 
-	void cleanup();
+	void clearRepairStructures();
+
+	void clearAssociationsAndReset();
 };
 
 

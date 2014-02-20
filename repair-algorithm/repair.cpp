@@ -64,6 +64,16 @@ bool RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
 
 void RepairAlgorithm::checkVersionAndIdx(unsigned v, int idx)
 {
+    if (!(v >= 0 && v < this->versions.size()))
+    {
+        cerr << "v is out of bounds...";
+        cerr << "v:" << v << " and idx: " << idx << endl;
+    }
+    if (!(idx >= 0 && idx < versions[v].size()))
+    {
+        cerr << "idx is out of bounds... ";
+        cerr << "v:" << v << " and idx: " << idx << endl;
+    }
     assert(v >= 0 && v < this->versions.size());
     assert(idx >= 0 && idx < versions[v].size());
 }
@@ -110,6 +120,10 @@ void RepairAlgorithm::extractPairs()
     unsigned long long currPair;
     for (size_t v = 0; v < versions.size(); v++)
     {
+        if (versions[v].size() < 1)
+        {
+            continue;
+        }
         // Go through the string and get all overlapping pairs, and process them
         for (size_t i = 0; i < versions[v].size() - 1; i++)
         {
@@ -123,6 +137,14 @@ void RepairAlgorithm::extractPairs()
             this->addOccurrence(currPair, v, i);
         }
     }
+    int sizes = 0; 
+    for (int i = 0; i < versions.size(); i++)
+    {
+        sizes += versions[i].size();
+    }
+    // cerr << "# distinct pairs: " << hashTable.size() << endl;
+    // cerr << "total # words: " << sizes << endl;
+    // exit(1);
 }
 
 /*
@@ -141,7 +163,7 @@ void RepairAlgorithm::extractPairs()
     -> Now we're going to build some trees inside here -yk, 2/24/13
 
 */
-void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
+void RepairAlgorithm::doReplacements(unsigned repairStoppingPoint)
 {
     unsigned symbol;
     unsigned long long key;
@@ -295,6 +317,8 @@ void RepairAlgorithm::doRepair(unsigned repairStoppingPoint)
             }
         }
     }
+    // cerr << "# associations: " << associations.size() << endl;
+    // exit(1);
 }
 
 void RepairAlgorithm::printVector(unsigned v)
@@ -302,7 +326,7 @@ void RepairAlgorithm::printVector(unsigned v)
     // Print the current vector in one line
     cerr << "Version " << v << ": ";
     for (unsigned i = 0; i < versions[v].size(); i++) {
-     cerr << versions[v][i] << " ";
+        cerr << versions[v][i] << " ";
     }
     cerr << endl;
 }
@@ -331,22 +355,29 @@ void RepairAlgorithm::printSection(unsigned v, unsigned idx, unsigned range)
 }
 
 // Release memory from all structures
-void RepairAlgorithm::cleanup()
+void RepairAlgorithm::clearRepairStructures()
 {
     for (auto it = hashTable.begin(); it != hashTable.end(); it++) {
         delete (*it).second;
     }
+    hashTable.clear();
+    assert(hashTable.empty());
 
     while (!myHeap.empty())
     {
         myHeap.deleteAtIndex(myHeap.getSize() - 1);
     }
+    assert(myHeap.empty());
+}
 
+void RepairAlgorithm::clearAssociationsAndReset()
+{
     for (size_t i = 0; i < versions.size(); ++i)
     {
         versions[i].clear();
     }
     versions.clear();
+    assert(versions.empty());
 
     this->associations.clear();
     resetcurrentWordID();

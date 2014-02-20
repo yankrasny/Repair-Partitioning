@@ -146,6 +146,13 @@ void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root,
 			assert(prevVal < currVal);
 
 			diff = currVal - prevVal;
+
+			// TODO
+			// if (diff > MAX_FRAG_LENGTH)
+			// {
+
+			// }
+
 			if (diff >= this->minFragSize)
 			{
 				// These offsets are already sorted (see the comparator at the top)

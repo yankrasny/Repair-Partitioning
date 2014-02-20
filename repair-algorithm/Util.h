@@ -124,33 +124,6 @@ inline std::vector<unsigned> stringToWordIDs(const std::string& text, std::unord
 }
 
 
-class VersionDataItem
-{
-private:
-	RepairTreeNode* rootNode;
-	unsigned versionNum; // aka versionID
-	unsigned versionSize; // aka number of words
-public:
-	VersionDataItem(unsigned versionNum, unsigned versionSize)
-		: versionNum(versionNum), versionSize(versionSize) {}
-
-	RepairTreeNode* getRootNode()
-	{
-		return rootNode;
-	}
-
-	unsigned getVersionSize() const
-	{
-		return versionSize;
-	}
-
-	void setRootNode(RepairTreeNode* rootNode)
-	{
-		this->rootNode = rootNode; 
-	}
-};
-
-
 struct FragInfo
 {
 	friend std::ostream& operator<<(std::ostream& os, const FragInfo& f)
