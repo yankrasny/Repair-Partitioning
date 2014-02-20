@@ -1,6 +1,10 @@
 #include "Repair.h"
 using namespace std;
 
+/*
+If the pair exists, add this occurrence of it
+If not, create a new entry in the heap and hash table, and add this occurrence of it
+*/
 void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, int idx)
 {
     // cerr << "addOccurrence(" << getKeyAsString(key) << ", " << version << ", " << idx << ")" << endl;
@@ -18,6 +22,16 @@ void RepairAlgorithm::addOccurrence(unsigned long long key, unsigned version, in
     }
 }
 
+/*
+Remove an occurrence of a pair from the hash table
+If there are no more occurrences of this pair left, release and erase the entries
+in both structures. 
+    EDGE CASE: Recall that each hash table entry points to a heap entry
+    When deleting a heap entry, we swap with the last heap entry to achive O(1) deletion
+    This messes up the hash table entry's pointer to that last heap entry
+    But, the deleteAtIdx function returns the new location of the previously last heap entry
+    See the section that uses indexOfEntryThatGotSwapped for the solution
+*/
 bool RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int idx)
 {
     // cerr << "removeOccurrence(" << getKeyAsString(key) << ", " << v << ", " << idx << ")" << endl;
@@ -62,6 +76,9 @@ bool RepairAlgorithm::removeOccurrence(unsigned long long key, unsigned v, int i
     return false;
 }
 
+/*
+Assert that the version and idx are within logical boundaries
+*/
 void RepairAlgorithm::checkVersionAndIdx(unsigned v, int idx)
 {
     if (!(v >= 0 && v < this->versions.size()))
@@ -78,6 +95,10 @@ void RepairAlgorithm::checkVersionAndIdx(unsigned v, int idx)
     assert(idx >= 0 && idx < versions[v].size());
 }
 
+/*
+Scan left from this idx and return the next valid idx
+-1 is used to indicate that there are no valid idxs in this direction
+*/
 int RepairAlgorithm::scanLeft(unsigned v, int idx)
 {
     checkVersionAndIdx(v, idx);
@@ -87,6 +108,10 @@ int RepairAlgorithm::scanLeft(unsigned v, int idx)
     return -1;
 }
 
+/*
+Scan right from this idx and return the next valid idx
+-1 is used to indicate that there are no valid idxs in this direction
+*/
 int RepairAlgorithm::scanRight(unsigned v, int idx)
 {
     checkVersionAndIdx(v, idx);
@@ -96,6 +121,9 @@ int RepairAlgorithm::scanRight(unsigned v, int idx)
     return -1;
 }
 
+/*
+Get the pair of unsigned at this idx if it's valid, and the next valid idx to the right
+*/
 unsigned long long RepairAlgorithm::getKeyAtIdx(unsigned v, int idx)
 {
     checkVersionAndIdx(v, idx);
@@ -115,6 +143,10 @@ unsigned long long RepairAlgorithm::getKeyAtIdx(unsigned v, int idx)
     return combineToUInt64(versions[v][idx], versions[v][rightIdx]);
 }
 
+/*
+Run through all positions of all versions
+Add each pair to the structures
+*/
 void RepairAlgorithm::extractPairs()
 {
     unsigned long long currPair;
@@ -321,6 +353,9 @@ void RepairAlgorithm::doReplacements(unsigned repairStoppingPoint)
     // exit(1);
 }
 
+/*
+Print the whole version v (useful for small examples)
+*/
 void RepairAlgorithm::printVector(unsigned v)
 {
     // Print the current vector in one line
@@ -331,6 +366,9 @@ void RepairAlgorithm::printVector(unsigned v)
     cerr << endl;
 }
 
+/*
+Print a section of the specified version
+*/
 void RepairAlgorithm::printSection(unsigned v, unsigned idx, unsigned range)
 {
     checkVersionAndIdx(v, idx); 
@@ -354,7 +392,9 @@ void RepairAlgorithm::printSection(unsigned v, unsigned idx, unsigned range)
     cerr << endl;
 }
 
-// Release memory from all structures
+/*
+Release memory from core repair structures
+*/
 void RepairAlgorithm::clearRepairStructures()
 {
     for (auto it = hashTable.begin(); it != hashTable.end(); it++) {
@@ -370,6 +410,9 @@ void RepairAlgorithm::clearRepairStructures()
     assert(myHeap.empty());
 }
 
+/*
+Clear associations and reset the global Ids
+*/
 void RepairAlgorithm::clearAssociationsAndReset()
 {
     for (size_t i = 0; i < versions.size(); ++i)
@@ -386,11 +429,17 @@ void RepairAlgorithm::clearAssociationsAndReset()
 
 /*************************************************************************************************/
 /*
-New Tree Building Code: takes the resulting vector<Association> from repair 
-and builds a tree for each version
+Algorithm Step 2: Build and cut trees
+    Takes the resulting vector<Association> from repair 
+    and builds a tree for each version
 */
 /*************************************************************************************************/
 
+/*
+Recursively build a tree from associations
+Expand an association to its left and right symbols
+Each symbol is a key to another association, there's your recursion
+*/
 RepairTreeNode* RepairAlgorithm::buildTree(unsigned symbol, unsigned versionNum)
 {
     // Allocate the current node and set its symbol
@@ -415,6 +464,26 @@ RepairTreeNode* RepairAlgorithm::buildTree(unsigned symbol, unsigned versionNum)
     return root;
 }
 
+/*
+Release the memory used by one tree starting at the root
+*/
+void RepairAlgorithm::deleteTree(RepairTreeNode* node) {
+    RepairTreeNode* leftChild = node->getLeftChild();
+    RepairTreeNode* rightChild = node->getRightChild();
+    if (leftChild) {
+        deleteTree(leftChild);
+    }
+    if (rightChild) {
+        deleteTree(rightChild);
+    }
+    delete node;
+    node = NULL;
+}
+
+/*
+Part of our top down tree building algorithm
+If this symbol has some versions left then it can be a root node
+*/
 int RepairAlgorithm::getNextRootSymbol(unsigned symbol)
 {
     while (associations[symbol].getVersions().size() <= 0)
@@ -427,6 +496,12 @@ int RepairAlgorithm::getNextRootSymbol(unsigned symbol)
     return symbol;
 }
 
+/*
+Starting at the last association created, build trees for each version top down
+Once you build one, get the partitioning for it and store it in the output
+Immediately delete the tree
+Organize the output as needed by the consumers of this class
+*/
 void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsigned* versionPartitionSizes)
 {
     int symbol = currWordID();
@@ -539,19 +614,9 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
     offsetMap.clear();
 }
 
-void RepairAlgorithm::deleteTree(RepairTreeNode* node) {
-    RepairTreeNode* leftChild = node->getLeftChild();
-    RepairTreeNode* rightChild = node->getRightChild();
-    if (leftChild) {
-        deleteTree(leftChild);
-    }
-    if (rightChild) {
-        deleteTree(rightChild);
-    }
-    delete node;
-    node = NULL;
-}
-
+/*
+Given a root node, assign offsets and sizes to it and recursively to all children nodes
+*/
 unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
 {
     if (!node) return 0;

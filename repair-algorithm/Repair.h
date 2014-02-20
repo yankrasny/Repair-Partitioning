@@ -73,9 +73,9 @@ private:
 	/***** Tree building, offsets, and partitioning ******/
 	RepairTreeNode* buildTree(unsigned symbol, unsigned versionNum);
 
-	int getNextRootSymbol(unsigned symbol);
-
 	void deleteTree(RepairTreeNode* node);
+
+	int getNextRootSymbol(unsigned symbol);	
 
 	unsigned calcOffsets(RepairTreeNode* node);
 
