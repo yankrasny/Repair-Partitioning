@@ -527,7 +527,7 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
             if (versionNum == -1) break;
 
             assert(versionNum < versions.size() && versionNum >= 0);
-            cerr << "Build tree: v" << versionNum << endl;
+            // cerr << "Build tree: v" << versionNum << endl;
     
             // Allocates a lot of memory, see delete at the end of this function
             currRoot = buildTree(symbol, versionNum);
