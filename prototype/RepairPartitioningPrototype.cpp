@@ -136,7 +136,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 {
 	bool debug = false;
 
-	unsigned numLevelsDown = 15;
+	unsigned numLevelsDown = 5;
 
 	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize,
 		fragmentationCoefficient);
