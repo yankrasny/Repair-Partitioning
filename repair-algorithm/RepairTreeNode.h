@@ -13,16 +13,9 @@ class RepairTreeNode
 	RepairTreeNode* leftChild;
 	RepairTreeNode* rightChild;
 
-	unsigned versionNum;
-
 public:
-	RepairTreeNode(unsigned symbol = 0) : symbol(symbol), offsetInFile(0), leftChild(NULL), rightChild(NULL), 
-		versionNum(0), size(0) {}
-
-	unsigned getVersionNum() const
-	{
-		return versionNum;
-	}
+	RepairTreeNode(unsigned symbol = 0) : symbol(symbol), offsetInFile(0), 
+		leftChild(NULL), rightChild(NULL), size(0) {}
 
 	unsigned getSymbol() const
 	{

@@ -49,7 +49,7 @@ inline unsigned currWordID()
 	return currentWordID;
 }
 
-inline void resetcurrentWordID()
+inline void resetCurrentWordID()
 {
 	currentWordID = 0;	
 }

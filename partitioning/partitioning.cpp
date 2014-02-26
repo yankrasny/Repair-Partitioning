@@ -47,7 +47,6 @@ double RepairDocumentPartition::getSubsetScore(SortedByOffsetNodeSet subset)
 	return currMax;
 }
 
-int i = 0;
 SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* node, int numLevels)
 {
 	numLevels++;
@@ -58,7 +57,10 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 	double myScore = 1.0;
 	if (associations.count(node->getSymbol()) > 0)
 	{
+		double x = 0.5;
+		double y = 0.5;
 		Association a = this->associations[node->getSymbol()];
+		// myScore = x * node->getSize() + y * a.getFreq();
 		myScore = node->getSize() * a.getFreq();
 	}
 
@@ -77,8 +79,6 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 		nodes.insert(node);
 		return nodes;
 	}
-	// cerr << ++i << endl;
-	// system("pause");
 
 	RepairTreeNode* leftChild = node->getLeftChild();
 	RepairTreeNode* rightChild = node->getRightChild();

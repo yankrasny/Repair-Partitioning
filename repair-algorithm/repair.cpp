@@ -169,11 +169,11 @@ void RepairAlgorithm::extractPairs()
             this->addOccurrence(currPair, v, i);
         }
     }
-    int sizes = 0; 
-    for (int i = 0; i < versions.size(); i++)
-    {
-        sizes += versions[i].size();
-    }
+    // int sizes = 0;
+    // for (int i = 0; i < versions.size(); i++)
+    // {
+    //     sizes += versions[i].size();
+    // }
     // cerr << "# distinct pairs: " << hashTable.size() << endl;
     // cerr << "total # words: " << sizes << endl;
     // exit(1);
@@ -423,7 +423,7 @@ void RepairAlgorithm::clearAssociationsAndReset()
     assert(versions.empty());
 
     this->associations.clear();
-    resetcurrentWordID();
+    resetCurrentWordID();
     resetFragID();
 }
 
@@ -567,7 +567,7 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
     // Post processing to get offsetMap into offsets and versionPartitionSizes
     if (versions.size() != offsetMap.size())
     {
-        cerr << "offsetMap.size(): " << offsetMap.size() << endl;
+        // cerr << "offsetMap.size(): " << offsetMap.size() << endl;
         set<unsigned> versionNums = set<unsigned>();
         for (auto it = offsetMap.begin(); it != offsetMap.end(); it++)
         {
