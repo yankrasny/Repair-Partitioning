@@ -6,24 +6,35 @@
 #include <set>
 #include <unordered_map>
 #include <vector>
+
+// #include <boost/interprocess/containers/flat_set.hpp>
+// typedef boost::container::flat_set<int> location_set;
+
+typedef std::set<int> location_set;
+
 class HashTableEntry
 {
 	HeapEntry* heapEntryPointer;
 
 	// The sets of locations of this pair for each version
 	// Ex: locationsInDoc[0] = {1,4,7}, locationsInDoc[1] = {1,4,12}
-	std::unordered_map<unsigned, std::set<int> > locationsInDoc;
+	std::unordered_map<unsigned, location_set> locationsInDoc;
 
 public:
 	HashTableEntry(HeapEntry* hp, unsigned version, int firstIdx) : heapEntryPointer(hp)
 	{
-		locationsInDoc = std::unordered_map<unsigned, std::set<int> >();
+		locationsInDoc = std::unordered_map<unsigned, location_set>();
 		this->addOccurrence(version, firstIdx);
+	}
+
+	std::unordered_map<unsigned, location_set> getLocationsInDoc() const
+	{
+		return locationsInDoc;
 	}
 
 	bool hasLocationsAtVersion(unsigned version);
 
-	std::set<int> getLocationsAtVersion(unsigned version);
+	location_set getLocationsAtVersion(unsigned version);
 
 	void increment();
 

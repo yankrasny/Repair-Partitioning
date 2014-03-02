@@ -169,6 +169,36 @@ void RepairAlgorithm::extractPairs()
             this->addOccurrence(currPair, v, i);
         }
     }
+
+
+    auto sizes = vector<size_t>();
+    for (auto it = hashTable.begin(); it != hashTable.end(); it++)
+    {
+        auto locsInDoc = (*it).second->getLocationsInDoc();
+        for (auto it2 = locsInDoc.begin(); it2 != locsInDoc.end(); it2++)
+        {
+            auto locsInVersion = (*it2).second;
+            sizes.push_back(locsInVersion.size());
+        }
+    }
+
+    int sum_of_elems = 0;
+    for (int n : sizes) 
+        sum_of_elems += n;  
+
+    cerr << "sum(sizes) = " << sum_of_elems << endl;
+
+    // sort(sizes.begin(), sizes.end(), std::greater<int>());
+
+    // for (size_t i = 0; i < sizes.size(); i++)
+    // {
+    //     if (i % 100 == 0) {
+    //         system("pause");
+    //     }
+    //     cerr << sizes[i] << endl;
+    // }
+
+
     // int sizes = 0;
     // for (int i = 0; i < versions.size(); i++)
     // {

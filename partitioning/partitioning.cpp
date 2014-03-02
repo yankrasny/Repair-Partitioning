@@ -47,9 +47,26 @@ double RepairDocumentPartition::getSubsetScore(SortedByOffsetNodeSet subset)
 	return currMax;
 }
 
+/*
+TODO
+
+global var numCalls
+Also see commented code below and finish it
+
+*/
+
+
 SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* node, int numLevels)
 {
-	numLevels++;
+
+	/* TODO */
+	// if (++numCalls > maxNumCalls) {
+	// 	// set a variable or something to tell the calling code we've gotta do it again
+	// 	// the calling code can decide what to do, like run us again with numLevels - 1
+	// }
+
+
+	++numLevels;
 	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
 	if (!node)
 		return nodes;

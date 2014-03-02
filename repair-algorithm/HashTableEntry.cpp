@@ -20,18 +20,18 @@ bool HashTableEntry::hasLocationsAtVersion(unsigned version)
 	return false;
 }
 
-set<int> HashTableEntry::getLocationsAtVersion(unsigned version)
+location_set HashTableEntry::getLocationsAtVersion(unsigned version)
 {
 	if (locationsInDoc.find(version) != locationsInDoc.end())
 		return locationsInDoc[version];
-	return set<int>();
+	return location_set();
 }
 
 // We create the set of locations for this version if it doesn't yet exist
 void HashTableEntry::addOccurrence(unsigned version, int idx)
 {
 	if (locationsInDoc.find(version) == locationsInDoc.end()) {
-		locationsInDoc[version] = set<int>();
+		locationsInDoc[version] = location_set();
 	}
 	locationsInDoc[version].insert(idx);
 	increment();
