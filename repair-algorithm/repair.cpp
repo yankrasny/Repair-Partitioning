@@ -1,4 +1,5 @@
 #include "Repair.h"
+#include <map>
 using namespace std;
 
 /*
@@ -171,22 +172,40 @@ void RepairAlgorithm::extractPairs()
     }
 
 
-    auto sizes = vector<size_t>();
-    for (auto it = hashTable.begin(); it != hashTable.end(); it++)
-    {
-        auto locsInDoc = (*it).second->getLocationsInDoc();
-        for (auto it2 = locsInDoc.begin(); it2 != locsInDoc.end(); it2++)
-        {
-            auto locsInVersion = (*it2).second;
-            sizes.push_back(locsInVersion.size());
-        }
-    }
+    // auto histogram = map<unsigned, unsigned>();
+    // // auto sizes = vector<size_t>();
+    // for (auto it = hashTable.begin(); it != hashTable.end(); it++)
+    // {
+    //     auto locsInDoc = (*it).second->getLocationsInDoc();
+    //     for (auto it2 = locsInDoc.begin(); it2 != locsInDoc.end(); it2++)
+    //     {
+    //         auto locsInVersion = (*it2).second;
+    //         unsigned theSize = locsInVersion.size();
+    //         if (histogram.count(theSize) > 0) {
+    //             histogram[theSize]++;
+    //         } else {
+    //             histogram[theSize] = 0;
+    //         }
+    //         // sizes.push_back(locsInVersion.size());
+    //     }
+    // }
 
-    int sum_of_elems = 0;
-    for (int n : sizes) 
-        sum_of_elems += n;  
+    // ofstream os("histogram.txt");
 
-    cerr << "sum(sizes) = " << sum_of_elems << endl;
+    // // sort(histogram.begin(), histogram.end());
+    // for (auto it = histogram.begin(); it != histogram.end(); it++) {
+    //     unsigned size = (*it).first;
+    //     unsigned numTimes = (*it).second;
+    //     os << "size: " << size << ", numTimes: " << numTimes << endl;
+    // }
+    // os.close();
+    // exit(0);
+
+    // int sum_of_elems = 0;
+    // for (int n : sizes) 
+    //     sum_of_elems += n;  
+
+    // cerr << "sum(sizes) = " << sum_of_elems << endl;
 
     // sort(sizes.begin(), sizes.end(), std::greater<int>());
 

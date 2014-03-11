@@ -6,6 +6,9 @@ all:
 optimized:
 	g++ $(SOURCES) -o repair -O3 -std=c++0x
 
+profile:
+	g++ $(SOURCES) -o repair -pg -std=c++0x
+
 clean:
 	rm -rvf repair repair.dSYM
 
