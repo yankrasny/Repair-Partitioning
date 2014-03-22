@@ -2,7 +2,6 @@
 #include "Partitioning.h"
 using namespace std;
 
-
 SortedByOffsetNodeSet RepairDocumentPartition::getNodesNthLevelDown(RepairTreeNode* root, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes)
 {
 	if (!root) return nodes;

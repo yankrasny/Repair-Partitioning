@@ -550,6 +550,8 @@ Starting at the last association created, build trees for each version top down
 Once you build one, get the partitioning for it and store it in the output
 Immediately delete the tree
 Organize the output as needed by the consumers of this class
+
+TODO fix: this function is pretty long, we can break it up
 */
 void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsigned* versionPartitionSizes)
 {
@@ -590,6 +592,20 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
             theList = PartitionList(versionNum);
             bounds = vector<unsigned>();
 
+            // TODO write some loops to run partitioning with different param values
+            // Pseudocode written, make it happen for real
+            /*
+            for (fragCoefficientArray : fragCoeff) {
+                for (numLevelsDownArray : numLevelsDown) {
+                    for (minFragSizeArray : minFragSize) {
+                        partitionAlg.getPartitioningOneVersion(currRoot, bounds, versions[versionNum].size(), params...);                        
+                    }
+                    // Now score the partitioning
+                    // The best one wins and gets used below
+                }
+            }
+            */
+            
             partitionAlg.getPartitioningOneVersion(currRoot, bounds, versions[versionNum].size());
 
             // A partitioning is defined as at least one fragment
@@ -613,7 +629,8 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
     unsigned totalOffsetInArray = 0;
     unsigned numVersions = 0;
 
-    // Post processing to get offsetMap into offsets and versionPartitionSizes
+    // offsetMap have not been populated with all partitionings
+    // some versions might be of size 0, so the algorithm might just do nothing for some of them
     if (versions.size() != offsetMap.size())
     {
         // cerr << "offsetMap.size(): " << offsetMap.size() << endl;
@@ -646,8 +663,10 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
         }
     }
 
+    // Now assert that we've populated results for all those poorly behaved versions 
     assert(versions.size() == offsetMap.size());
-    
+
+    // Post processing to get offsetMap into offsets and versionPartitionSizes    
     for (auto it = offsetMap.begin(); it != offsetMap.end(); it++)
     {
         // Reusing the same var from above, should be ok
