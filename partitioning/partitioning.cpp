@@ -53,22 +53,25 @@ global var numCalls
 Also see commented code below and finish it
 
 */
-
-
-SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* node, int numLevels)
+unsigned numCalls = 0;
+SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* node, int numLevels, bool& tooManyCalls)
 {
-
-	/* TODO */
-	// if (++numCalls > maxNumCalls) {
-	// 	// set a variable or something to tell the calling code we've gotta do it again
-	// 	// the calling code can decide what to do, like run us again with numLevels - 1
-	// }
-
-
 	++numLevels;
 	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
 	if (!node)
 		return nodes;
+
+	if (tooManyCalls) {
+		return nodes;
+	}
+
+	// cerr << "Num Calls: " << numCalls << endl;
+	if (++numCalls > this->maxNumCalls) {
+		numCalls = 0;
+		cerr << "Too many calls to getBestSubset, trying again with numLevelsDown--" << endl;
+		tooManyCalls = true;
+	    return nodes;
+	}
 	
 	double myScore = 1.0;
 	if (associations.count(node->getSymbol()) > 0)
@@ -80,15 +83,12 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 		myScore = node->getSize() * a.getFreq();
 	}
 
-	// node is a terminal 
+	// node is a terminal
 	if (!node->getLeftChild())
 	{
 		nodes.insert(node);
 		return nodes;
 	}
-
-	// int depth = node->getDepth();
-	// cerr << "Depth: " << depth << endl;
 
 	// Limit the number of recursive calls
 	if (numLevels > this->numLevelsDown) {
@@ -99,8 +99,8 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 	RepairTreeNode* leftChild = node->getLeftChild();
 	RepairTreeNode* rightChild = node->getRightChild();
 
-	SortedByOffsetNodeSet leftSubset = getBestSubset(leftChild, numLevels + 1);
-	SortedByOffsetNodeSet rightSubset = getBestSubset(rightChild, numLevels + 1);
+	SortedByOffsetNodeSet leftSubset = getBestSubset(leftChild, numLevels + 1, tooManyCalls);
+	SortedByOffsetNodeSet rightSubset = getBestSubset(rightChild, numLevels + 1, tooManyCalls);
 	
 	double leftScore = getSubsetScore(leftSubset);
 	double rightScore = getSubsetScore(rightSubset);
@@ -122,8 +122,13 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root,
 	vector<unsigned>& bounds, unsigned versionSize)
 {
-	// cerr << "Version Number: " << root->getVersionNum() << endl;
-	SortedByOffsetNodeSet nodes = getBestSubset(root);
+	bool tooManyCalls = false;
+	SortedByOffsetNodeSet nodes = getBestSubset(root, 0, tooManyCalls);
+	while (tooManyCalls) {
+		tooManyCalls = false;
+		this->numLevelsDown--;
+		nodes = getBestSubset(root, 0, tooManyCalls);
+	}
 
 	unsigned prevVal(0); // the previous node's index in the file
 	unsigned currVal(0); // the current node's index in the file
