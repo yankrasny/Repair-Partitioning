@@ -171,6 +171,9 @@ void RepairAlgorithm::extractPairs()
         }
     }
 
+    // READ THIS: The rest of this method is test code
+    // This is a good place to look at our structures, after the initial run
+    // But before we start the replacement process
 
     // auto histogram = map<unsigned, unsigned>();
     // // auto sizes = vector<size_t>();
@@ -268,7 +271,7 @@ void RepairAlgorithm::doReplacements(unsigned repairStoppingPoint)
 
         size_t numOccurrences = max->getSize();
 
-        // TODO Consider using this at some point
+        // TODO Future Work
         // if (numOccurrences < repairStoppingPoint)
         //     return;
 
@@ -365,12 +368,9 @@ void RepairAlgorithm::doReplacements(unsigned repairStoppingPoint)
                 }
 
                 // Store the association and which version it occurs in
-                if (associations.count(symbol) < 1)
-                {
+                if (associations.count(symbol) < 1) {
                     associations[symbol] = Association(symbol, versions[v][idx], versions[v][rightIdx], numOccurrences, v);
-                }
-                else
-                {
+                } else {
                     associations[symbol].addVersion(v);
                 }
 
@@ -535,10 +535,8 @@ If this symbol has some versions left then it can be a root node
 */
 int RepairAlgorithm::getNextRootSymbol(unsigned symbol)
 {
-    while (associations[symbol].getVersions().size() <= 0)
-    {
-        if (--symbol < 1)
-        {
+    while (associations[symbol].getVersions().size() <= 0) {
+        if (--symbol < 1) {
             return -1;
         }
     }
@@ -567,13 +565,11 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
         this->numLevelsDown, this->minFragSize, this->fragmentationCoefficient);
 
     vector<unsigned> bounds;
-    while (true)
-    {
+    while (true) {
         symbol = getNextRootSymbol(symbol);
         if (symbol == -1) break;
 
-        while (true)
-        {
+        while (true) {
             versionNum = associations[symbol].getVersionAtBegin();
             if (versionNum == -1) break;
 
@@ -612,8 +608,7 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
             // So at least 2 fragment boundaries
             assert(bounds.size() > 1);
 
-            for (size_t i = 0; i < bounds.size(); i++)
-            {
+            for (size_t i = 0; i < bounds.size(); i++) {
                 theList.push(bounds[i]);
             }
 
@@ -631,26 +626,21 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
 
     // offsetMap have not been populated with all partitionings
     // some versions might be of size 0, so the algorithm might just do nothing for some of them
-    if (versions.size() != offsetMap.size())
-    {
+    if (versions.size() != offsetMap.size()) {
         // cerr << "offsetMap.size(): " << offsetMap.size() << endl;
         set<unsigned> versionNums = set<unsigned>();
-        for (auto it = offsetMap.begin(); it != offsetMap.end(); it++)
-        {
+        for (auto it = offsetMap.begin(); it != offsetMap.end(); it++) {
             // Reusing the same var from above, should be ok
             theList = *it;
             unsigned versionNum = theList.getVersionNum();
             versionNums.insert(versionNum);
         }
 
-        for (size_t v = 0; v < versions.size(); ++v)
-        {
-            if (versionNums.count(v) < 1)
-            {
+        for (size_t v = 0; v < versions.size(); ++v) {
+            if (versionNums.count(v) < 1) {
                 // We didn't find the version number, handle the possible cases
                 // cerr << "Version not found in offsetMap: " << v << endl;
-                if (versions[v].size() < this->minFragSize)
-                {
+                if (versions[v].size() < this->minFragSize) {
                     theList = PartitionList(v);
                     theList.push(0);
                     theList.push(versions[v].size());
@@ -667,12 +657,10 @@ void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsign
     assert(versions.size() == offsetMap.size());
 
     // Post processing to get offsetMap into offsets and versionPartitionSizes    
-    for (auto it = offsetMap.begin(); it != offsetMap.end(); it++)
-    {
+    for (auto it = offsetMap.begin(); it != offsetMap.end(); it++) {
         // Reusing the same var from above, should be ok
         theList = *it;
-        for (size_t j = 0; j < theList.size(); j++)
-        {
+        for (size_t j = 0; j < theList.size(); j++) {
             offsetsAllVersions[totalOffsetInArray + j] = theList.get(j);
         }
         versionPartitionSizes[numVersions++] = theList.size();
@@ -690,8 +678,7 @@ unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
     if (!node) return 0;
 
     // node is not a terminal
-    if (node->getLeftChild())
-    {
+    if (node->getLeftChild()) {
         RepairTreeNode* leftChild = node->getLeftChild();
         RepairTreeNode* rightChild = node->getRightChild();
         

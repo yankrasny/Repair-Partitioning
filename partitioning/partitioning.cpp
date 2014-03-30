@@ -46,14 +46,6 @@ double RepairDocumentPartition::getSubsetScore(SortedByOffsetNodeSet subset)
 	return currMax;
 }
 
-/*
-TODO
-
-global var numCalls
-Also see commented code below and finish it
-
-*/
-unsigned numCalls = 0;
 SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* node, int numLevels, bool& tooManyCalls)
 {
 	++numLevels;
@@ -65,10 +57,10 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 		return nodes;
 	}
 
-	// cerr << "Num Calls: " << numCalls << endl;
-	if (++numCalls > this->maxNumCalls) {
-		numCalls = 0;
-		cerr << "Too many calls to getBestSubset, trying again with numLevelsDown--" << endl;
+	// cerr << "Num Calls: " << numCallsSoFar << endl;
+	if (++numCallsSoFar > this->maxNumCalls) {
+		numCallsSoFar = 0;
+		cerr << "Too many calls to getBestSubset, trying again with numLevelsDown = " << (numLevelsDown - 1) << endl;
 		tooManyCalls = true;
 	    return nodes;
 	}
@@ -76,8 +68,8 @@ SortedByOffsetNodeSet RepairDocumentPartition::getBestSubset(RepairTreeNode* nod
 	double myScore = 1.0;
 	if (associations.count(node->getSymbol()) > 0)
 	{
-		double x = 0.5;
-		double y = 0.5;
+		// double x = 0.5;
+		// double y = 0.5;
 		Association a = this->associations[node->getSymbol()];
 		// myScore = x * node->getSize() + y * a.getFreq();
 		myScore = node->getSize() * a.getFreq();
