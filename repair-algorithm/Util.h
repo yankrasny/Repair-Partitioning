@@ -123,25 +123,7 @@ inline std::vector<unsigned> stringToWordIDs(const std::string& text, std::unord
 	return ret;
 }
 
-
-struct FragInfo
-{
-	friend std::ostream& operator<<(std::ostream& os, const FragInfo& f)
-	{
-		return os << f.id << " -> " << "(count = " << f.count << ", fragSize = " << f.fragSize << ")" << std::endl;
-	}
-
-	unsigned id;
-	unsigned count;
-	unsigned fragSize;
-	std::string hash;
-
-	FragInfo() : id(-1), count(0), fragSize(0), hash("") {}
-	FragInfo(unsigned id, unsigned count, unsigned fragSize, const std::string& hash) : id(id), count(count), fragSize(fragSize), hash(hash) {}
-};
-
-
-//Used to store associations from one symbol to two others
+// Used to store associations from one symbol to two others
 class Association
 {
 	friend std::ostream& operator<<(std::ostream& os, const Association& a)
@@ -228,6 +210,75 @@ public:
 			return (int)(*it);
 		}
 	}
+};
+
+struct BaseFragment
+{
+    int start;
+    int end;
+};
+
+// Use this class with the comparator below to sort the output by version number
+class BaseFragmentList
+{
+private:
+	std::vector<BaseFragment> baseFragments;
+	unsigned versionNum;
+public:
+	BaseFragmentList(unsigned versionNum) : versionNum(versionNum) {}
+	BaseFragmentList() {}
+
+	void push(BaseFragment f)
+	{
+		baseFragments.push_back(f);
+	}
+
+	int size() const
+	{
+		return baseFragments.size();
+	}
+
+	BaseFragment get(size_t index) const
+	{
+		return baseFragments[index];
+	}
+
+	unsigned getVersionNum() const
+	{
+		return versionNum;
+	}
+
+	~BaseFragmentList()
+	{
+		baseFragments.clear();
+	}
+};
+
+class BaseFragmentsListCompare
+{
+public:
+	bool operator() (const BaseFragmentList lhs, const BaseFragmentList rhs) const
+	{
+		return lhs.getVersionNum() < rhs.getVersionNum();
+	}
+};
+
+typedef std::set<BaseFragmentList, BaseFragmentsListCompare> BaseFragmentsAllVersions;
+
+struct FragInfo
+{
+	friend std::ostream& operator<<(std::ostream& os, const FragInfo& f)
+	{
+		return os << f.id << " -> " << "(count = " << f.count << ", fragSize = " << f.fragSize << ")" << std::endl;
+	}
+
+	unsigned id;
+	unsigned count;
+	unsigned fragSize;
+	std::string hash;
+
+	FragInfo() : id(-1), count(0), fragSize(0), hash("") {}
+	FragInfo(unsigned id, unsigned count, unsigned fragSize, const std::string& hash) : id(id), count(count), fragSize(fragSize), hash(hash) {}
 };
 
 #endif

@@ -50,59 +50,28 @@ void RepairPartitioningPrototype::updateUniqueFragmentHashMap()
 
 void RepairPartitioningPrototype::writeResults(
 	const vector<vector<unsigned> >& versions, 
-	unsigned* offsetsAllVersions,
-	unsigned* versionPartitionSizes,
+	const BaseFragmentsAllVersions& baseFragmentsAllVersions,
 	unordered_map<unsigned, string>& IDsToWords,
 	const string& outFilename)
 {
 	ofstream os(outFilename.c_str());
 
 	os << "Results of re-pair partitioning..." << endl << endl;
-	os << "*** Fragment boundaries ***" << endl;
+	os << "*** Base Fragments ***" << endl;
 	
-	unsigned totalCountFragments(0);
-	unsigned diff(0);
-	unsigned numVersions = versions.size();
-	unsigned currOffset(0);
-	unsigned nextOffset(0);
-	for (unsigned v = 0; v < numVersions; v++)
-	{
-		unsigned numFragsInVersion = versionPartitionSizes[v];
-
-		if (numFragsInVersion < 1)
-		{
-			continue;
+	BaseFragment frag;
+	BaseFragmentList baseFragList;
+	assert(versions.size() == baseFragmentsAllVersions.size());
+	for (auto it = baseFragmentsAllVersions.begin(); it != baseFragmentsAllVersions.end(); ++it) {
+		baseFragList = (*it);
+		unsigned versionNum = baseFragList.getVersionNum();
+		cerr << "Version " << versionNum << "..." << endl;
+		for (size_t i = 0; i < baseFragList.size(); ++i) {
+			frag = baseFragList.get(i);
+			cerr << "Start: " << frag.start <<  ", End: " << frag.end << endl;
 		}
-		os << "Version " << v << endl;
-		for (unsigned i = 0; i < numFragsInVersion - 1; i++)
-		{
-			if (i < numFragsInVersion - 1)
-			{
-				currOffset = offsetsAllVersions[totalCountFragments + i];
-				nextOffset = offsetsAllVersions[totalCountFragments + i + 1];
-				diff = nextOffset - currOffset;
-			}
-			else
-			{
-				diff = 0;
-			}
-
-			os << "Fragment " << i << ": " << 
-				offsetsAllVersions[totalCountFragments + i] << "-" <<
-				offsetsAllVersions[totalCountFragments + i + 1] << 
-				" (frag size: " << diff << ")" << endl;
-		}
-		totalCountFragments += numFragsInVersion;
-		os << endl;
 	}
 
-	// Assign fragment IDs and stick them in a hashmap
-	unordered_map<string, FragInfo> uniqueFrags;
-	this->updateUniqueFragmentHashMap();
-
-	// Now decide on the score for this partitioning
-	double score = this->getScore(os);
-	os << "Score: " << score << endl;
 	os.close();
 }
 
@@ -126,17 +95,15 @@ void RepairPartitioningPrototype::writeAssociations(
 //	}
 }
 
+// TODO use baseFragmentsAllVersions
 double RepairPartitioningPrototype::runRepairPartitioning(
-	vector<vector<unsigned> > versions, 
-	unsigned* offsetsAllVersions,
-	unsigned* versionPartitionSizes,
-	unsigned minFragSize, 
-	float fragmentationCoefficient, 
-	unsigned method)
+	vector<vector<unsigned> > versions,
+	BaseFragmentsAllVersions& baseFragmentsAllVersions,
+	unsigned numLevelsDown,
+	unsigned minFragSize,
+	float fragmentationCoefficient)
 {
 	bool debug = false;
-
-	unsigned numLevelsDown = 15;
 
 	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize,
 		fragmentationCoefficient);
@@ -145,13 +112,18 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 
 	repairAlg.clearRepairStructures();
 
-	repairAlg.getOffsetsAllVersions(offsetsAllVersions, versionPartitionSizes);
+	// Declare and instantiate here, populate in the function call below
+	BaseFragmentsAllVersions baseFragsAllVersions = BaseFragmentsAllVersions();
+
+	// Base fragments get populated here
+	repairAlg.getOffsetsAllVersions(baseFragmentsAllVersions);
 	
 	repairAlg.clearAssociationsAndReset();
 
-	if (debug)
-		checkOffsets(versions, offsetsAllVersions, versionPartitionSizes);
+	// if (debug)
+	// 	checkOffsets(versions, offsetsAllVersions, versionPartitionSizes);
 
+	// We don't yet have a way to calculate score, TODO
 	double score = 0.0;
 	return score;
 }
@@ -202,7 +174,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		*/
 		unsigned minFragSize = 10; //in words
 
-		//pairs that occur less than this amount of times will not be replaced
+		// pairs that occur less than this amount of times will not be replaced
 //		unsigned repairStoppingPoint = 1;
 
 		/*
@@ -213,19 +185,16 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 
 		/*
 		A variable used in the naive way to partition the tree:
-		just go n levels down
+		just go n levels down and grab all the nodes
 		*/
-//		unsigned numLevelsDown = 5;
-
-		/* The partitioning alg to use. See Partitioning.h for the enum */
-		unsigned method = 1;
+		unsigned numLevelsDown = 5;
 
 		if (argc == 2 && (string) argv[1] == "help")
 		{
 			cerr << "Usage:" << endl;
 			
 			cerr << "\t" << argv[0] <<
-				" <directory> <fragmentationCoefficient> <minFragSize> <method>"
+				" <directory> <fragmentationCoefficient> <minFragSize> <numLevelsDown>"
 				<< endl;
 
 			cerr << "\t" << argv[0] <<
@@ -247,7 +216,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 			
 			cerr << "\tminFragSize: " << minFragSize << endl;
 			
-			cerr << "\tmethod: " << method << endl;
+			cerr << "\tnumLevelsDown: " << numLevelsDown << endl;
 			
 			exit(0);
 		}
@@ -262,7 +231,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 			minFragSize = atoi(argv[3]);
 		
 		if (argc > 4)
-			method = atoi(argv[4]);
+			numLevelsDown = atoi(argv[4]);
 
 		
 		vector<string> inputFilenames = vector<string>();
@@ -357,9 +326,11 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		// printIDtoWordMapping(IDsToWords);
 		// system("pause");
 
-		unsigned* versionPartitionSizes = new unsigned[versions.size()];
-		unsigned* offsetsAllVersions = 
-			new unsigned[versions.size() * MAX_NUM_FRAGMENTS_PER_VERSION];
+		// unsigned* versionPartitionSizes = new unsigned[versions.size()];
+		// unsigned* offsetsAllVersions = 
+		// 	new unsigned[versions.size() * MAX_NUM_FRAGMENTS_PER_VERSION];
+
+		BaseFragmentsAllVersions baseFragmentsAllVersions = BaseFragmentsAllVersions();
 
 		double score = 0.0;
 		
@@ -370,29 +341,28 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		try {
 			score = runRepairPartitioning(
 			 	versions,
-			 	offsetsAllVersions,
-			 	versionPartitionSizes,
+			 	baseFragmentsAllVersions,
+			 	numLevelsDown,
 			 	minFragSize,
-			 	fragmentationCoefficient,
-			 	method);
+			 	fragmentationCoefficient);
 
 			string outputFilename = "./Output/results.txt";
 
-			this->writeResults(versions, offsetsAllVersions,
-				 	versionPartitionSizes, IDsToWords, outputFilename);
+			this->writeResults(versions, baseFragmentsAllVersions,
+				 	IDsToWords, outputFilename);
 
-			stringstream command;
-			command << "start " << outputFilename.c_str();
-			system(command.str().c_str());
+			// stringstream command;
+			// command << "start " << outputFilename.c_str();
+			// system(command.str().c_str());
 		} catch (int e) {
 			cerr << "Error code: " << e << endl;
 			exit(e);
 		}
 
-        delete [] versionPartitionSizes;
-        delete [] offsetsAllVersions;
+        // delete [] versionPartitionSizes;
+        // delete [] offsetsAllVersions;
 
-		final=clock()-init;
+		final = clock()-init;
 		cerr << (double)final / ((double)CLOCKS_PER_SEC) << endl;
 
 		return score;

@@ -82,9 +82,9 @@ private:
 public:
 
 	RepairAlgorithm(std::vector<std::vector<unsigned> >& versions,
-		unsigned numLevelsDown = 1,
-		unsigned minFragSize = 2,
-		double fragmentationCoefficient = 1.0) :
+		unsigned numLevelsDown,
+		unsigned minFragSize,
+		double fragmentationCoefficient) :
 			versions(versions),
 			numLevelsDown(numLevelsDown),
 			minFragSize(minFragSize),
@@ -94,8 +94,6 @@ public:
 		hashTable = RepairHashTable();
 		associations = std::unordered_map<unsigned, Association>();
 	}
-
-	void getOffsetsAllVersions(unsigned* offsetsAllVersions, unsigned* versionPartitionSizes);
 
 	void doRepair(unsigned repairStoppingPoint = 0)
 	{
@@ -111,53 +109,8 @@ public:
 	void clearRepairStructures();
 
 	void clearAssociationsAndReset();
+
+	void getOffsetsAllVersions(BaseFragmentsAllVersions& baseFragsAllVersions);
 };
 
-
-// Use this class with the comparator below to sort the output by version number
-class PartitionList
-{
-private:
-	std::vector<unsigned> offsets;
-	unsigned versionNum;
-public:
-	PartitionList(unsigned versionNum) : versionNum(versionNum) {}
-	PartitionList() {}
-
-	void push(unsigned offset)
-	{
-		offsets.push_back(offset);
-	}
-
-	int size() const
-	{
-		return offsets.size();
-	}
-
-	unsigned get(unsigned index) const
-	{
-		return offsets[index];
-	}
-
-	unsigned getVersionNum() const
-	{
-		return versionNum;
-	}
-
-	~PartitionList()
-	{
-		offsets.clear();
-	}
-};
-
-class SortPartitionListsByVersion
-{
-public:
-	bool operator() (const PartitionList lhs, const PartitionList rhs) const
-	{
-		return lhs.getVersionNum() < rhs.getVersionNum();
-	}
-};
-
-typedef std::set<PartitionList, SortPartitionListsByVersion> SortedPartitionsByVersion;
 #endif

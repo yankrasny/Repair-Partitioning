@@ -39,17 +39,12 @@ public:
 
 	void updateUniqueFragmentHashMap();
 
-	double getScore(std::unordered_map<std::string, FragInfo>& uniqueFrags, 
-		unsigned numVersions, 
-		std::ostream& os = std::cerr);
-
 	void writeAssociations(
 		const std::unordered_map<unsigned, Association>& associations, std::ostream& os) const;
 
 	void writeResults(
 		const std::vector<std::vector<unsigned> >& versions, 
-		unsigned* offsetsAllVersions,
-		unsigned* versionPartitionSizes,
+		const BaseFragmentsAllVersions& baseFragmentsAllVersions,
 		std::unordered_map<unsigned, std::string>& IDsToWords,
 		const std::string& outFilename);
 
@@ -58,11 +53,10 @@ public:
 
 	double runRepairPartitioning(
 		std::vector<std::vector<unsigned> > versions,
-		unsigned* offsetsAllVersions,
-		unsigned* versionPartitionSizes,
-		unsigned minFragSize, 
-		float fragmentationCoefficient, 
-		unsigned method);
+		BaseFragmentsAllVersions& baseFragmentsAllVersions,
+		unsigned numLevelsDown = 5,
+		unsigned minFragSize = 1,
+		float fragmentationCoefficient = 1.0);
 
 
 	void checkAssociations(

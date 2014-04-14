@@ -544,133 +544,6 @@ int RepairAlgorithm::getNextRootSymbol(unsigned symbol)
 }
 
 /*
-Starting at the last association created, build trees for each version top down
-Once you build one, get the partitioning for it and store it in the output
-Immediately delete the tree
-Organize the output as needed by the consumers of this class
-
-TODO fix: this function is pretty long, we can break it up
-*/
-void RepairAlgorithm::getOffsetsAllVersions(unsigned* offsetsAllVersions, unsigned* versionPartitionSizes)
-{
-    int symbol = currWordID();
-    RepairTreeNode* currRoot = NULL;
-    int versionNum = 0;
-
-    // A set of partition lists, sorted by version number (see Repair.h for typedef)
-    SortedPartitionsByVersion offsetMap = SortedPartitionsByVersion();
-    PartitionList theList;
-
-    RepairDocumentPartition partitionAlg = RepairDocumentPartition(this->associations, this->versions.size(),
-        this->numLevelsDown, this->minFragSize, this->fragmentationCoefficient);
-
-    vector<unsigned> bounds;
-    while (true) {
-        symbol = getNextRootSymbol(symbol);
-        if (symbol == -1) break;
-
-        while (true) {
-            versionNum = associations[symbol].getVersionAtBegin();
-            if (versionNum == -1) break;
-
-            assert(versionNum < versions.size() && versionNum >= 0);
-            // cerr << "Build tree: v" << versionNum << endl;
-    
-            // Allocates a lot of memory, see delete at the end of this function
-            currRoot = buildTree(symbol, versionNum);
-
-            // Let's see if this tree is reasonable
-            // int countNodes = currRoot->getCountNodes();
-
-            this->calcOffsets(currRoot);
-            resetOffset();
-
-            theList = PartitionList(versionNum);
-            bounds = vector<unsigned>();
-
-            // TODO write some loops to run partitioning with different param values
-            // Pseudocode written, make it happen for real
-            /*
-            for (fragCoefficientArray : fragCoeff) {
-                for (numLevelsDownArray : numLevelsDown) {
-                    for (minFragSizeArray : minFragSize) {
-                        partitionAlg.getPartitioningOneVersion(currRoot, bounds, versions[versionNum].size(), params...);                        
-                    }
-                    // Now score the partitioning
-                    // The best one wins and gets used below
-                }
-            }
-            */
-            
-            partitionAlg.getPartitioningOneVersion(currRoot, bounds, versions[versionNum].size());
-
-            // A partitioning is defined as at least one fragment
-            // So at least 2 fragment boundaries
-            assert(bounds.size() > 1);
-
-            for (size_t i = 0; i < bounds.size(); i++) {
-                theList.push(bounds[i]);
-            }
-
-            // Now theList should be populated, just insert it into the sorted set
-            offsetMap.insert(theList);
-
-            // Deallocate all those tree nodes
-            this->deleteTree(currRoot);
-        }
-        --symbol;
-    }
-
-    unsigned totalOffsetInArray = 0;
-    unsigned numVersions = 0;
-
-    // offsetMap have not been populated with all partitionings
-    // some versions might be of size 0, so the algorithm might just do nothing for some of them
-    if (versions.size() != offsetMap.size()) {
-        // cerr << "offsetMap.size(): " << offsetMap.size() << endl;
-        set<unsigned> versionNums = set<unsigned>();
-        for (auto it = offsetMap.begin(); it != offsetMap.end(); it++) {
-            // Reusing the same var from above, should be ok
-            theList = *it;
-            unsigned versionNum = theList.getVersionNum();
-            versionNums.insert(versionNum);
-        }
-
-        for (size_t v = 0; v < versions.size(); ++v) {
-            if (versionNums.count(v) < 1) {
-                // We didn't find the version number, handle the possible cases
-                // cerr << "Version not found in offsetMap: " << v << endl;
-                if (versions[v].size() < this->minFragSize) {
-                    theList = PartitionList(v);
-                    theList.push(0);
-                    theList.push(versions[v].size());
-                    offsetMap.insert(theList);
-                } else {
-                    // What else is a possible cause?
-                    cerr << "Version not found in offsetMap: " << v << endl;
-                }
-            }
-        }
-    }
-
-    // Now assert that we've populated results for all those poorly behaved versions 
-    assert(versions.size() == offsetMap.size());
-
-    // Post processing to get offsetMap into offsets and versionPartitionSizes    
-    for (auto it = offsetMap.begin(); it != offsetMap.end(); it++) {
-        // Reusing the same var from above, should be ok
-        theList = *it;
-        for (size_t j = 0; j < theList.size(); j++) {
-            offsetsAllVersions[totalOffsetInArray + j] = theList.get(j);
-        }
-        versionPartitionSizes[numVersions++] = theList.size();
-        totalOffsetInArray += theList.size();
-    }
-
-    offsetMap.clear();
-}
-
-/*
 Given a root node, assign offsets and sizes to it and recursively to all children nodes
 */
 unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
@@ -703,4 +576,116 @@ unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
     unsigned offset = nextOffset();
     node->setOffset(offset);
     return offset;
+}
+
+/*
+    Starting at the last association created, build trees for each version top down
+    Once you build one, get the partitioning for it and store it in the output
+    Immediately delete the tree
+    Organize the output as needed by the consumers of this class
+
+    TODO refactor: this function is pretty long, we can break it up
+*/
+void RepairAlgorithm::getOffsetsAllVersions(BaseFragmentsAllVersions& baseFragsAllVersions)
+{
+    int symbol = currWordID();
+    RepairTreeNode* currRoot = NULL;
+    int versionNum = 0;
+
+    BaseFragmentList baseFragmentsOneVersion;
+
+    RepairDocumentPartition partitionAlg = RepairDocumentPartition(
+        this->associations,
+        this->versions.size(),
+        this->numLevelsDown,
+        this->minFragSize,
+        this->fragmentationCoefficient);
+
+    while (true) {
+        // TODO we can store the last touched version in a stack and just pop from there instead of doing this
+        symbol = getNextRootSymbol(symbol);
+        if (symbol == -1) break;
+
+        while (true) {
+            versionNum = associations[symbol].getVersionAtBegin();
+            if (versionNum == -1) break;
+
+            assert(versionNum < versions.size() && versionNum >= 0);
+            // cerr << "Build tree: v" << versionNum << endl;
+    
+            // Allocates a lot of memory, see delete at the end of this function
+            currRoot = buildTree(symbol, versionNum);
+
+            // Let's see if this tree is reasonable
+            // int countNodes = currRoot->getCountNodes();
+
+            // Decorate the tree with offsets
+            this->calcOffsets(currRoot);
+            resetOffset();
+
+            baseFragmentsOneVersion = BaseFragmentList(versionNum);
+
+            // TODO write some loops to run partitioning with different param values
+            // Pseudocode written, make it happen for real
+            /*
+            for (fragCoefficientArray : fragCoeff) {
+                for (numLevelsDownArray : numLevelsDown) {
+                    for (minFragSizeArray : minFragSize) {
+                        partitionAlg.getPartitioningOneVersion(currRoot, bounds, versions[versionNum].size(), params...);                        
+                    }
+                    // Now score the partitioning
+                    // The best one wins and gets used below
+                }
+            }
+            */
+
+            // Run the fragment selection alg and populate base            
+            partitionAlg.getPartitioningOneVersion(currRoot, baseFragmentsOneVersion, versions[versionNum].size());
+
+            // A partitioning is defined as at least one fragment
+            assert(baseFragmentsOneVersion.size() > 0);
+
+            // Now baseFragmentsOneVersion should be populated, just insert it into the sorted set
+            baseFragsAllVersions.insert(baseFragmentsOneVersion);
+
+            // Deallocate all those tree nodes
+            this->deleteTree(currRoot);
+        }
+        --symbol;
+    }
+
+    // baseFragsAllVersions have not been populated with all partitionings
+    // some versions might be of size 0, so the algorithm might just do nothing for some of them
+    if (versions.size() != baseFragsAllVersions.size()) {
+        // cerr << "baseFragsAllVersions.size(): " << baseFragsAllVersions.size() << endl;
+        set<unsigned> versionNums = set<unsigned>();
+        unsigned versionNum;
+        for (auto it = baseFragsAllVersions.begin(); it != baseFragsAllVersions.end(); it++) {
+            // Reusing the same var from above, should be ok
+            baseFragmentsOneVersion = *it;
+            versionNum = baseFragmentsOneVersion.getVersionNum();
+            versionNums.insert(versionNum);
+        }
+
+        BaseFragment frag;
+        for (size_t v = 0; v < versions.size(); ++v) {
+            if (versionNums.count(v) < 1) {
+                // We didn't find the version number, handle the possible cases
+                // cerr << "Version not found in baseFragsAllVersions: " << v << endl;
+                if (versions[v].size() < this->minFragSize) {
+                    frag.start = 0;
+                    frag.end = versions[v].size();
+                    baseFragmentsOneVersion = BaseFragmentList(v);
+                    baseFragmentsOneVersion.push(frag);
+                    baseFragsAllVersions.insert(baseFragmentsOneVersion);
+                } else {
+                    // What else is a possible cause?
+                    cerr << "Version not found in baseFragsAllVersions: " << v << endl;
+                }
+            }
+        }
+    }
+
+    // Now assert that we've populated results for all those poorly behaved versions 
+    assert(versions.size() == baseFragsAllVersions.size());
 }
