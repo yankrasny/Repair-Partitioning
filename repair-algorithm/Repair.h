@@ -46,6 +46,8 @@ private:
 	
 	// The result of repair, a list of associations in the form (roughly) symbol -> (left, right)
 	std::unordered_map<unsigned, Association> associations;
+
+	std::vector<unsigned> versionRoots;
 	
 
 	/***** Repair Core Algorithm *****/
@@ -93,6 +95,7 @@ public:
 		myHeap = IndexedHeap();
 		hashTable = RepairHashTable();
 		associations = std::unordered_map<unsigned, Association>();
+		versionRoots = std::vector<unsigned>(versions.size());
 	}
 
 	void doRepair(unsigned repairStoppingPoint = 0)

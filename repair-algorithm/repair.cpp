@@ -374,6 +374,8 @@ void RepairAlgorithm::doReplacements(unsigned repairStoppingPoint)
                     associations[symbol].addVersion(v);
                 }
 
+                versionRoots[v] = symbol;
+
                 // Now the replacement: we modify the actual array of word Ids
                 versions[v][idx] = symbol;
                 if (rightIdx != -1) {
@@ -588,11 +590,9 @@ unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
 */
 void RepairAlgorithm::getOffsetsAllVersions(BaseFragmentsAllVersions& baseFragsAllVersions)
 {
-    int symbol = currWordID();
     RepairTreeNode* currRoot = NULL;
-    int versionNum = 0;
-
     BaseFragmentList baseFragmentsOneVersion;
+    unsigned symbol;
 
     RepairDocumentPartition partitionAlg = RepairDocumentPartition(
         this->associations,
@@ -601,57 +601,36 @@ void RepairAlgorithm::getOffsetsAllVersions(BaseFragmentsAllVersions& baseFragsA
         this->minFragSize,
         this->fragmentationCoefficient);
 
-    while (true) {
-        // TODO we can store the last touched version in a stack and just pop from there instead of doing this
-        symbol = getNextRootSymbol(symbol);
-        if (symbol == -1) break;
-
-        while (true) {
-            versionNum = associations[symbol].getVersionAtBegin();
-            if (versionNum == -1) break;
-
-            assert(versionNum < versions.size() && versionNum >= 0);
-            // cerr << "Build tree: v" << versionNum << endl;
+    assert(versionRoots.size() == versions.size());
     
-            // Allocates a lot of memory, see delete at the end of this function
-            currRoot = buildTree(symbol, versionNum);
+    for (size_t v = 0; v < this->versionRoots.size(); ++v)
+    {
+        symbol = versionRoots[v];
 
-            // Let's see if this tree is reasonable
-            // int countNodes = currRoot->getCountNodes();
+        // cerr << "Build tree: v" << v << endl;
+        // Allocates a lot of memory, see delete at the end of this function
+        currRoot = buildTree(symbol, v);
 
-            // Decorate the tree with offsets
-            this->calcOffsets(currRoot);
-            resetOffset();
+        // Let's see if this tree is reasonable
+        // int countNodes = currRoot->getCountNodes();
 
-            baseFragmentsOneVersion = BaseFragmentList(versionNum);
+        // Decorate the tree with offsets
+        this->calcOffsets(currRoot);
+        resetOffset();
 
-            // TODO write some loops to run partitioning with different param values
-            // Pseudocode written, make it happen for real
-            /*
-            for (fragCoefficientArray : fragCoeff) {
-                for (numLevelsDownArray : numLevelsDown) {
-                    for (minFragSizeArray : minFragSize) {
-                        partitionAlg.getPartitioningOneVersion(currRoot, bounds, versions[versionNum].size(), params...);                        
-                    }
-                    // Now score the partitioning
-                    // The best one wins and gets used below
-                }
-            }
-            */
+        baseFragmentsOneVersion = BaseFragmentList(v);
 
-            // Run the fragment selection alg and populate base            
-            partitionAlg.getPartitioningOneVersion(currRoot, baseFragmentsOneVersion, versions[versionNum].size());
+        // Run the fragment selection alg and populate base            
+        partitionAlg.getPartitioningOneVersion(currRoot, baseFragmentsOneVersion, versions[v].size());
 
-            // A partitioning is defined as at least one fragment
-            assert(baseFragmentsOneVersion.size() > 0);
+        // A partitioning is defined as at least one fragment
+        assert(baseFragmentsOneVersion.size() > 0);
 
-            // Now baseFragmentsOneVersion should be populated, just insert it into the sorted set
-            baseFragsAllVersions.insert(baseFragmentsOneVersion);
+        // Now baseFragmentsOneVersion should be populated, just insert it into the sorted set
+        baseFragsAllVersions.insert(baseFragmentsOneVersion);
 
-            // Deallocate all those tree nodes
-            this->deleteTree(currRoot);
-        }
-        --symbol;
+        // Deallocate all those tree nodes
+        this->deleteTree(currRoot);
     }
 
     // baseFragsAllVersions have not been populated with all partitionings
