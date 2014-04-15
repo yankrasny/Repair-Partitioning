@@ -21,17 +21,28 @@ private:
 	// Unique Fragments in all the versions
 	std::unordered_map<std::string, FragInfo> uniqueFrags;
 
+	// An instance of the repair algorithm
+	RepairAlgorithm repairAlg;
+
 public:
-	RepairPartitioningPrototype() 
+
+
+	RepairPartitioningPrototype()
 	{
 		fragments = std::vector<std::vector<FragInfo > >();
 		uniqueFrags = std::unordered_map<std::string, FragInfo>();
+		repairAlg = RepairAlgorithm();
+	}
+
+	RepairPartitioningPrototype(const std::vector<std::vector<unsigned> >& versions)
+	{
+		repairAlg = RepairAlgorithm(versions);
 	}
 
 	double getScore(std::ostream& os);
 
 	void setFragmentInfo(
-		const std::vector<std::vector<unsigned> >& versions, 
+		const std::vector<std::vector<unsigned> >& versions,
 		std::ostream& os, 
 		bool print);
 
@@ -52,9 +63,7 @@ public:
 	double runRepairPartitioning(
 		std::vector<std::vector<unsigned> > versions,
 		BaseFragmentsAllVersions& baseFragmentsAllVersions,
-		unsigned numLevelsDown = 5,
-		unsigned minFragSize = 1,
-		float fragmentationCoefficient = 1.0);
+		unsigned numLevelsDown = 5);
 
 
 	void checkAssociations(

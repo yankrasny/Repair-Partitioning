@@ -26,15 +26,6 @@ class RepairAlgorithm
 {
 private:
 
-	// Pass this to the partitioning alg, it prevents us from going too far down a repair tree
-	unsigned numLevelsDown;
-	
-	// The minimum allowed size for a fragment, used during partitioning
-	unsigned minFragSize;
-
-	// How much should be favor fragmenting into small fragments. Should we keep them bigger, go for more occurrences, etc.
-	double fragmentationCoefficient;
-
 	// Each inner vector: The wordIDs for that version, outer vector: all the versions
 	std::vector<std::vector<unsigned> > versions;
 
@@ -83,14 +74,14 @@ private:
 
 public:
 
-	RepairAlgorithm(std::vector<std::vector<unsigned> >& versions,
-		unsigned numLevelsDown,
-		unsigned minFragSize,
-		double fragmentationCoefficient) :
-			versions(versions),
-			numLevelsDown(numLevelsDown),
-			minFragSize(minFragSize),
-			fragmentationCoefficient(fragmentationCoefficient)
+	RepairAlgorithm()
+	{
+		versions = std::vector<std::vector<unsigned> >();
+	}
+	
+	RepairAlgorithm(const std::vector<std::vector<unsigned> >& versions)
+		:
+		versions(versions)
 	{
 		myHeap = IndexedHeap();
 		hashTable = RepairHashTable();
@@ -113,7 +104,7 @@ public:
 
 	void clearAssociationsAndReset();
 
-	void getOffsetsAllVersions(BaseFragmentsAllVersions& baseFragsAllVersions);
+	void getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVersions, unsigned numLevelsDown);
 };
 
 #endif

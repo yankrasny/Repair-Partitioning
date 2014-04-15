@@ -95,18 +95,21 @@ void RepairPartitioningPrototype::writeAssociations(
 //	}
 }
 
-// TODO use baseFragmentsAllVersions
+// Break this up into api functions: repair + partitioning
+/*
+
+repairApi->doRepair(); // does repair and sets up associations
+repairApi->getBaseFrags(numLevelsDown); // builds trees and returns base fragments
+
+*/
 double RepairPartitioningPrototype::runRepairPartitioning(
 	vector<vector<unsigned> > versions,
 	BaseFragmentsAllVersions& baseFragmentsAllVersions,
-	unsigned numLevelsDown,
-	unsigned minFragSize,
-	float fragmentationCoefficient)
+	unsigned numLevelsDown)
 {
 	bool debug = false;
 
-	RepairAlgorithm repairAlg(versions, numLevelsDown, minFragSize,
-		fragmentationCoefficient);
+	RepairAlgorithm repairAlg(versions);
 
 	repairAlg.doRepair();
 
@@ -116,7 +119,7 @@ double RepairPartitioningPrototype::runRepairPartitioning(
 	BaseFragmentsAllVersions baseFragsAllVersions = BaseFragmentsAllVersions();
 
 	// Base fragments get populated here
-	repairAlg.getOffsetsAllVersions(baseFragmentsAllVersions);
+	repairAlg.getBaseFragments(baseFragmentsAllVersions, numLevelsDown);
 	
 	repairAlg.clearAssociationsAndReset();
 
@@ -342,9 +345,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 			score = runRepairPartitioning(
 			 	versions,
 			 	baseFragmentsAllVersions,
-			 	numLevelsDown,
-			 	minFragSize,
-			 	fragmentationCoefficient);
+			 	numLevelsDown);
 
 			string outputFilename = "./Output/results.txt";
 

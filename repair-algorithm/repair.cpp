@@ -402,6 +402,7 @@ void RepairAlgorithm::doReplacements(unsigned repairStoppingPoint)
     }
     // cerr << "# associations: " << associations.size() << endl;
     // exit(1);
+    this->clearRepairStructures();
 }
 
 /*
@@ -532,21 +533,7 @@ void RepairAlgorithm::deleteTree(RepairTreeNode* node) {
 }
 
 /*
-Part of our top down tree building algorithm
-If this symbol has some versions left then it can be a root node
-*/
-int RepairAlgorithm::getNextRootSymbol(unsigned symbol)
-{
-    while (associations[symbol].getVersions().size() <= 0) {
-        if (--symbol < 1) {
-            return -1;
-        }
-    }
-    return symbol;
-}
-
-/*
-Given a root node, assign offsets and sizes to it and recursively to all children nodes
+    Given a root node, assign offsets and sizes to it and recursively to all children nodes
 */
 unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
 {
@@ -588,18 +575,14 @@ unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
 
     TODO refactor: this function is pretty long, we can break it up
 */
-void RepairAlgorithm::getOffsetsAllVersions(BaseFragmentsAllVersions& baseFragsAllVersions)
+void RepairAlgorithm::getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVersions, unsigned numLevelsDown)
 {
     RepairTreeNode* currRoot = NULL;
     BaseFragmentList baseFragmentsOneVersion;
     unsigned symbol;
 
     RepairDocumentPartition partitionAlg = RepairDocumentPartition(
-        this->associations,
-        this->versions.size(),
-        this->numLevelsDown,
-        this->minFragSize,
-        this->fragmentationCoefficient);
+        this->associations);
 
     assert(versionRoots.size() == versions.size());
     
@@ -620,8 +603,12 @@ void RepairAlgorithm::getOffsetsAllVersions(BaseFragmentsAllVersions& baseFragsA
 
         baseFragmentsOneVersion = BaseFragmentList(v);
 
-        // Run the fragment selection alg and populate base            
-        partitionAlg.getPartitioningOneVersion(currRoot, baseFragmentsOneVersion, versions[v].size());
+        // Run the fragment selection alg and populate base frags
+        partitionAlg.getPartitioningOneVersion(
+            currRoot,
+            baseFragmentsOneVersion,
+            versions[v].size(),
+            numLevelsDown);
 
         // A partitioning is defined as at least one fragment
         assert(baseFragmentsOneVersion.size() > 0);
@@ -651,16 +638,11 @@ void RepairAlgorithm::getOffsetsAllVersions(BaseFragmentsAllVersions& baseFragsA
             if (versionNums.count(v) < 1) {
                 // We didn't find the version number, handle the possible cases
                 // cerr << "Version not found in baseFragsAllVersions: " << v << endl;
-                if (versions[v].size() < this->minFragSize) {
-                    frag.start = 0;
-                    frag.end = versions[v].size();
-                    baseFragmentsOneVersion = BaseFragmentList(v);
-                    baseFragmentsOneVersion.push(frag);
-                    baseFragsAllVersions.insert(baseFragmentsOneVersion);
-                } else {
-                    // What else is a possible cause?
-                    cerr << "Version not found in baseFragsAllVersions: " << v << endl;
-                }
+                frag.start = 0;
+                frag.end = versions[v].size();
+                baseFragmentsOneVersion = BaseFragmentList(v);
+                baseFragmentsOneVersion.push(frag);
+                baseFragsAllVersions.insert(baseFragmentsOneVersion);
             }
         }
     }

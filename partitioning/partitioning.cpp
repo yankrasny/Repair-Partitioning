@@ -43,19 +43,23 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
 	}
 }
 
-void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root,
-	BaseFragmentList& baseFragmentsOneVersion, unsigned versionSize)
+void RepairDocumentPartition::getPartitioningOneVersion(
+	RepairTreeNode* root,
+	BaseFragmentList& baseFragmentsOneVersion,
+	unsigned versionSize,
+	unsigned numLevelsDown)
 {
 	// bool tooManyCalls = false;
 	// SortedByOffsetNodeSet nodes = getBestHorizontalCut(root, 0, tooManyCalls);
 	// while (tooManyCalls) {
 	// 	tooManyCalls = false;
-	// 	this->numLevelsDown--;
+	// 	numLevelsDown--;
 	// 	nodes = getBestHorizontalCut(root, 0, tooManyCalls);
 	// }
 
+	// TODO don't control numLevelsDown in this class, just take it as a regular param here
 	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
-	getNodesTopNLevels(root, this->numLevelsDown, nodes);
+	getNodesTopNLevels(root, numLevelsDown, nodes);
 
 	// for (auto it = nodes.begin(); it != nodes.end(); ++it) {
 	// 	RepairTreeNode* currNode = (*it);
@@ -63,98 +67,4 @@ void RepairDocumentPartition::getPartitioningOneVersion(RepairTreeNode* root,
 	// }
 
 	this->getBaseFragmentsOneVersion(nodes, baseFragmentsOneVersion);
-}
-
-
-/*** OLD STUFF BELOW ***/
-/*
-	We used to try to optimize 
-	the cut ourselves, we now provide a ton of candidate fragments 
-	for optimization by someone else
-*/
-double RepairDocumentPartition::getSubsetScore(SortedByOffsetNodeSet subset)
-{
-	/* MAX */
-	double currMax(0);
-	for (SortedByOffsetNodeSet::iterator it = subset.begin(); it != subset.end(); it++)
-	{
-		RepairTreeNode* currNode = *it;
-		double currScore = 1.0;
-
-		if (associations.count(currNode->getSymbol()) > 0)
-		{
-			Association a = associations[currNode->getSymbol()];
-			currScore = currNode->getSize() * a.getFreq();
-		}
-		if (currScore > currMax)
-		{
-			currMax = currScore;
-		}
-	}
-	if (subset.size() == 0 || currMax == 0) return 0.0;
-	return currMax;
-}
-SortedByOffsetNodeSet RepairDocumentPartition::getBestHorizontalCut(RepairTreeNode* node, int numLevels, bool& tooManyCalls)
-{
-	++numLevels;
-	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
-	if (!node)
-		return nodes;
-
-	if (tooManyCalls) {
-		return nodes;
-	}
-
-	// cerr << "Num Calls: " << numCallsSoFar << endl;
-	if (++numCallsSoFar > this->maxNumCalls) {
-		numCallsSoFar = 0;
-		cerr << "Too many calls to getBestHorizontalCut, trying again with numLevelsDown = " << (numLevelsDown - 1) << endl;
-		tooManyCalls = true;
-	    return nodes;
-	}
-	
-	double myScore = 1.0;
-	if (associations.count(node->getSymbol()) > 0)
-	{
-		// double x = 0.5;
-		// double y = 0.5;
-		Association a = this->associations[node->getSymbol()];
-		// myScore = x * node->getSize() + y * a.getFreq();
-		myScore = node->getSize() * a.getFreq();
-	}
-
-	// node is a terminal
-	if (!node->getLeftChild())
-	{
-		nodes.insert(node);
-		return nodes;
-	}
-
-	// Limit the number of recursive calls
-	if (numLevels > this->numLevelsDown) {
-		nodes.insert(node);
-		return nodes;
-	}
-
-	RepairTreeNode* leftChild = node->getLeftChild();
-	RepairTreeNode* rightChild = node->getRightChild();
-
-	SortedByOffsetNodeSet leftSubset = getBestHorizontalCut(leftChild, numLevels + 1, tooManyCalls);
-	SortedByOffsetNodeSet rightSubset = getBestHorizontalCut(rightChild, numLevels + 1, tooManyCalls);
-	
-	double leftScore = getSubsetScore(leftSubset);
-	double rightScore = getSubsetScore(rightSubset);
-
-	// TODO try changing to max(leftScore, rightScore)
-	double childrenScore = fragmentationCoefficient * (leftScore + rightScore); // Raise coefficient to favor fragmenting more
-
-	if (myScore >= childrenScore)
-	{
-		nodes.insert(node);
-		return nodes;
-	}
-
-	nodes.insert(leftSubset.begin(), leftSubset.end());
-	nodes.insert(rightSubset.begin(), rightSubset.end());
-	return nodes;
 }

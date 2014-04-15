@@ -24,12 +24,6 @@ typedef std::set<RepairTreeNode*, SortNodesByOffsetComparator> SortedByOffsetNod
 
 class RepairDocumentPartition
 {
-	float fragmentationCoefficient;
-
-	unsigned numLevelsDown;
-
-	unsigned minFragSize;
-
 	unsigned maxNumCalls;
 	
 	unsigned numCallsSoFar;
@@ -48,9 +42,9 @@ class RepairDocumentPartition
 		BaseFragmentList& baseFragmentsOneVersion);
 
 	// Another one, greedy approach
-	SortedByOffsetNodeSet getBestHorizontalCut(RepairTreeNode* node, int numLevels, bool& tooManyCalls);
+	// SortedByOffsetNodeSet getBestHorizontalCut(RepairTreeNode* node, int numLevels, bool& tooManyCalls);
 
-	double getSubsetScore(SortedByOffsetNodeSet subset);
+	// double getSubsetScore(SortedByOffsetNodeSet subset);
 
 	// Populates unique frags using the boundaries found by the partitioning algorithm
 	// void updateUniqueFragmentHashMap();
@@ -58,17 +52,9 @@ class RepairDocumentPartition
 	// Populates this->fragments NOT USED
 	// void setFragmentInfo(const std::vector<std::vector<unsigned> >& versions, std::ostream& os, bool print);
 public:
-	RepairDocumentPartition(
-		std::unordered_map<unsigned, Association>& associations,
-		unsigned numVersions, 
-		unsigned numLevelsDown, 
-		unsigned minFragSize,
-		float fragmentationCoefficient)
+	RepairDocumentPartition(std::unordered_map<unsigned, Association>& associations)
 		 :
-		associations(associations),
-		numLevelsDown(numLevelsDown), 
-	 	minFragSize(minFragSize),
-	 	fragmentationCoefficient(fragmentationCoefficient)
+		associations(associations)
 	{
 		baseFragments = std::vector<BaseFragment>();
 		maxNumCalls = 100;
@@ -79,7 +65,8 @@ public:
 	void getPartitioningOneVersion(
 		RepairTreeNode* root,
 		BaseFragmentList& baseFragmentsOneVersion,
-		unsigned versionSize);
+		unsigned versionSize,
+		unsigned numLevelsDown);
 };
 
 #endif
