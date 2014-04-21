@@ -12,7 +12,7 @@
 #include <algorithm>
 #include <set>
 
-const unsigned MAX_NUM_FRAGMENTS_PER_VERSION(2000);
+const unsigned MAX_NUM_FRAGMENTS_PER_VERSION(1000000);
 const unsigned MAX_FRAG_LENGTH(10000);
 class RepairTreeNode;
 
