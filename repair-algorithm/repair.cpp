@@ -590,6 +590,11 @@ void RepairAlgorithm::getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVer
     {
         symbol = versionRoots[v];
 
+        if (symbol == 0)
+        {
+            continue;
+        }
+
         // cerr << "Build tree: v" << v << endl;
         // Allocates a lot of memory, see delete at the end of this function
         currRoot = buildTree(symbol, v);
