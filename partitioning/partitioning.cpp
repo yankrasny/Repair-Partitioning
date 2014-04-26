@@ -48,15 +48,6 @@ void RepairDocumentPartition::getPartitioningOneVersion(
 	unsigned versionSize,
 	unsigned numLevelsDown)
 {
-	// bool tooManyCalls = false;
-	// SortedByOffsetNodeSet nodes = getBestHorizontalCut(root, 0, tooManyCalls);
-	// while (tooManyCalls) {
-	// 	tooManyCalls = false;
-	// 	numLevelsDown--;
-	// 	nodes = getBestHorizontalCut(root, 0, tooManyCalls);
-	// }
-
-	// TODO don't control numLevelsDown in this class, just take it as a regular param here
 	SortedByOffsetNodeSet nodes = SortedByOffsetNodeSet();
 	getNodesTopNLevels(root, numLevelsDown, nodes);
 

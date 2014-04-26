@@ -497,9 +497,6 @@ RepairTreeNode* RepairAlgorithm::buildTree(unsigned symbol, unsigned versionNum)
     // Allocate the current node and set its symbol
     RepairTreeNode* root = new RepairTreeNode(symbol);
 
-    // Keep track of which versions we've processed in order to choose a root (see getNextRootLoc)
-    associations[symbol].removeFromVersions(versionNum);
-    
     unsigned left = associations[symbol].getLeft();
     unsigned right = associations[symbol].getRight();
 
@@ -568,12 +565,10 @@ unsigned RepairAlgorithm::calcOffsets(RepairTreeNode* node)
 }
 
 /*
-    Starting at the last association created, build trees for each version top down
-    Once you build one, get the partitioning for it and store it in the output
-    Immediately delete the tree
-    Organize the output as needed by the consumers of this class
-
-    TODO refactor: this function is pretty long, we can break it up
+    Build the repair trees one by one
+        Build one tree
+        Do what you need to with it
+        Delete the tree
 */
 void RepairAlgorithm::getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVersions, unsigned numLevelsDown)
 {
@@ -590,6 +585,7 @@ void RepairAlgorithm::getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVer
     {
         symbol = versionRoots[v];
 
+        // versionRoots is initialized with zeros, so that means this version was empty
         if (symbol == 0)
         {
             continue;
@@ -599,8 +595,7 @@ void RepairAlgorithm::getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVer
         // Allocates a lot of memory, see delete at the end of this function
         currRoot = buildTree(symbol, v);
 
-        // Let's see if this tree is reasonable
-        // int countNodes = currRoot->getCountNodes();
+        // Code that checks the tree somehow can go here
 
         // Decorate the tree with offsets
         this->calcOffsets(currRoot);
@@ -631,6 +626,8 @@ void RepairAlgorithm::getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVer
         // cerr << "baseFragsAllVersions.size(): " << baseFragsAllVersions.size() << endl;
         set<unsigned> versionNums = set<unsigned>();
         unsigned versionNum;
+
+        // First, populate a set of all the version numbers for which we have populated base fragments
         for (auto it = baseFragsAllVersions.begin(); it != baseFragsAllVersions.end(); it++) {
             // Reusing the same var from above, should be ok
             baseFragmentsOneVersion = *it;
@@ -638,6 +635,8 @@ void RepairAlgorithm::getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVer
             versionNums.insert(versionNum);
         }
 
+        // Now go from 0 to numVersions
+        // If the set is missing any of them, atrificially add baseFragments as [0, versionSize]
         BaseFragment frag;
         for (size_t v = 0; v < versions.size(); ++v) {
             if (versionNums.count(v) < 1) {
