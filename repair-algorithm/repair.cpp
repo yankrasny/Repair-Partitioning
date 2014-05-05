@@ -603,6 +603,8 @@ void RepairAlgorithm::getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVer
 
         baseFragmentsOneVersion = BaseFragmentList(v);
 
+        // cerr << "Start partitioning for version " << v << ", size is " << versions[v].size() << endl;
+
         // Run the fragment selection alg and populate base frags
         partitionAlg.getPartitioningOneVersion(
             currRoot,
@@ -612,6 +614,10 @@ void RepairAlgorithm::getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVer
 
         // A partitioning is defined as at least one fragment
         assert(baseFragmentsOneVersion.size() > 0);
+
+
+        // Test the partitioning for quality
+
 
         // Now baseFragmentsOneVersion should be populated, just insert it into the sorted set
         baseFragsAllVersions.insert(baseFragmentsOneVersion);
