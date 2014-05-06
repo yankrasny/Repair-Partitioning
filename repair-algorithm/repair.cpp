@@ -615,9 +615,7 @@ void RepairAlgorithm::getBaseFragments(BaseFragmentsAllVersions& baseFragsAllVer
         // A partitioning is defined as at least one fragment
         assert(baseFragmentsOneVersion.size() > 0);
 
-
-        // Test the partitioning for quality
-
+        // Optional: Test the partitioning for quality
 
         // Now baseFragmentsOneVersion should be populated, just insert it into the sorted set
         baseFragsAllVersions.insert(baseFragmentsOneVersion);

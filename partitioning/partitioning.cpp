@@ -30,13 +30,20 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
         offsets.push_back(currOffset);
     }
 
+    cerr << "All offsets: ";
+    for (size_t i = 0; i < offsets.size(); ++i) {
+        cerr << offsets[i] << ",";
+    }
+    cerr << endl;
+
+    unsigned kmax = 3;
     BaseFragment frag;
     for (size_t i = 0; i < offsets.size(); ++i) {
-        for (size_t j = i + 1; j < offsets.size(); ++j) {
+        for (size_t j = i + 1; j < i + 1 + kmax && j < offsets.size(); ++j) {
             frag.start = offsets[i];
-            frag.end = offsets[j];
+            frag.end = offsets[j] + 1;
             baseFragmentsOneVersion.push(frag);
-            // cerr << "Frag(" << frag.start << ", " << frag.end << ")" << endl;
+            cerr << "Frag(" << frag.start << ", " << frag.end << ")" << endl;
         }
     }
 }
