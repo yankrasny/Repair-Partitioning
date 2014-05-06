@@ -43,7 +43,7 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
             frag.start = offsets[i];
             frag.end = offsets[j] + 1;
             baseFragmentsOneVersion.push(frag);
-            cerr << "Frag(" << frag.start << ", " << frag.end << ")" << endl;
+            // cerr << "Frag(" << frag.start << ", " << frag.end << ")" << endl;
         }
     }
 }
