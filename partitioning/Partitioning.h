@@ -36,10 +36,13 @@ class RepairDocumentPartition
 	// Get the nodes for the first n levels of the tree: these define hierarchical fragments of the document version
 	void getNodesTopNLevels(RepairTreeNode* node, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes);
 
+	void getNodesNthLevelDown(RepairTreeNode* node, unsigned numLevelsDown, SortedByOffsetNodeSet& nodes);
+
 	// Given the set of nodes chosen by the selection algorithm, get all the possible fragments
 	void getBaseFragmentsOneVersion(
-		const SortedByOffsetNodeSet& nodes,
-		BaseFragmentList& baseFragmentsOneVersion);
+	    const std::vector<SortedByOffsetNodeSet>& nodes,
+	    BaseFragmentList& baseFragmentsOneVersion,
+	    unsigned versionSize);
 
 	// Another one, greedy approach
 	// SortedByOffsetNodeSet getBestHorizontalCut(RepairTreeNode* node, int numLevels, bool& tooManyCalls);
