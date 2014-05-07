@@ -190,7 +190,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 		A variable used in the naive way to partition the tree:
 		just go n levels down and grab all the nodes
 		*/
-		unsigned numLevelsDown = 10;
+		unsigned numLevelsDown = 5;
 
 		if (argc == 2 && (string) argv[1] == "help")
 		{
@@ -349,7 +349,7 @@ int RepairPartitioningPrototype::run(int argc, char* argv[])
 
 			string outputFilename = "./Output/results.txt";
 
-			// this->writeResults(versions, baseFragmentsAllVersions, IDsToWords, outputFilename);
+			this->writeResults(versions, baseFragmentsAllVersions, IDsToWords, outputFilename);
 
 			// stringstream command;
 			// command << "start " << outputFilename.c_str();

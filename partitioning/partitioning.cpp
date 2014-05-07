@@ -58,30 +58,39 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
     // ...
     // Level n: [0, o1, o2, ..., on, versionSize] we don't necessarily get n inner offsets here, but we get more as we go down the tree
 
-    vector<vector<unsigned> > offsetsAllVersions = vector<vector<unsigned> >();
+    vector<vector<unsigned> > offsetsAllLevels = vector<vector<unsigned> >();
     vector<unsigned> offsets;
-    SortedByOffsetNodeSet nodesOneVersion;
+    SortedByOffsetNodeSet nodesOneLevel;
     for (auto it = nodes.begin(); it != nodes.end(); ++it) {
-        nodesOneVersion = (*it);
+        nodesOneLevel = (*it);
         offsets = vector<unsigned>();
-        for (auto it2 = nodesOneVersion.begin(); it2 != nodesOneVersion.end(); ++it2) {
+        for (auto it2 = nodesOneLevel.begin(); it2 != nodesOneLevel.end(); ++it2) {
             unsigned currOffset = (*it2)->getOffset();
             offsets.push_back(currOffset);
         }
         // We get all the offsets except for version size, just add that in
         offsets.push_back(versionSize);
-        offsetsAllVersions.push_back(offsets);
+        offsetsAllLevels.push_back(offsets);
     }
 
     BaseFragment frag;
-    for (size_t i = 0; i < offsetsAllVersions.size() - 1; ++i) {
+    for (size_t i = 0; i < offsetsAllLevels.size(); ++i) {
         // cerr << "Level: " << i << endl;
-        frag.start = offsets[i];
-        frag.end = offsets[i + 1];
-        baseFragmentsOneVersion.push(frag);
+        for (size_t j = 0; j < offsetsAllLevels[i].size() - 1; ++j) {
+            frag.start = offsetsAllLevels[i][j];
+            frag.end = offsetsAllLevels[i][j + 1];
 
-        // for (size_t j = 0; j < offsetsAllVersions[i].size(); ++j) {
-        //     cerr << "CurrOffset: " << offsetsAllVersions[i][j] << endl;
+            if (frag.start >= frag.end) {
+                cerr << "Fragment is invalid..." << endl;
+                cerr << "(" << frag.start << "," << frag.end << endl;
+                exit(1);
+            }
+
+            baseFragmentsOneVersion.push(frag);
+        }
+
+        // for (size_t j = 0; j < offsetsAllLevels[i].size(); ++j) {
+        //     cerr << "CurrOffset: " << offsetsAllLevels[i][j] << endl;
         // }
         // cerr << endl;
     }
@@ -96,16 +105,6 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
     // Not sure what to do with kmax exactly, but we had the right idea. let's just make this shit work
     // Ok for now get the adjacent ones, just hierarchical and leave kmax for later
 
-    // unsigned kmax = 3;
-    // BaseFragment frag;
-    // for (size_t i = 0; i < offsets.size(); ++i) {
-    //     for (size_t j = i + 1; j < i + 1 + kmax && j < offsets.size(); ++j) {
-    //         frag.start = offsets[i];
-    //         frag.end = offsets[j] + 1;
-    //         baseFragmentsOneVersion.push(frag);
-    //         // cerr << "Frag(" << frag.start << ", " << frag.end << ")" << endl;
-    //     }
-    // }
 }
 
 void RepairDocumentPartition::getPartitioningOneVersion(
