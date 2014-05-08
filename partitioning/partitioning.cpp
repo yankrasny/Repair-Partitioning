@@ -51,26 +51,26 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
     BaseFragmentList& baseFragmentsOneVersion,
     unsigned versionSize)
 {
-    // We have a data structure like this:
+    // We have a data structure like this (just an array of size n):
     // Level 0: [0, versionSize]
     // Level 1: [0, o1, versionSize]
     // Level 2: [0, o1, o2, versionSize]
     // ...
-    // Level n: [0, o1, o2, ..., on, versionSize] we don't necessarily get n inner offsets here, but we get more as we go down the tree
+    // Level n: [0, o1, o2, ..., on, versionSize] we don't necessarily get n inner offsetsOneLevel here, but we get more as we go down the tree
 
     vector<vector<unsigned> > offsetsAllLevels = vector<vector<unsigned> >();
-    vector<unsigned> offsets;
+    vector<unsigned> offsetsOneLevel;
     SortedByOffsetNodeSet nodesOneLevel;
     for (auto it = nodes.begin(); it != nodes.end(); ++it) {
         nodesOneLevel = (*it);
-        offsets = vector<unsigned>();
+        offsetsOneLevel = vector<unsigned>();
         for (auto it2 = nodesOneLevel.begin(); it2 != nodesOneLevel.end(); ++it2) {
             unsigned currOffset = (*it2)->getOffset();
-            offsets.push_back(currOffset);
+            offsetsOneLevel.push_back(currOffset);
         }
-        // We get all the offsets except for version size, just add that in
-        offsets.push_back(versionSize);
-        offsetsAllLevels.push_back(offsets);
+        // We get all the offsetsOneLevel except for version size, just add that in
+        offsetsOneLevel.push_back(versionSize);
+        offsetsAllLevels.push_back(offsetsOneLevel);
     }
 
     BaseFragment frag;
@@ -79,10 +79,11 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
         for (size_t j = 0; j < offsetsAllLevels[i].size() - 1; ++j) {
             frag.start = offsetsAllLevels[i][j];
             frag.end = offsetsAllLevels[i][j + 1];
+            // cerr << "(" << frag.start << "," << frag.end << ")" << endl;
 
             if (frag.start >= frag.end) {
                 cerr << "Fragment is invalid..." << endl;
-                cerr << "(" << frag.start << "," << frag.end << endl;
+                cerr << "(" << frag.start << "," << frag.end << ")" << endl;
                 exit(1);
             }
 
@@ -95,6 +96,11 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
         // cerr << endl;
     }
 
+    // auto baseFragSet = baseFragmentsOneVersion.getBaseFragments();
+    // for (auto it = baseFragSet.begin(); it != baseFragSet.end(); ++it) {
+    //     frag = (*it);
+    //     cerr << "Start: " << frag.start <<  ", End: " << frag.end << endl;
+    // }
     // exit(1);
 
     // TODO think about what it means when you're missing nodes

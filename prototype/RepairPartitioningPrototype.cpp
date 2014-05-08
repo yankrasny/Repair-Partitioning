@@ -60,14 +60,14 @@ void RepairPartitioningPrototype::writeResults(
 	os << "*** Base Fragments ***" << endl;
 	
 	BaseFragment frag;
-	BaseFragmentList baseFragList;
 	assert(versions.size() == baseFragmentsAllVersions.size());
 	for (auto it = baseFragmentsAllVersions.begin(); it != baseFragmentsAllVersions.end(); ++it) {
-		baseFragList = (*it);
-		unsigned versionNum = baseFragList.getVersionNum();
+		auto baseFragObj = (*it);
+		auto baseFragments = baseFragObj.getBaseFragments();
+		unsigned versionNum = baseFragObj.getVersionNum();
 		cerr << "Version " << versionNum << "..." << endl;
-		for (size_t i = 0; i < baseFragList.size(); ++i) {
-			frag = baseFragList.get(i);
+		for (auto it2 = baseFragments.begin(); it2 != baseFragments.end(); ++it2) {
+			frag = (*it2);
 			cerr << "Start: " << frag.start <<  ", End: " << frag.end << endl;
 		}
 	}

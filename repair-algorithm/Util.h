@@ -218,11 +218,26 @@ struct BaseFragment
     int end;
 };
 
+class BaseFragCompare
+{
+public:
+	bool operator() (const BaseFragment& lhs, const BaseFragment& rhs) const
+	{
+		if (lhs.start < rhs.start) {
+			return true;
+		}
+		if (lhs.end < rhs.end) {
+			return true;
+		}
+		return false;
+	}
+};
+
 // Use this class with the comparator below to sort the output by version number
 class BaseFragmentList
 {
 private:
-	std::vector<BaseFragment> baseFragments;
+	std::set<BaseFragment, BaseFragCompare> baseFragments;
 	unsigned versionNum;
 public:
 	BaseFragmentList(unsigned versionNum) : versionNum(versionNum) {}
@@ -230,7 +245,7 @@ public:
 
 	void push(BaseFragment f)
 	{
-		baseFragments.push_back(f);
+		baseFragments.insert(f);
 	}
 
 	int size() const
@@ -238,9 +253,13 @@ public:
 		return baseFragments.size();
 	}
 
-	BaseFragment get(size_t index) const
-	{
-		return baseFragments[index];
+	// BaseFragment get(size_t index) const
+	// {
+	// 	return baseFragments[index];
+	// }
+
+	std::set<BaseFragment, BaseFragCompare> getBaseFragments() const {
+		return baseFragments;
 	}
 
 	unsigned getVersionNum() const
