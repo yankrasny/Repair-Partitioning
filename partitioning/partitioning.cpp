@@ -74,20 +74,23 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
     }
 
     BaseFragment frag;
+    int kmax = 2;
     for (size_t i = 0; i < offsetsAllLevels.size(); ++i) {
         // cerr << "Level: " << i << endl;
         for (size_t j = 0; j < offsetsAllLevels[i].size() - 1; ++j) {
-            frag.start = offsetsAllLevels[i][j];
-            frag.end = offsetsAllLevels[i][j + 1];
-            // cerr << "(" << frag.start << "," << frag.end << ")" << endl;
 
-            if (frag.start >= frag.end) {
-                cerr << "Fragment is invalid..." << endl;
-                cerr << "(" << frag.start << "," << frag.end << ")" << endl;
-                exit(1);
+            for (size_t k = 0; k < kmax && j + k < offsetsAllLevels[i].size() - 1; ++k) {
+                frag.start = offsetsAllLevels[i][j];
+                frag.end = offsetsAllLevels[i][j + k + 1];
+
+                if (frag.start >= frag.end) {
+                    cerr << "Fragment is invalid..." << endl;
+                    cerr << "(" << frag.start << "," << frag.end << ")" << endl;
+                    exit(1);
+                }
+
+                baseFragmentsOneVersion.push(frag);
             }
-
-            baseFragmentsOneVersion.push(frag);
         }
 
         // for (size_t j = 0; j < offsetsAllLevels[i].size(); ++j) {
@@ -95,22 +98,6 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
         // }
         // cerr << endl;
     }
-
-    // auto baseFragSet = baseFragmentsOneVersion.getBaseFragments();
-    // for (auto it = baseFragSet.begin(); it != baseFragSet.end(); ++it) {
-    //     frag = (*it);
-    //     cerr << "Start: " << frag.start <<  ", End: " << frag.end << endl;
-    // }
-    // exit(1);
-
-    // TODO think about what it means when you're missing nodes
-    // Let's say that level 1 and 2 are the same, that's because we have some missing nodes
-    // Ok, so then... shit lost train of thought. Whatever, I think I'll find it somewhere, in a dark place, years from now.
-
-    // Yea this be TODO also mofo
-    // Not sure what to do with kmax exactly, but we had the right idea. let's just make this shit work
-    // Ok for now get the adjacent ones, just hierarchical and leave kmax for later
-
 }
 
 void RepairDocumentPartition::getPartitioningOneVersion(
