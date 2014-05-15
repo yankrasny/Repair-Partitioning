@@ -51,7 +51,7 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
     BaseFragmentList& baseFragmentsOneVersion,
     unsigned versionSize)
 {
-    // We have a data structure like this (just an array of size n):
+    // nodes looks like this (outer array has size n):
     // Level 0: [0, versionSize]
     // Level 1: [0, o1, versionSize]
     // Level 2: [0, o1, o2, versionSize]
