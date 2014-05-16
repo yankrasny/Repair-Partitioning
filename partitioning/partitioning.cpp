@@ -74,7 +74,7 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
     }
 
     BaseFragment frag;
-    int kmax = 2;
+    int kmax = 1;
     for (size_t i = 0; i < offsetsAllLevels.size(); ++i) {
         // cerr << "Level: " << i << endl;
         for (size_t j = 0; j < offsetsAllLevels[i].size() - 1; ++j) {
@@ -86,7 +86,7 @@ void RepairDocumentPartition::getBaseFragmentsOneVersion(
                 if (frag.start >= frag.end) {
                     cerr << "Fragment is invalid..." << endl;
                     cerr << "(" << frag.start << "," << frag.end << ")" << endl;
-                    exit(1);
+                    continue;
                 }
 
                 baseFragmentsOneVersion.push(frag);
